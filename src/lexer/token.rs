@@ -4,7 +4,7 @@ use std::fmt::Display;
 #[derive(Debug, PartialEq)]
 pub enum Token {
     Ident(String),
-    Int(String),
+    Int(i32),
 
     Illegal,
     Eof,
@@ -33,9 +33,9 @@ pub enum Token {
     If,
     Else,
     Return,
-    True,
-    False,
+    Bool(bool),
 }
+
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
@@ -64,8 +64,8 @@ impl Display for Token {
             Token::If => write!(f, "If"),
             Token::Else => write!(f, "Else"),
             Token::Return => write!(f, "Return"),
-            Token::True => write!(f, "True"),
-            Token::False => write!(f, "False"),
+            Token::Bool(true) => write!(f, "True"),
+            Token::Bool(false) => write!(f, "False"),
         }
     }
 }

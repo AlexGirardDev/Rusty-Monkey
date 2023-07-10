@@ -24,8 +24,25 @@ impl Lexer {
     pub fn next_token(&mut self) -> Token {
         self.eat_whitespace();
         println!("{}", self.position);
+
+        // Bang,
+        // Dash,
+        // ForwardSlash,
+        // Asterisk,
+        // Equal,
+        // NotEqual,
+        // LessThan,
+        // GreaterThan,
         let token = match self.ch {
-            b'=' => Token::Assign,
+            b'=' => {
+                match self.peak_char() {
+                    b'=' => {
+                        self.read_char();
+                        Token::Equal
+                    }
+                    _ => Token::Assign
+                }
+            }
             b';' => Token::Semicolon,
             b'(' => Token::Lparen,
             b')' => Token::Rparen,
@@ -33,6 +50,20 @@ impl Lexer {
             b'+' => Token::Plus,
             b'{' => Token::LSquirly,
             b'}' => Token::RSquirly,
+            b'!' => {
+                match self.peak_char() {
+                    b'=' => {
+                        self.read_char();
+                        Token::NotEqual
+                    }
+                    _ => Token::Bang
+                }
+            }
+            b'-' => Token::Dash,
+            b'/' => Token::ForwardSlash,
+            b'*' => Token::Asterisk,
+            b'<' => Token::LessThan,
+            b'>' => Token::GreaterThan,
             ch => {
                 if ch.is_ascii_digit() {
                     return Token::Int(self.read_int());
@@ -41,6 +72,11 @@ impl Lexer {
                     return match ident.as_str() {
                         "let" => Token::Let,
                         "fn" => Token::Function,
+                        "return" => Token::Return,
+                        "true" => Token::Bool(true),
+                        "false" => Token::Bool(false),
+                        "if" => Token::If,
+                        "else" => Token::Else,
                         _ => { Token::Ident(ident) }
                     };
                 }
@@ -51,13 +87,16 @@ impl Lexer {
         return token;
     }
 
-    fn read_int(&mut self) -> String {
+    fn read_int(&mut self) -> i32 {
         let position = self.position;
 
         while self.ch.is_ascii_digit() {
             self.read_char();
         }
-        return String::from_utf8_lossy(&self.input[position..self.position]).to_string();
+         return String::from_utf8_lossy(&self.input[position..self.position])
+            .to_string()
+            .parse::<i32>()
+            .expect("expected int to parse but failed??");
     }
     fn read_ident(&mut self) -> String {
         let position = self.position;
@@ -128,47 +167,84 @@ mod tests {
             };\
 \
             let result = add(five, ten);\
-            ");
+            !-/*5;\
+            5 < 10 > 5;\
+if (5 < 10) {
+    return true;
+} else {
+    return false;
+}`
+10 == 10;
+10 != 9;
+`");
         let mut lex = Lexer::new(input);
 
         let expected_stuff: Vec<Token> = vec![
-            { Token::Let },
-            { Token::Ident(String::from("five")) },
-            { Token::Assign },
-            { Token::Int(String::from("5")) },
-            { Token::Semicolon },
-            { Token::Let },
-            { Token::Ident(String::from("ten")) },
-            { Token::Assign },
-            { Token::Int(String::from("10")) },
-            { Token::Semicolon },
-            { Token::Let },
-            { Token::Ident(String::from("add")) },
-            { Token::Assign },
-            { Token::Function },
-            { Token::Lparen },
-            { Token::Ident(String::from("x")) },
-            { Token::Comma },
-            { Token::Ident(String::from("y")) },
-            { Token::Rparen },
-            { Token::LSquirly },
-            { Token::Ident(String::from("x")) },
-            { Token::Plus },
-            { Token::Ident(String::from("y")) },
-            { Token::Semicolon },
-            { Token::RSquirly },
-            { Token::Semicolon },
-            { Token::Let },
-            { Token::Ident(String::from("result")) },
-            { Token::Assign },
-            { Token::Ident(String::from("add")) },
-            { Token::Lparen },
-            { Token::Ident(String::from("five")) },
-            { Token::Comma },
-            { Token::Ident(String::from("ten")) },
-            { Token::Rparen },
-            { Token::Semicolon },
-            { Token::Eof },
+            Token::Let,
+            Token::Ident(String::from("five")),
+            Token::Assign,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("ten")),
+            Token::Assign,
+            Token::Int(10),
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("add")),
+            Token::Assign,
+            Token::Function,
+            Token::Lparen,
+            Token::Ident(String::from("x")),
+            Token::Comma,
+            Token::Ident(String::from("y")),
+            Token::Rparen,
+            Token::LSquirly,
+            Token::Ident(String::from("x")),
+            Token::Plus,
+            Token::Ident(String::from("y")),
+            Token::Semicolon,
+            Token::RSquirly,
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("result")),
+            Token::Assign,
+            Token::Ident(String::from("add")),
+            Token::Lparen,
+            Token::Ident(String::from("five")),
+            Token::Comma,
+            Token::Ident(String::from("ten")),
+            Token::Rparen,
+            Token::Semicolon,
+            Token::Bang,
+            Token::Dash,
+            Token::ForwardSlash,
+            Token::Asterisk,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::Int(5),
+            Token::LessThan,
+            Token::Int(10),
+            Token::GreaterThan,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::If,
+            Token::Lparen,
+            Token::Int(5),
+            Token::LessThan,
+            Token::Int(10),
+            Token::Rparen,
+            Token::LSquirly,
+            Token::Return,
+            Token::Bool(true),
+            Token::Semicolon,
+            Token::RSquirly,
+            Token::Else,
+            Token::LSquirly,
+            Token::Return,
+            Token::Bool(false),
+            Token::Semicolon,
+            Token::RSquirly,
         ];
         for expected_token in expected_stuff
         {
