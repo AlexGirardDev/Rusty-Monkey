@@ -1,4 +1,4 @@
-use crate::lexer::token::*;
+use crate::token::Token;
 
 #[derive(Debug)]
 pub struct Lexer {
@@ -9,7 +9,7 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub fn new(input: String) -> Lexer {
+    pub fn new(input: String) -> Self {
         let mut lex = Lexer {
             ch: 0,
             read_position: 0,

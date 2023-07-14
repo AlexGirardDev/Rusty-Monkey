@@ -66,6 +66,6 @@ impl Display for Token {
             Token::Return => write!(f, "Return"),
             Token::Bool(true) => write!(f, "True"),
             Token::Bool(false) => write!(f, "False"),
-        }
+        };
     }
 }
