@@ -10,4 +10,5 @@ path = "src/main.rs"
 
 [dependencies]
 lexer = { path = "../lexer" }
+whoami = "1.4.1"
 # parser = { path = "../parser" }

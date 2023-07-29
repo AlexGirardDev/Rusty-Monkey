@@ -23,26 +23,14 @@ impl Lexer {
 
     pub fn next_token(&mut self) -> Token {
         self.eat_whitespace();
-        println!("{}", self.position);
-
-        // Bang,
-        // Dash,
-        // ForwardSlash,
-        // Asterisk,
-        // Equal,
-        // NotEqual,
-        // LessThan,
-        // GreaterThan,
         let token = match self.ch {
-            b'=' => {
-                match self.peak_char() {
-                    b'=' => {
-                        self.read_char();
-                        Token::Equal
-                    }
-                    _ => Token::Assign
+            b'=' => match self.peak_char() {
+                b'=' => {
+                    self.read_char();
+                    Token::Equal
                 }
-            }
+                _ => Token::Assign,
+            },
             b';' => Token::Semicolon,
             b'(' => Token::Lparen,
             b')' => Token::Rparen,
@@ -50,15 +38,13 @@ impl Lexer {
             b'+' => Token::Plus,
             b'{' => Token::LSquirly,
             b'}' => Token::RSquirly,
-            b'!' => {
-                match self.peak_char() {
-                    b'=' => {
-                        self.read_char();
-                        Token::NotEqual
-                    }
-                    _ => Token::Bang
+            b'!' => match self.peak_char() {
+                b'=' => {
+                    self.read_char();
+                    Token::NotEqual
                 }
-            }
+                _ => Token::Bang,
+            },
             b'-' => Token::Dash,
             b'/' => Token::ForwardSlash,
             b'*' => Token::Asterisk,
@@ -77,7 +63,7 @@ impl Lexer {
                         "false" => Token::Bool(false),
                         "if" => Token::If,
                         "else" => Token::Else,
-                        _ => { Token::Ident(ident) }
+                        _ => Token::Ident(ident),
                     };
                 }
                 Token::Eof
@@ -93,7 +79,7 @@ impl Lexer {
         while self.ch.is_ascii_digit() {
             self.read_char();
         }
-         return String::from_utf8_lossy(&self.input[position..self.position])
+        return String::from_utf8_lossy(&self.input[position..self.position])
             .to_string()
             .parse::<i32>()
             .expect("expected int to parse but failed??");
@@ -120,7 +106,6 @@ impl Lexer {
         } else {
             self.ch = self.input[self.read_position]
         }
-        println!("{}", self.ch as char);
         self.position = self.read_position;
         self.read_position += 1;
     }
@@ -129,7 +114,6 @@ impl Lexer {
         self.input[self.read_position]
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -149,17 +133,16 @@ mod tests {
             Token::Comma,
             Token::Semicolon,
         ];
-        for stuff in expected_stuff
-        {
+        for stuff in expected_stuff {
             let token = lex.next_token();
             assert_eq!(token, stuff);
         }
     }
 
     #[test]
-    fn TestNextToken()
-    {
-        let input = String::from("let five = 5;\
+    fn TestNextToken() {
+        let input = String::from(
+            "let five = 5;\
             let ten = 10;\
             let add = fn (x, y)\
             {\
@@ -176,7 +159,8 @@ if (5 < 10) {
 }`
 10 == 10;
 10 != 9;
-`");
+`",
+        );
         let mut lex = Lexer::new(input);
 
         let expected_stuff: Vec<Token> = vec![
@@ -246,19 +230,19 @@ if (5 < 10) {
             Token::Semicolon,
             Token::RSquirly,
         ];
-        for expected_token in expected_stuff
-        {
+        for expected_token in expected_stuff {
             let actual_token = lex.next_token();
             assert_eq!(expected_token, actual_token);
         }
     }
-//     {token.ASSIGN, "="},
-// {token.PLUS, "+"},
-// {token.LPAREN, "("},
-// {token.RPAREN, ")"},
-// {token.LBRACE, "{"},
-// {token.RBRACE, "}"},
-// {token.COMMA, ","},
-// {token.SEMICOLON, ";"},
-// {token.EOF, ""},
+    //     {token.ASSIGN, "="},
+    // {token.PLUS, "+"},
+    // {token.LPAREN, "("},
+    // {token.RPAREN, ")"},
+    // {token.LBRACE, "{"},
+    // {token.RBRACE, "}"},
+    // {token.COMMA, ","},
+    // {token.SEMICOLON, ";"},
+    // {token.EOF, ""},
 }
+
