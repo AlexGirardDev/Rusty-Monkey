@@ -1,19 +1,19 @@
 use crate::token::Token;
 
 #[derive(Debug)]
-pub struct Lexer {
-    input: Vec<u8>,
+pub struct Lexer<'a> {
+    input: &'a [u8],
     position: usize,
     read_position: usize,
     ch: u8,
 }
 
-impl Lexer {
-    pub fn new(input: String) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(input: &'a str) -> Self {
         let mut lex = Lexer {
             ch: 0,
             read_position: 0,
-            input: input.into_bytes(),
+            input: input.as_bytes(),
             position: 0,
         };
 
@@ -121,8 +121,8 @@ mod tests {
 
     #[test]
     fn lexer_test() {
-        let input = String::from("=+(){},;");
-        let mut lex = Lexer::new(input);
+        let input = "=+(){},;";
+        let mut lex = Lexer::new(&input);
         let expected_stuff: Vec<Token> = vec![
             Token::Assign,
             Token::Plus,
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn TestNextToken() {
-        let input = String::from(
+        let input =
             "let five = 5;\
             let ten = 10;\
             let add = fn (x, y)\
@@ -159,8 +159,7 @@ if (5 < 10) {
 }`
 10 == 10;
 10 != 9;
-`",
-        );
+`";
         let mut lex = Lexer::new(input);
 
         let expected_stuff: Vec<Token> = vec![

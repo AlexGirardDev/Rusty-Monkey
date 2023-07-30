@@ -1,7 +1,6 @@
 use lexer::lexer::Lexer;
 use lexer::token::Token;
-use std::string;
-use whoami;
+use parser::parser::Parser;
 
 fn main() {
     Repl::start();
@@ -11,6 +10,7 @@ struct Repl {}
 
 impl Repl {
     fn start() {
+        // let parser = Parser {};
         println!(
             "Hello {}! This is the Monkey programming language!",
             whoami::realname()
@@ -20,7 +20,7 @@ impl Repl {
             let mut line = String::new();
             println!(">>");
             std::io::stdin().read_line(&mut line).unwrap();
-            let mut l = Lexer::new(line);
+            let mut l = Lexer::new(&line);
             let mut tok = l.next_token();
             while tok != Token::Eof {
                 println!("{}", tok);
