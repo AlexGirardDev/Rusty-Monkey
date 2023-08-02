@@ -28,7 +28,7 @@ impl<'a> Parser<'a> {
         self.peek_token = self.lexer.next_token();
     }
 
-    pub fn parse_program(&mut self) -> Option<Program> {
+    pub fn parse_program(&mut self) -> Program {
         let mut statements: Vec<Statement> = Vec::new();
         while self.cur_token != Token::Eof {
             if let Some(p) = self.parse_statement() {
@@ -37,7 +37,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        return if statements.is_empty() { None } else { Some(Program { statements }) };
+        return Program { statements };
     }
 
     pub fn check_errors(&mut self) -> bool {
@@ -53,15 +53,20 @@ impl<'a> Parser<'a> {
 
 
     fn parse_statement(&mut self) -> Option<Statement> {
-        return match &self.cur_token {
-            Token::Let => match self.parse_let_statement() {
-                Ok(s) => Some(s),
-                Err(e) => {
-                    &self.parse_errors.push(e);
+        let statement = match &self.cur_token {
+            Token::Let => self.parse_let_statement(),
+            Token::Return => self.parse_return_statement(),
+            t => Err(ParserError::UnexpectedStatementStart(t.clone()))
+        };
+        return match statement {
+            Ok(statement) => Some(statement),
+            Err(e) => match e {
+                ParserError::UnexpectedStatementStart(_) => None,
+                _ => {
+                    self.parse_errors.push(e);
                     None
                 }
-            },
-            _ => None
+            }
         };
     }
 
@@ -77,20 +82,37 @@ impl<'a> Parser<'a> {
             t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Assign, actual_token: TokenType::from(t) })
         }
 
+        let expression = self.parse_expression();
+
+        return Ok(Statement::Let(ident, expression));
+    }
+
+    fn parse_return_statement(&mut self) -> Result<Statement, ParserError> {
+        match &self.cur_token {
+            Token::Return => self.next_token(),
+            t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Return, actual_token: TokenType::from(t) })
+        }
+
+        let expression = self.parse_expression();
+        return Ok(Statement::Return(expression));
+    }
+
+    fn parse_expression(&mut self) -> Expression {
         while !matches!(&self.cur_token , Token::Semicolon) {//todo actualy parse the expression
             self.next_token();
         }
 
-        return Ok(Statement::Let(ident, Expression::Constant));
+        return Expression::Constant;
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::os::linux::raw::stat;
     use super::*;
 
     #[test]
-    fn test_let_statments() {
+    fn test_let_statements() {
         let input = "let x = 5;\
         let y = 10;\
         let foobar = 838383;
@@ -98,8 +120,8 @@ mod tests {
 
         let mut p = Parser::new(Lexer::new(&input));
 
-        let program = p.parse_program().unwrap();
-        if p.check_errors(){
+        let program = p.parse_program();
+        if p.check_errors() {
             panic!("ruh roh, program had errors")
         }
         let expected_statements: Vec<String> = vec![
@@ -110,10 +132,31 @@ mod tests {
         assert_eq!(program.statements.len(), expected_statements.len());
 
         for (i, value_name) in expected_statements.iter().enumerate() {
-            println!("Let statement {}", i);
-
             let statement = &program.statements[i];
             let test_result = test_let_statement(&statement, value_name);
+            if test_result.is_err() { panic!("{}", test_result.unwrap_err()); }
+        }
+    }
+
+    #[test]
+    fn test_return_statements() {
+        let input = "return 5;\
+        return 10;\
+        return 838383;
+        ";
+        let expected_count = 3;
+
+        let mut p = Parser::new(Lexer::new(&input));
+
+        let program = p.parse_program();
+        if p.check_errors() {
+            panic!("ruh roh, program had errors")
+        }
+        assert_eq!(program.statements.len(), expected_count);
+
+        for i in 0..expected_count {
+            let statement = &program.statements[i];
+            let test_result = test_return_statement(&statement);
             if test_result.is_err() { panic!("{}", test_result.unwrap_err()); }
         }
     }
@@ -124,6 +167,15 @@ mod tests {
                 assert_eq!(x.value, name);// test to make sure name is correct
             }
             _ => { panic!("Expected let statement, got {:?}", statement); }
+        };
+
+        return Ok(());
+    }
+
+    fn test_return_statement(statement: &Statement) -> Result<(), String> {
+        match statement {
+            Statement::Return(..) => {}
+            _ => { panic!("Expected return statement, got {:?}", statement); }
         };
 
         return Ok(());

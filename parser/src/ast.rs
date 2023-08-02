@@ -9,6 +9,7 @@
 #[derive(Debug)]
 pub enum Statement {
     Let(Identifier, Expression),
+    Return(Expression),
 }
 
 #[derive(Debug)]

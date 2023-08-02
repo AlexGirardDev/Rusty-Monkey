@@ -5,6 +5,7 @@ use lexer::token::Token;
 pub enum ParserError {
     WrongCurrentToken { expected_token: TokenType, actual_token: TokenType },
     WrongPeekToken { expected_token: TokenType, actual_token: TokenType },
+    UnexpectedStatementStart(Token),
     System,
 }
 
@@ -16,6 +17,7 @@ impl fmt::Display for ParserError {
         match self {
             ParserError::WrongCurrentToken { actual_token, expected_token } => write!(f, "Expected {} token but found an {}", expected_token, actual_token),
             ParserError::WrongPeekToken { actual_token, expected_token } => write!(f, "Peeked ahead and expected {} token but found an {}", expected_token, actual_token),
+            ParserError::UnexpectedStatementStart (token)=> write!(f, "{} is not a valid starting to a statement", token),
             ParserError::System => write!(f, "System Error")
         }
     }
