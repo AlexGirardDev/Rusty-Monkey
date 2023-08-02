@@ -1,10 +1,10 @@
 
-#[derive(Debug)]
-pub enum Node {
-    Statement(Statement),
-    Expression(Expression),
-    Program(Program),
-}
+// #[derive(Debug)]
+// pub enum Node {
+//     Statement(Statement),
+//     Expression(Expression),
+//     Program(Program),
+// }
 
 #[derive(Debug)]
 pub enum Statement {
