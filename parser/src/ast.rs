@@ -20,12 +20,14 @@ impl std::fmt::Display for Statement {
 #[derive(Debug)]
 pub enum Expression {
     Constant,
+    Identifier(Identifier),
 }
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Expression::Constant => write!(f, "Constant expression???"),
+            Expression::Identifier(i) => write!(f, "{};", i.value),
         };
     }
 }

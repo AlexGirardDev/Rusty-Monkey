@@ -56,7 +56,7 @@ impl<'a> Parser<'a> {
         let statement = match &self.cur_token {
             Token::Let => self.parse_let_statement(),
             Token::Return => self.parse_return_statement(),
-            t => Err(ParserError::UnexpectedStatementStart(t.clone()))
+            _ => self.parse_expression_statement()
         };
         return match statement {
             Ok(statement) => Some(statement),
@@ -82,9 +82,7 @@ impl<'a> Parser<'a> {
             t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Assign, actual_token: TokenType::from(t) })
         }
 
-        let expression = self.parse_expression();
-
-        return Ok(Statement::Let(ident, expression));
+        return Ok(Statement::Let(ident, self.parse_expression()?));
     }
 
     fn parse_return_statement(&mut self) -> Result<Statement, ParserError> {
@@ -93,15 +91,57 @@ impl<'a> Parser<'a> {
             t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Return, actual_token: TokenType::from(t) })
         }
 
-        let expression = self.parse_expression();
-        return Ok(Statement::Return(expression));
+        return Ok(Statement::Return(self.parse_expression()?));
     }
 
-    fn parse_expression(&mut self) -> Expression {
+    fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
+        match &self.cur_token {
+            Token::Ident(i) => {
+                match &self.peek_token {
+                    Token::Semicolon => {
+                        let statement = Statement::ExpressionStatement(Expression::Identifier(Identifier { value: i.clone() }));
+                        self.next_token();
+                        self.next_token();
+                        return Ok(statement);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        return Err(ParserError::WrongPeekToken {
+            actual_token: TokenType::from(&self.peek_token),
+            expected_token: TokenType::Eof,
+        });
+    }
+
+    fn parse_expression(&mut self) -> Result<Expression, ParserError> {
         while !matches!(&self.cur_token , Token::Semicolon) {//todo actualy parse the expression
             self.next_token();
         }
 
+        return Ok(Expression::Constant);
+    }
+
+    fn is_prefix_token(token: &Token) -> bool {
+        return match token {
+            Token::Dash => true,
+            _ => false
+        };
+    }
+
+    fn is_infix_token(token: &Token) -> bool {
+        return match token {
+            Token::Dash => true,
+            _ => false
+        };
+    }
+
+    fn parse_prefix_expression(&mut self) -> Expression {
+        return Expression::Constant;
+    }
+
+    fn parse_infix_expression(&mut self, left_side: &Expression) -> Expression {
         return Expression::Constant;
     }
 }
@@ -110,6 +150,42 @@ impl<'a> Parser<'a> {
 mod tests {
     use std::os::linux::raw::stat;
     use super::*;
+
+    #[test]
+    fn test_identifier() {
+        let input = "foobar;
+        ";
+
+        let mut p = Parser::new(Lexer::new(&input));
+
+        let program = p.parse_program();
+        if p.check_errors() {
+            panic!("ruh roh, program had errors")
+        } else {
+            for s in &program.statements {
+                println!("{}", s);
+            }
+        }
+
+        assert_eq!(program.statements.len(), 1);
+
+        for statement in &program.statements {
+            println!("{}", statement);
+        }
+
+        let statement = &program.statements[0];
+        match statement {
+            Statement::ExpressionStatement(i) => {
+                match i {
+                    Expression::Identifier(i) => {
+                        assert_eq!(i.value, "foobar");
+                    }
+                    s => { panic!("Expected identifier statement, got {:?}", s) }
+                }
+            }
+            _ => { panic!("Expected expression statement, got {:?}", statement); }
+        }
+    }
 
     #[test]
     fn test_let_statements() {
@@ -131,12 +207,8 @@ mod tests {
         ];
         assert_eq!(program.statements.len(), expected_statements.len());
         for statement in &program.statements {
-            println!("{}",statement);
+            println!("{}", statement);
         }
-
-        panic!("");
-
-
         for (i, value_name) in expected_statements.iter().enumerate() {
             let statement = &program.statements[i];
             let test_result = test_let_statement(&statement, value_name);
