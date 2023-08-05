@@ -130,6 +130,12 @@ mod tests {
             String::from("foobar"),
         ];
         assert_eq!(program.statements.len(), expected_statements.len());
+        for statement in &program.statements {
+            println!("{}",statement);
+        }
+
+        panic!("");
+
 
         for (i, value_name) in expected_statements.iter().enumerate() {
             let statement = &program.statements[i];
@@ -153,7 +159,6 @@ mod tests {
             panic!("ruh roh, program had errors")
         }
         assert_eq!(program.statements.len(), expected_count);
-
         for i in 0..expected_count {
             let statement = &program.statements[i];
             let test_result = test_return_statement(&statement);

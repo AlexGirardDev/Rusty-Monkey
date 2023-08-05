@@ -36,7 +36,7 @@ pub enum Token {
     Bool(bool),
 }
 
-impl Display for Token {
+/**/impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Token::Ident(x) => write!(f, "Ident({})", x),
