@@ -61,24 +61,26 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
-        let ident = match &self.peek_token {
-            Token::Ident(i) => i.clone(),
-            t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Identifier, actual_token: TokenType::from(t) })
+        let ident = if let Token::Ident(i) = &self.peek_token {
+            i.clone()
+        } else {
+            return Err(self.peek_error(TokenType::Identifier));
         };
+
         self.next_token();
 
-        match &self.peek_token {
-            Token::Assign => self.next_token(),
-            t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Assign, actual_token: TokenType::from(t) })
+        if let Token::Assign = &self.peek_token {
+            self.next_token();
+        } else {
+            return Err(self.peek_error(TokenType::Assign));
         }
-
         return Ok(Statement::Let(ident, self.parse_temp_expression()?));
     }
 
     fn parse_return_statement(&mut self) -> Result<Statement, ParserError> {
         match &self.cur_token {
             Token::Return => self.next_token(),
-            t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Return, actual_token: TokenType::from(t) })
+            _ => return Err(self.peek_error(TokenType::Return))
         }
 
         return Ok(Statement::Return(self.parse_temp_expression()?));
@@ -138,5 +140,13 @@ impl<'a> Parser<'a> {
 
     fn parse_infix_expression(&mut self, left_side: &Expression) -> Expression {
         return Expression::Constant;
+    }
+    fn peek_error(&self, expected_token: TokenType) -> ParserError
+    {
+        return ParserError::WrongPeekToken { expected_token, actual_token: TokenType::from(&self.peek_token) };
+    }
+    fn cur_error(&self, expected_token: TokenType) -> ParserError
+    {
+        return ParserError::WrongCurrentToken { expected_token, actual_token: TokenType::from(&self.cur_token) };
     }
 }
