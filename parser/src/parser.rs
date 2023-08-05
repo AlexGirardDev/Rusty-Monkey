@@ -62,7 +62,7 @@ impl<'a> Parser<'a> {
 
     fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
         let ident = match &self.peek_token {
-            Token::Ident(i) => Identifier { value: i.clone() },
+            Token::Ident(i) => i.clone(),
             t => return Err(ParserError::WrongPeekToken { expected_token: TokenType::Identifier, actual_token: TokenType::from(t) })
         };
         self.next_token();
@@ -84,15 +84,21 @@ impl<'a> Parser<'a> {
         return Ok(Statement::Return(self.parse_temp_expression()?));
     }
 
+    fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
+        let expression = self.parse_expression(Iota::Lowest.precedence())?;
+
+        if let Token::Semicolon = &self.peek_token {
+            self.next_token();
+        }
+        return Ok(Statement::ExpressionStatement(expression));
+    }
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
-        match &self.cur_token {
-            Token::Ident(_) => {
-                return self.parse_identifier();
-            }
-            _ => {}
-        }
-        return Err(ParserError::System);//todo fix
+        return match &self.cur_token {
+            Token::Ident(i) => Parser::parse_identifier(i),
+            Token::Int(i) => self.parse_int_literal(),
+            _ => Err(ParserError::System)
+        };
     }
 
 
@@ -103,30 +109,16 @@ impl<'a> Parser<'a> {
         return Ok(Expression::Constant);
     }
 
-    fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
-        let expression = self.parse_expression(Iota::Lowest.precedence())?;
 
-        match &self.peek_token {
-            Token::Semicolon =>
-                {
-                    let result = Statement::ExpressionStatement(expression);
-                    self.next_token();
-                    return Ok(result);
-                }
-            _ => {}
-        }
-        return Err(ParserError::System);
+    fn parse_identifier(ident: &String) -> Result<Expression, ParserError> {
+        return Ok(Expression::Identifier(ident.clone()));
     }
 
-
-    fn parse_identifier(&mut self) -> Result<Expression, ParserError> {
-        match &self.cur_token {
-            Token::Ident(i) => {
-                let result = Ok(Expression::Identifier(Identifier { value: i.clone() }));
-                return result;
-            }
-            e => Err(ParserError::WrongCurrentToken { actual_token: TokenType::from(e), expected_token: TokenType::Identifier })
-        }
+    fn parse_int_literal(&mut self) -> Result<Expression, ParserError> {
+        return match &self.cur_token {
+            Token::Int(i) => Ok(Expression::IntLiteral(*i)),
+            t => Err(ParserError::WrongCurrentToken { actual_token: TokenType::from(t), expected_token: TokenType::Int })
+        };
     }
 
     fn is_prefix_token(token: &Token) -> bool {

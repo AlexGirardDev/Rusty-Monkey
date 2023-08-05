@@ -1,4 +1,3 @@
-use std::os::linux::raw::stat;
 use lexer::token::Token;
 
 #[derive(Debug)]
@@ -22,27 +21,21 @@ impl std::fmt::Display for Statement {
 pub enum Expression {
     Constant,
     Identifier(Identifier),
+    IntLiteral(i32),
 }
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Expression::Constant => write!(f, "Constant expression???"),
-            Expression::Identifier(i) => write!(f, "{};", i.value),
+            Expression::Identifier(i) => write!(f, "{};", i),
+            Expression::IntLiteral(i) => write!(f, "{};", i)
         };
     }
 }
 
-#[derive(Debug)]
-pub struct Identifier {
-    pub value: String,
-}
+pub type Identifier = String;
 
-impl std::fmt::Display for Identifier {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{}", self.value);
-    }
-}
 
 #[derive(Debug)]
 pub struct Program {
