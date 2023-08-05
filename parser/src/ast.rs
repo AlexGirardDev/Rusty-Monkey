@@ -1,3 +1,4 @@
+use std::os::linux::raw::stat;
 use lexer::token::Token;
 
 #[derive(Debug)]
@@ -47,6 +48,42 @@ impl std::fmt::Display for Identifier {
 pub struct Program {
     pub statements: Vec<Statement>,
 }
+
+impl std::fmt::Display for Program {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for statement in &self.statements {
+            writeln!(f, "{}", statement)?;
+        }
+        return Ok(());
+    }
+}
+
+#[derive(Debug)]
+pub enum Iota {
+    Lowest,
+    Equals,
+    LessGreater,
+    Sum,
+    Product,
+    Prefix,
+    Call,
+}
+
+impl Iota {
+    pub fn precedence(&self) -> i8
+    {
+        match self {
+            Iota::Lowest => 0,
+            Iota::Equals => 1,
+            Iota::LessGreater => 2,
+            Iota::Sum => 3,
+            Iota::Product => 4,
+            Iota::Prefix => 5,
+            Iota::Call => 6
+        }
+    }
+}
+
 
 // #[derive(Debug)]
 // pub enum Node {
