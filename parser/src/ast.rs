@@ -22,6 +22,7 @@ pub enum Expression {
     Constant,
     Identifier(Identifier),
     IntLiteral(i32),
+    PrefixExpression(Token, Box<Expression>),
 }
 
 impl std::fmt::Display for Expression {
@@ -29,7 +30,8 @@ impl std::fmt::Display for Expression {
         return match self {
             Expression::Constant => write!(f, "Constant expression???"),
             Expression::Identifier(i) => write!(f, "{};", i),
-            Expression::IntLiteral(i) => write!(f, "{};", i)
+            Expression::IntLiteral(i) => write!(f, "{};", i),
+            Expression::PrefixExpression(p, e) => write!(f, "{}{}", p, e),
         };
     }
 }

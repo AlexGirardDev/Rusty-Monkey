@@ -1,6 +1,36 @@
 use lexer::lexer::Lexer;
+use lexer::token::Token;
 use crate::ast::{Expression, Program, Statement};
+use crate::parse_error::TokenType::Dash;
 use crate::parser::Parser;
+
+struct PrefixTest {
+    input: String,
+    operator: Token,
+    number: i32,
+
+}
+
+#[test]
+fn test_prefix_expressions() {
+    let tests: Vec<PrefixTest> = vec![
+        PrefixTest { input: String::from("!5"), operator: Token::Bang, number: 5 },
+        PrefixTest { input: String::from("-15"), operator: Token::Dash, number: 15 },
+    ];
+
+    for t in tests {
+        let mut p = Parser::new(Lexer::new(&t.input));
+        let program: Program = p.parse_program();
+        check_and_print_errors(&p, &program);
+        assert_eq!(program.statements.len(), 1);
+        if let Statement::ExpressionStatement(Expression::PrefixExpression(token, exp)) = &program.statements[0] {
+            assert_eq!(token, &t.operator);
+            if let Expression::IntLiteral(i) = exp.as_ref() {
+                assert_eq!(i, &t.number);
+            }
+        }
+    }
+}
 
 #[test]
 fn test_identifier() {
@@ -128,11 +158,13 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
 fn check_and_print_errors(parser: &Parser, program: &Program) {
     if !parser.parse_errors.is_empty() {
         println!("Parse errors:");
+        println!("=============");
         for parse_error in &parser.parse_errors {
             println!("{}", parse_error);
         }
 
-        println!("Statements");
+        println!("Statements:");
+        println!("===========");
         println!("{}", program);
         panic!("ruh roh, program had errors")
     }

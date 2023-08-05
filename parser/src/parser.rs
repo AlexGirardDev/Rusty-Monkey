@@ -96,6 +96,10 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
+        if Parser::is_prefix_token(&self.cur_token) {
+            return self.parse_prefix_expression();
+        }
+
         return match &self.cur_token {
             Token::Ident(i) => self.parse_identifier(i),
             Token::Int(i) => self.parse_int_literal(*i),
@@ -122,7 +126,7 @@ impl<'a> Parser<'a> {
 
     fn is_prefix_token(token: &Token) -> bool {
         return match token {
-            Token::Dash => true,
+            Token::Dash | Token::Bang => true,
             _ => false
         };
     }
@@ -134,13 +138,16 @@ impl<'a> Parser<'a> {
         };
     }
 
-    fn parse_prefix_expression(&mut self) -> Expression {
-        return Expression::Constant;
+    fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
+        let token = self.cur_token.clone();
+        self.next_token();
+        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Iota::Lowest.precedence())?)));
     }
 
     fn parse_infix_expression(&mut self, left_side: &Expression) -> Expression {
         return Expression::Constant;
     }
+
     fn peek_error(&self, expected_token: TokenType) -> ParserError
     {
         return ParserError::WrongPeekToken { expected_token, actual_token: TokenType::from(&self.peek_token) };
