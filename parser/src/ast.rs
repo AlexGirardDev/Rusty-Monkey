@@ -53,30 +53,16 @@ impl std::fmt::Display for Program {
     }
 }
 
-#[derive(Debug)]
-pub enum Iota {
-    Lowest,
-    Equals,
-    LessGreater,
-    Sum,
-    Product,
-    Prefix,
-    Call,
-}
+pub struct Precdenece;
 
-impl Iota {
-    pub fn precedence(&self) -> i8
-    {
-        match self {
-            Iota::Lowest => 0,
-            Iota::Equals => 1,
-            Iota::LessGreater => 2,
-            Iota::Sum => 3,
-            Iota::Product => 4,
-            Iota::Prefix => 5,
-            Iota::Call => 6
-        }
-    }
+impl Precdenece {
+    pub const LOWEST: i8 = 0;
+    pub const EQUALS: i8 = 1;
+    pub const LESS_GREATER: i8 = 2;
+    pub const SUM: i8 = 3;
+    pub const PRODUCT: i8 = 4;
+    pub const PREFIX: i8 = 5;
+    pub const CALL: i8 = 6;
 }
 
 

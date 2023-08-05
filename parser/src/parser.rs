@@ -1,4 +1,4 @@
-use crate::ast::{Identifier, Program, Statement, Expression, Iota};
+use crate::ast::{Identifier, Program, Statement, Expression, Precdenece};
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 use crate::parse_error::{ParserError, TokenType};
@@ -87,7 +87,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
-        let expression = self.parse_expression(Iota::Lowest.precedence())?;
+        let expression = self.parse_expression(Precdenece::LOWEST)?;
 
         if let Token::Semicolon = &self.peek_token {
             self.next_token();
@@ -141,7 +141,7 @@ impl<'a> Parser<'a> {
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         let token = self.cur_token.clone();
         self.next_token();
-        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Iota::Lowest.precedence())?)));
+        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precdenece::PREFIX)?)));
     }
 
     fn parse_infix_expression(&mut self, left_side: &Expression) -> Expression {
