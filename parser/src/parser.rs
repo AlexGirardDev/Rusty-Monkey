@@ -95,8 +95,8 @@ impl<'a> Parser<'a> {
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
         return match &self.cur_token {
-            Token::Ident(i) => Parser::parse_identifier(i),
-            Token::Int(i) => self.parse_int_literal(),
+            Token::Ident(i) => self.parse_identifier(i),
+            Token::Int(i) => self.parse_int_literal(*i),
             _ => Err(ParserError::System)
         };
     }
@@ -110,15 +110,12 @@ impl<'a> Parser<'a> {
     }
 
 
-    fn parse_identifier(ident: &String) -> Result<Expression, ParserError> {
+    fn parse_identifier(&self, ident: &String) -> Result<Expression, ParserError> {
         return Ok(Expression::Identifier(ident.clone()));
     }
 
-    fn parse_int_literal(&mut self) -> Result<Expression, ParserError> {
-        return match &self.cur_token {
-            Token::Int(i) => Ok(Expression::IntLiteral(*i)),
-            t => Err(ParserError::WrongCurrentToken { actual_token: TokenType::from(t), expected_token: TokenType::Int })
-        };
+    fn parse_int_literal(&self, int: i32) -> Result<Expression, ParserError> {
+        return Ok(Expression::IntLiteral(int));
     }
 
     fn is_prefix_token(token: &Token) -> bool {
