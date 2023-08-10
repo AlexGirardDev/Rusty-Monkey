@@ -138,18 +138,35 @@ impl<'a> Parser<'a> {
         return Ok(Expression::Bool(b));
     }
 
+    fn expect_peek_token(&mut self, token_type: TokenType) -> bool {
+        if TokenType::from(&self.peek_token) == token_type {
+            self.next_token();
+            return true;
+        }
+        return false;
+    }
 
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         match &self.cur_token {
             Token::Ident(i) => return self.parse_identifier(i),
             Token::Int(i) => return self.parse_int_literal(*i),
             Token::Bool(b) => return self.parse_bool(*b),
+            Token::Lparen => return self.parse_grouped_expression(),
             _ => {}
         };
 
         let token = self.cur_token.clone();
         self.next_token();
         return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precedence::PREFIX)?)));
+    }
+    fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
+        self.next_token();
+        let exp = self.parse_expression(Precedence::LOWEST)?;
+        if self.peek_token != Token::Rparen {
+            return Err(self.peek_error(TokenType::Rparen));
+        }
+        self.next_token();
+        return Ok(exp);
     }
 
     fn parse_infix_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
@@ -175,7 +192,8 @@ impl<'a> Parser<'a> {
             Token::Bang |
             Token::Int(_) |
             Token::Ident(_) |
-            Token::Bool(_)
+            Token::Bool(_) |
+            Token::Lparen
             => true,
             _ => false
         };
