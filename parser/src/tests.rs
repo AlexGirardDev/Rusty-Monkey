@@ -1,5 +1,6 @@
 use lexer::lexer::Lexer;
 use lexer::token::Token;
+use lexer::token::Token::{Bool, Int};
 use crate::ast::{Expression, Program, Statement};
 use crate::parse_error::TokenType::Dash;
 use crate::parser::Parser;
@@ -25,6 +26,17 @@ fn test_program(tests: Vec<Test>) {
 }
 
 #[test]
+fn test_bool_expressions() {
+    let tests: Vec<Test> = vec![
+        Test::new("true", "true"),
+        Test::new("false", "false"),
+        Test::new("3 > 5 == false", "((3 > 5) == false)"),
+        Test::new("3 < 5 == true", "((3 < 5) == true)"),
+    ];
+    test_program(tests);
+}
+
+#[test]
 fn test_op_prec_expressions() {
     let tests: Vec<Test> = vec![
         Test::new("-5 * b", "((-5) * b)"),
@@ -44,21 +56,29 @@ fn test_op_prec_expressions() {
 
 #[test]
 fn test_infix_expressions() {
-    struct Test<'a> {
-        input: &'a str,
+    struct InfixTest {
+        input: String,
         operator: Token,
-        left_value: i32,
-        right_value: i32,
+        left_value: Token,
+        right_value: Token,
     }
-    let tests: Vec<Test> = vec![
-        Test { input: "5 + 5", operator: Token::Plus, left_value: 5, right_value: 5 },
-        Test { input: "5 - 5", operator: Token::Dash, left_value: 5, right_value: 5 },
-        Test { input: "5 * 5", operator: Token::Asterisk, left_value: 5, right_value: 5 },
-        Test { input: "5 / 5", operator: Token::ForwardSlash, left_value: 5, right_value: 5 },
-        Test { input: "5 > 5", operator: Token::GreaterThan, left_value: 5, right_value: 5 },
-        Test { input: "5 < 5", operator: Token::LessThan, left_value: 5, right_value: 5 },
-        Test { input: "5 == 5", operator: Token::Equal, left_value: 5, right_value: 5 },
-        Test { input: "5 != 5", operator: Token::NotEqual, left_value: 5, right_value: 5 },
+    impl InfixTest {
+        pub fn new(input: &str, left_value: Token, operator: Token, right_value: Token) -> InfixTest {
+            InfixTest { input: String::from(input), operator, left_value, right_value }
+        }
+    }
+
+    let tests: Vec<InfixTest> = vec![
+        InfixTest::new("5 - 5", Int(5), Token::Dash, Int(5)),
+        InfixTest::new("5 * 5", Int(5), Token::Asterisk, Int(5)),
+        InfixTest::new("5 / 5", Int(5), Token::ForwardSlash, Int(5)),
+        InfixTest::new("5 > 5", Int(5), Token::GreaterThan, Int(5)),
+        InfixTest::new("5 < 5", Int(5), Token::LessThan, Int(5)),
+        InfixTest::new("5 == 5", Int(5), Token::Equal, Int(5)),
+        InfixTest::new("5 != 5", Int(5), Token::NotEqual, Int(5)),
+        InfixTest::new("true == true", Bool(true), Token::Equal, Bool(true)),
+        InfixTest::new("true != false", Bool(true), Token::NotEqual, Bool(false)),
+        InfixTest::new("false == false", Bool(false), Token::Equal, Bool(false)),
     ];
 
     for t in tests {
@@ -68,28 +88,29 @@ fn test_infix_expressions() {
         assert_eq!(program.statements.len(), 1);
         if let Statement::ExpressionStatement(Expression::InfixExpression(token, l_exp, r_exp)) = &program.statements[0] {
             assert_eq!(token, &t.operator);
-            if let Expression::IntLiteral(i) = l_exp.as_ref() {
-                assert_eq!(i, &t.left_value, "left value check");
-            }
-            if let Expression::IntLiteral(i) = r_exp.as_ref() {
-                assert_eq!(i, &t.right_value, "right value check");
-            }
+            assert_eq!(l_exp.as_ref(), &Expression::from(&t.left_value).unwrap(), "left value check");
+            assert_eq!(r_exp.as_ref(), &Expression::from(&t.right_value).unwrap(), "left value check");
         }
     }
 }
 
-struct PrefixTest {
-    input: String,
-    operator: Token,
-    number: i32,
-
-}
-
 #[test]
 fn test_prefix_expressions() {
+    struct PrefixTest {
+        input: String,
+        prefix: Token,
+        value: Token,
+    }
+    impl PrefixTest {
+        pub fn new(input: &str, prefix: Token, value: Token) -> PrefixTest {
+            PrefixTest { input: String::from(input), prefix, value }
+        }
+    }
     let tests: Vec<PrefixTest> = vec![
-        PrefixTest { input: String::from("!5"), operator: Token::Bang, number: 5 },
-        PrefixTest { input: String::from("-15"), operator: Token::Dash, number: 15 },
+        PrefixTest::new("!5", Token::Bang, Int(5)),
+        PrefixTest::new("-15", Token::Dash, Int(15)),
+        PrefixTest::new("!true", Token::Bang, Bool(true)),
+        PrefixTest::new("!false", Token::Bang, Bool(false)),
     ];
 
     for t in tests {
@@ -98,10 +119,9 @@ fn test_prefix_expressions() {
         check_and_print_errors(&p, &program);
         assert_eq!(program.statements.len(), 1);
         if let Statement::ExpressionStatement(Expression::PrefixExpression(token, exp)) = &program.statements[0] {
-            assert_eq!(token, &t.operator);
-            if let Expression::IntLiteral(i) = exp.as_ref() {
-                assert_eq!(i, &t.number);
-            }
+
+            assert_eq!(token, &t.prefix);
+            assert_eq!(exp.as_ref(), &Expression::from(&t.value).unwrap(), "left value check");
         }
     }
 }

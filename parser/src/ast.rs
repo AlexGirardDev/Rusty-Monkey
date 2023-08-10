@@ -17,11 +17,12 @@ impl std::fmt::Display for Statement {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Constant,
     Identifier(Identifier),
     IntLiteral(i32),
+    Bool(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Token, Box<Expression>, Box<Expression>),
 }
@@ -32,8 +33,21 @@ impl std::fmt::Display for Expression {
             Expression::Constant => write!(f, "Constant expression???"),
             Expression::Identifier(i) => write!(f, "{}", i),
             Expression::IntLiteral(i) => write!(f, "{}", i),
+            Expression::Bool(b) => write!(f, "{}", b),
             Expression::PrefixExpression(op, e) => write!(f, "({}{})", op, e),
             Expression::InfixExpression(op, l_exp, r_exp) => write!(f, "({} {} {})", l_exp, op, r_exp),
+        };
+    }
+}
+
+impl Expression {
+    pub fn from(token: &Token) -> Option<Expression> {
+        return match token {
+            Token::Int(i) => Some(Expression::IntLiteral(*i)),
+            Token::Bool(b) => Some(Expression::Bool(*b)),
+            Token::Ident(s) => Some(Expression::Identifier(s.clone())),
+            _ => None,
+
         };
     }
 }

@@ -134,11 +134,16 @@ impl<'a> Parser<'a> {
         return Ok(Expression::IntLiteral(int));
     }
 
+    fn parse_bool(&self, b: bool) -> Result<Expression, ParserError> {
+        return Ok(Expression::Bool(b));
+    }
+
 
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         match &self.cur_token {
             Token::Ident(i) => return self.parse_identifier(i),
             Token::Int(i) => return self.parse_int_literal(*i),
+            Token::Bool(b) => return self.parse_bool(*b),
             _ => {}
         };
 
@@ -169,7 +174,8 @@ impl<'a> Parser<'a> {
             Token::Dash |
             Token::Bang |
             Token::Int(_) |
-            Token::Ident(_)
+            Token::Ident(_) |
+            Token::Bool(_)
             => true,
             _ => false
         };
