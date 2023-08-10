@@ -1,7 +1,8 @@
-use crate::ast::{Identifier, Program, Statement, Expression, Precdenece};
+use crate::ast::{Identifier, Program, Statement, Expression, Precedence};
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 use crate::parse_error::{ParserError, TokenType};
+
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
@@ -87,7 +88,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
-        let expression = self.parse_expression(Precdenece::LOWEST)?;
+        let expression = self.parse_expression(Precedence::LOWEST)?;
 
         if let Token::Semicolon = &self.peek_token {
             self.next_token();
@@ -96,15 +97,24 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
-        if Parser::is_prefix_token(&self.cur_token) {
-            return self.parse_prefix_expression();
+        if !Parser::is_prefix_token(&self.cur_token) {
+            return Err(ParserError::NoValidPrefix(TokenType::from(&self.cur_token)));
         }
 
-        return match &self.cur_token {
-            Token::Ident(i) => self.parse_identifier(i),
-            Token::Int(i) => self.parse_int_literal(*i),
-            _ => Err(ParserError::System)
-        };
+        let mut left_exp = self.parse_prefix_expression()?;
+
+        while !matches!(self.peek_token, Token::Semicolon)
+            && precedence < self.peek_precedence()
+        {
+            if !Parser::is_infix_token(&self.peek_token) {
+                return Ok(left_exp);
+            }
+            self.next_token();
+            left_exp = self.parse_infix_expression(left_exp)?;
+            println!("{}", left_exp);
+        }
+
+        return Ok(left_exp);
     }
 
 
@@ -124,30 +134,60 @@ impl<'a> Parser<'a> {
         return Ok(Expression::IntLiteral(int));
     }
 
+
+    fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
+        match &self.cur_token {
+            Token::Ident(i) => return self.parse_identifier(i),
+            Token::Int(i) => return self.parse_int_literal(*i),
+            _ => {}
+        };
+
+        let token = self.cur_token.clone();
+        self.next_token();
+        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precedence::PREFIX)?)));
+    }
+
+    fn parse_infix_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
+        let token = self.cur_token.clone();
+        let prec = self.cur_precedence();
+        self.next_token();
+
+        let right_exp = self.parse_expression(prec)?;
+        return Ok(Expression::InfixExpression(token, Box::new(left_side), Box::new(right_exp)));
+    }
+
+    fn peek_precedence(&self) -> i8 {
+        return Precedence::from(&self.peek_token);
+    }
+
+    fn cur_precedence(&self) -> i8 {
+        return Precedence::from(&self.cur_token);
+    }
+
     fn is_prefix_token(token: &Token) -> bool {
         return match token {
-            Token::Dash | Token::Bang => true,
+            Token::Dash |
+            Token::Bang |
+            Token::Int(_) |
+            Token::Ident(_)
+            => true,
             _ => false
         };
     }
 
     fn is_infix_token(token: &Token) -> bool {
         return match token {
-            Token::Dash => true,
+            Token::Equal |
+            Token::NotEqual |
+            Token::LessThan |
+            Token::GreaterThan |
+            Token::Plus |
+            Token::Dash |
+            Token::ForwardSlash |
+            Token::Asterisk => true,
             _ => false
         };
     }
-
-    fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
-        let token = self.cur_token.clone();
-        self.next_token();
-        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precdenece::PREFIX)?)));
-    }
-
-    fn parse_infix_expression(&mut self, left_side: &Expression) -> Expression {
-        return Expression::Constant;
-    }
-
     fn peek_error(&self, expected_token: TokenType) -> ParserError
     {
         return ParserError::WrongPeekToken { expected_token, actual_token: TokenType::from(&self.peek_token) };

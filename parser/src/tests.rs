@@ -4,6 +4,80 @@ use crate::ast::{Expression, Program, Statement};
 use crate::parse_error::TokenType::Dash;
 use crate::parser::Parser;
 
+struct Test {
+    input: String,
+    expected_output: String,
+}
+
+impl Test {
+    pub fn new(input: &str, output: &str) -> Self {
+        Test { input: String::from(input), expected_output: String::from(output) }
+    }
+}
+
+fn test_program(tests: Vec<Test>) {
+    for test in tests {
+        let mut p = Parser::new(Lexer::new(&test.input));
+        let program: Program = p.parse_program();
+        check_and_print_errors(&p, &program);
+        assert_eq!(program.to_string(), test.expected_output)
+    }
+}
+
+#[test]
+fn test_op_prec_expressions() {
+    let tests: Vec<Test> = vec![
+        Test::new("-5 * b", "((-5) * b)"),
+        Test::new("!-5", "(!(-5))"),
+        Test::new("!-5 * 4", "((!(-5)) * 4)"),
+        Test::new("a + b + c", "((a + b) + c)"),
+        Test::new("a + b - c", "((a + b) - c)"),
+        Test::new("a * b * c", "((a * b) * c)"),
+        Test::new("a * b / c", "((a * b) / c)"),
+        Test::new("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        Test::new("3+4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        Test::new("5>4==3<4", "((5 > 4) == (3 < 4))"),
+        Test::new("3 + 4  * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+    ];
+    test_program(tests);
+}
+
+#[test]
+fn test_infix_expressions() {
+    struct Test<'a> {
+        input: &'a str,
+        operator: Token,
+        left_value: i32,
+        right_value: i32,
+    }
+    let tests: Vec<Test> = vec![
+        Test { input: "5 + 5", operator: Token::Plus, left_value: 5, right_value: 5 },
+        Test { input: "5 - 5", operator: Token::Dash, left_value: 5, right_value: 5 },
+        Test { input: "5 * 5", operator: Token::Asterisk, left_value: 5, right_value: 5 },
+        Test { input: "5 / 5", operator: Token::ForwardSlash, left_value: 5, right_value: 5 },
+        Test { input: "5 > 5", operator: Token::GreaterThan, left_value: 5, right_value: 5 },
+        Test { input: "5 < 5", operator: Token::LessThan, left_value: 5, right_value: 5 },
+        Test { input: "5 == 5", operator: Token::Equal, left_value: 5, right_value: 5 },
+        Test { input: "5 != 5", operator: Token::NotEqual, left_value: 5, right_value: 5 },
+    ];
+
+    for t in tests {
+        let mut p = Parser::new(Lexer::new(&t.input));
+        let program: Program = p.parse_program();
+        check_and_print_errors(&p, &program);
+        assert_eq!(program.statements.len(), 1);
+        if let Statement::ExpressionStatement(Expression::InfixExpression(token, l_exp, r_exp)) = &program.statements[0] {
+            assert_eq!(token, &t.operator);
+            if let Expression::IntLiteral(i) = l_exp.as_ref() {
+                assert_eq!(i, &t.left_value, "left value check");
+            }
+            if let Expression::IntLiteral(i) = r_exp.as_ref() {
+                assert_eq!(i, &t.right_value, "right value check");
+            }
+        }
+    }
+}
+
 struct PrefixTest {
     input: String,
     operator: Token,
@@ -157,15 +231,17 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
 
 fn check_and_print_errors(parser: &Parser, program: &Program) {
     if !parser.parse_errors.is_empty() {
-        println!("Parse errors:");
-        println!("=============");
+        println!("==============");
+        println!("=Parse errors=");
+        println!("==============");
         for parse_error in &parser.parse_errors {
-            println!("{}", parse_error);
+            println!(" - {}", parse_error);
         }
 
-        println!("Statements:");
-        println!("===========");
-        println!("{}", program);
+        println!("============");
+        println!("=Statements=");
+        println!("============");
+        println!(" - {}", program);
         panic!("ruh roh, program had errors")
     }
 }

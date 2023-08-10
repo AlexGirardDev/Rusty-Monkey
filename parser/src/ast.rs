@@ -23,15 +23,17 @@ pub enum Expression {
     Identifier(Identifier),
     IntLiteral(i32),
     PrefixExpression(Token, Box<Expression>),
+    InfixExpression(Token, Box<Expression>, Box<Expression>),
 }
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Expression::Constant => write!(f, "Constant expression???"),
-            Expression::Identifier(i) => write!(f, "{};", i),
-            Expression::IntLiteral(i) => write!(f, "{};", i),
-            Expression::PrefixExpression(p, e) => write!(f, "{}{}", p, e),
+            Expression::Identifier(i) => write!(f, "{}", i),
+            Expression::IntLiteral(i) => write!(f, "{}", i),
+            Expression::PrefixExpression(op, e) => write!(f, "({}{})", op, e),
+            Expression::InfixExpression(op, l_exp, r_exp) => write!(f, "({} {} {})", l_exp, op, r_exp),
         };
     }
 }
@@ -47,15 +49,15 @@ pub struct Program {
 impl std::fmt::Display for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for statement in &self.statements {
-            writeln!(f, "{}", statement)?;
+            write!(f, "{}", statement)?;
         }
         return Ok(());
     }
 }
 
-pub struct Precdenece;
+pub struct Precedence;
 
-impl Precdenece {
+impl Precedence {
     pub const LOWEST: i8 = 0;
     pub const EQUALS: i8 = 1;
     pub const LESS_GREATER: i8 = 2;
@@ -63,6 +65,16 @@ impl Precdenece {
     pub const PRODUCT: i8 = 4;
     pub const PREFIX: i8 = 5;
     pub const CALL: i8 = 6;
+
+    pub fn from(token: &Token) -> i8 {
+        return match token {
+            Token::Equal | Token::NotEqual => Precedence::EQUALS,
+            Token::LessThan | Token::GreaterThan => Precedence::LESS_GREATER,
+            Token::Plus | Token::Dash => Precedence::SUM,
+            Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
+            _ => Precedence::LOWEST
+        };
+    }
 }
 
 

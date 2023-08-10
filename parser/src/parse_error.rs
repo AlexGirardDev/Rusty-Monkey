@@ -7,6 +7,8 @@ pub enum ParserError {
     WrongPeekToken { expected_token: TokenType, actual_token: TokenType },
     UnexpectedStatementStart(Token),
     System,
+    NoValidPrefix(TokenType),
+
 }
 
 
@@ -18,7 +20,9 @@ impl fmt::Display for ParserError {
             ParserError::WrongCurrentToken { actual_token, expected_token } => write!(f, "Expected {} token but found an {}", expected_token, actual_token),
             ParserError::WrongPeekToken { actual_token, expected_token } => write!(f, "Peeked ahead and expected {} token but found an {}", expected_token, actual_token),
             ParserError::UnexpectedStatementStart (token)=> write!(f, "{} is not a valid starting to a statement", token),
-            ParserError::System => write!(f, "System Error")
+            ParserError::System => write!(f, "System Error"),
+            ParserError::NoValidPrefix(token) => write!(f, "{} is not a valid prefix token", token),
+
         }
     }
 }
