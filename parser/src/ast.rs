@@ -21,7 +21,7 @@ impl std::fmt::Display for Statement {
 pub enum Expression {
     Constant,
     Identifier(Identifier),
-    IntLiteral(i32),
+    IntLiteral(i64),
     Bool(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Token, Box<Expression>, Box<Expression>),

@@ -32,12 +32,12 @@ impl<'a> Lexer<'a> {
                 _ => Token::Assign,
             },
             b';' => Token::Semicolon,
-            b'(' => Token::Lparen,
-            b')' => Token::Rparen,
+            b'(' => Token::LParen,
+            b')' => Token::RParent,
             b',' => Token::Comma,
             b'+' => Token::Plus,
-            b'{' => Token::LSquirly,
-            b'}' => Token::RSquirly,
+            b'{' => Token::LBracket,
+            b'}' => Token::RBracket,
             b'!' => match self.peak_char() {
                 b'=' => {
                     self.read_char();
@@ -73,7 +73,7 @@ impl<'a> Lexer<'a> {
         return token;
     }
 
-    fn read_int(&mut self) -> i32 {
+    fn read_int(&mut self) -> i64 {
         let position = self.position;
 
         while self.ch.is_ascii_digit() {
@@ -81,7 +81,7 @@ impl<'a> Lexer<'a> {
         }
         return String::from_utf8_lossy(&self.input[position..self.position])
             .to_string()
-            .parse::<i32>()
+            .parse::<i64>()
             .expect("expected int to parse but failed??");
     }
     fn read_ident(&mut self) -> String {
@@ -126,10 +126,10 @@ mod tests {
         let expected_stuff: Vec<Token> = vec![
             Token::Assign,
             Token::Plus,
-            Token::Lparen,
-            Token::Rparen,
-            Token::LSquirly,
-            Token::RSquirly,
+            Token::LParen,
+            Token::RParent,
+            Token::LBracket,
+            Token::RBracket,
             Token::Comma,
             Token::Semicolon,
         ];
@@ -177,27 +177,27 @@ if (5 < 10) {
             Token::Ident(String::from("add")),
             Token::Assign,
             Token::Function,
-            Token::Lparen,
+            Token::LParen,
             Token::Ident(String::from("x")),
             Token::Comma,
             Token::Ident(String::from("y")),
-            Token::Rparen,
-            Token::LSquirly,
+            Token::RParent,
+            Token::LBracket,
             Token::Ident(String::from("x")),
             Token::Plus,
             Token::Ident(String::from("y")),
             Token::Semicolon,
-            Token::RSquirly,
+            Token::RBracket,
             Token::Semicolon,
             Token::Let,
             Token::Ident(String::from("result")),
             Token::Assign,
             Token::Ident(String::from("add")),
-            Token::Lparen,
+            Token::LParen,
             Token::Ident(String::from("five")),
             Token::Comma,
             Token::Ident(String::from("ten")),
-            Token::Rparen,
+            Token::RParent,
             Token::Semicolon,
             Token::Bang,
             Token::Dash,
@@ -212,22 +212,22 @@ if (5 < 10) {
             Token::Int(5),
             Token::Semicolon,
             Token::If,
-            Token::Lparen,
+            Token::LParen,
             Token::Int(5),
             Token::LessThan,
             Token::Int(10),
-            Token::Rparen,
-            Token::LSquirly,
+            Token::RParent,
+            Token::LBracket,
             Token::Return,
             Token::Bool(true),
             Token::Semicolon,
-            Token::RSquirly,
+            Token::RBracket,
             Token::Else,
-            Token::LSquirly,
+            Token::LBracket,
             Token::Return,
             Token::Bool(false),
             Token::Semicolon,
-            Token::RSquirly,
+            Token::RBracket,
         ];
         for expected_token in expected_stuff {
             let actual_token = lex.next_token();

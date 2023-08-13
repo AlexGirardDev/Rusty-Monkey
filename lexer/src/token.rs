@@ -4,7 +4,7 @@ use std::fmt::Display;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Ident(String),
-    Int(i32),
+    Int(i64),
 
     Illegal,
     Eof,
@@ -22,10 +22,10 @@ pub enum Token {
     Plus,
     Comma,
     Semicolon,
-    Lparen,
-    Rparen,
-    LSquirly,
-    RSquirly,
+    LParen,
+    RParent,
+    LBracket,
+    RBracket,
 
     Function,
     Let,
@@ -55,10 +55,10 @@ pub enum Token {
             Token::Plus => write!(f, "+"),
             Token::Comma => write!(f, ","),
             Token::Semicolon => write!(f, ";"),
-            Token::Lparen => write!(f, "("),
-            Token::Rparen => write!(f, ")"),
-            Token::LSquirly => write!(f, "{{"),
-            Token::RSquirly => write!(f, "}}"),
+            Token::LParen => write!(f, "("),
+            Token::RParent => write!(f, ")"),
+            Token::LBracket => write!(f, "{{"),
+            Token::RBracket => write!(f, "}}"),
             Token::Function => write!(f, "fn"),
             Token::Let => write!(f, "let"),
             Token::If => write!(f, "if"),
@@ -69,3 +69,4 @@ pub enum Token {
         };
     }
 }
+        
