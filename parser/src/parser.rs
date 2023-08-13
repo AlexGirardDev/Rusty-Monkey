@@ -1,4 +1,4 @@
-use crate::ast::{Identifier, Program, Statement, Expression, Precedence};
+use crate::ast::{Identifier, Program, Statement, Expression, Precedence, BlockStatement};
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 use crate::parse_error::{ParserError, TokenType};
@@ -90,10 +90,40 @@ impl<'a> Parser<'a> {
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
         let expression = self.parse_expression(Precedence::LOWEST)?;
 
-        if let Token::Semicolon = &self.peek_token {
+        if let Token::RSquirly | Token::Semicolon = &self.peek_token {
             self.next_token();
         }
         return Ok(Statement::ExpressionStatement(expression));
+    }
+
+
+    fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
+        self.expect_peek(TokenType::Lparen)?;
+        self.next_token();
+        let cond = self.parse_expression(Precedence::LOWEST)?;
+
+        self.expect_peek(TokenType::Rparen)?;
+        self.expect_peek(TokenType::LSquirly)?;
+        let if_block = self.parse_block_statement()?;
+
+        let else_block = if let Token::Else = &self.cur_token {
+            self.next_token();
+            Some(self.parse_block_statement()?)
+        } else { None };
+
+        return Ok(Expression::IfExpression(Box::new(cond), if_block, else_block));
+    }
+
+    fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
+        self.next_token();
+        let mut statements = Vec::<Statement>::new();
+        while !matches!(&self.cur_token, Token::RSquirly) {
+            if let Some(s) = self.parse_statement() {
+                statements.push(s)
+            }
+            self.next_token();
+        }
+        return Ok(BlockStatement { statements });
     }
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
@@ -138,13 +168,6 @@ impl<'a> Parser<'a> {
         return Ok(Expression::Bool(b));
     }
 
-    fn expect_peek_token(&mut self, token_type: TokenType) -> bool {
-        if TokenType::from(&self.peek_token) == token_type {
-            self.next_token();
-            return true;
-        }
-        return false;
-    }
 
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         match &self.cur_token {
@@ -152,6 +175,7 @@ impl<'a> Parser<'a> {
             Token::Int(i) => return self.parse_int_literal(*i),
             Token::Bool(b) => return self.parse_bool(*b),
             Token::Lparen => return self.parse_grouped_expression(),
+            Token::If => return self.parse_if_expression(),
             _ => {}
         };
 
@@ -159,6 +183,7 @@ impl<'a> Parser<'a> {
         self.next_token();
         return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precedence::PREFIX)?)));
     }
+
     fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
         self.next_token();
         let exp = self.parse_expression(Precedence::LOWEST)?;
@@ -193,7 +218,9 @@ impl<'a> Parser<'a> {
             Token::Int(_) |
             Token::Ident(_) |
             Token::Bool(_) |
-            Token::Lparen
+            Token::Lparen |
+            Token::LSquirly |
+            Token::If
             => true,
             _ => false
         };
@@ -212,10 +239,22 @@ impl<'a> Parser<'a> {
             _ => false
         };
     }
+
+    fn expect_peek(&mut self, expected_token: TokenType) -> Result<(), ParserError>
+    {
+        return if TokenType::from(&self.peek_token) == expected_token {
+            self.next_token();
+            Ok(())
+        } else {
+            Err(self.peek_error(expected_token))
+        };
+    }
+
     fn peek_error(&self, expected_token: TokenType) -> ParserError
     {
         return ParserError::WrongPeekToken { expected_token, actual_token: TokenType::from(&self.peek_token) };
     }
+
     fn cur_error(&self, expected_token: TokenType) -> ParserError
     {
         return ParserError::WrongCurrentToken { expected_token, actual_token: TokenType::from(&self.cur_token) };

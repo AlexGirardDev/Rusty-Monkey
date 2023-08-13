@@ -1,6 +1,6 @@
 use lexer::token::Token;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Statement {
     Let(Identifier, Expression),
     Return(Expression),
@@ -25,7 +25,9 @@ pub enum Expression {
     Bool(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Token, Box<Expression>, Box<Expression>),
+    IfExpression(Box<Expression>, BlockStatement, Option<BlockStatement>),
 }
+
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -36,18 +38,23 @@ impl std::fmt::Display for Expression {
             Expression::Bool(b) => write!(f, "{}", b),
             Expression::PrefixExpression(op, e) => write!(f, "({}{})", op, e),
             Expression::InfixExpression(op, l_exp, r_exp) => write!(f, "({} {} {})", l_exp, op, r_exp),
+            Expression::IfExpression(cond, if_block, else_block) => {
+                match else_block {
+                    Some(e) => write!(f, "if {} {} else {}", cond, if_block, e),
+                    None => write!(f, "if {} {}", cond, if_block)
+                }
+            }
         };
     }
 }
 
 impl Expression {
-    pub fn from(token: &Token) -> Option<Expression> {
+    pub fn from(token: Token) -> Option<Expression> {
         return match token {
-            Token::Int(i) => Some(Expression::IntLiteral(*i)),
-            Token::Bool(b) => Some(Expression::Bool(*b)),
+            Token::Int(i) => Some(Expression::IntLiteral(i)),
+            Token::Bool(b) => Some(Expression::Bool(b)),
             Token::Ident(s) => Some(Expression::Identifier(s.clone())),
             _ => None,
-
         };
     }
 }
@@ -55,12 +62,14 @@ impl Expression {
 pub type Identifier = String;
 
 
-#[derive(Debug)]
-pub struct Program {
+pub type Program = BlockStatement;
+
+#[derive(Debug, PartialEq)]
+pub struct BlockStatement {
     pub statements: Vec<Statement>,
 }
 
-impl std::fmt::Display for Program {
+impl std::fmt::Display for BlockStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for statement in &self.statements {
             write!(f, "{}", statement)?;

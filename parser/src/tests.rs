@@ -2,6 +2,7 @@ use lexer::lexer::Lexer;
 use lexer::token::Token;
 use lexer::token::Token::{Bool, Int};
 use crate::ast::{Expression, Program, Statement};
+use crate::parse_error::TokenType;
 use crate::parse_error::TokenType::Dash;
 use crate::parser::Parser;
 
@@ -24,6 +25,69 @@ fn test_program(tests: Vec<Test>) {
         assert_eq!(program.to_string(), test.expected_output)
     }
 }
+
+#[test]
+fn test_if_expressions() {
+    let input = "if (x < y) { x }";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    check_and_print_errors(&p, &program);
+
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+
+
+    if let Statement::ExpressionStatement(i) = statement {
+        if let Expression::IfExpression(condition, if_exp, else_exp) = i {
+            test_infix_exp(condition, Token::LessThan, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
+            assert_eq!(if_exp.statements.len(), 1);
+            if let Statement::ExpressionStatement(Expression::Identifier(ident)) = &if_exp.statements[0] {
+                assert_eq!(ident, "x");
+            }
+            else{
+                panic!("Expected if ident statement with , got {}", statement);
+            }
+            assert_eq!(else_exp, &None);
+        } else {
+            panic!("Expected if expression statement, got {}", statement);
+        }
+    }
+}
+
+#[test]
+fn test_if_else_expressions() {
+    let input = "if (x < y) { x } else { 10 }";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    check_and_print_errors(&p, &program);
+
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+
+
+    if let Statement::ExpressionStatement(i) = statement {
+        if let Expression::IfExpression(condition, if_exp, else_exp) = i {
+            test_infix_exp(condition, Token::LessThan, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
+            assert_eq!(if_exp.statements.len(), 1);
+            if let Statement::ExpressionStatement(Expression::Identifier(ident)) = &if_exp.statements[0] {
+                assert_eq!(ident, "x");
+            }
+            else{
+                panic!("Expected if ident statement with , got {}", statement);
+            }
+
+            if let Statement::ExpressionStatement(Expression::IntLiteral(i)) = &else_exp.as_ref().unwrap().statements[0] {
+                assert_eq!(*i, 10);
+            }
+            else{
+                panic!("Expected if ident statement with , got {}", statement);
+            }
+        } else {
+            panic!("Expected if expression statement, got {}", statement);
+        }
+    }
+}
+
 
 #[test]
 fn test_bool_expressions() {
@@ -50,10 +114,10 @@ fn test_op_prec_expressions() {
         Test::new("3+4; -5 * 5", "(3 + 4)((-5) * 5)"),
         Test::new("5>4==3<4", "((5 > 4) == (3 < 4))"),
         Test::new("3 + 4  * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
-        Test::new("1 + (2 + 3) +4 ","((1 + (2 + 3)) + 4)"),
-        Test::new("(5+5)*2","((5 + 5) * 2)"),
-        Test::new("2 / (5 + 5)","(2 / (5 + 5))"),
-        Test::new("!(true == true)","(!(true == true))"),
+        Test::new("1 + (2 + 3) +4 ", "((1 + (2 + 3)) + 4)"),
+        Test::new("(5+5)*2", "((5 + 5) * 2)"),
+        Test::new("2 / (5 + 5)", "(2 / (5 + 5))"),
+        Test::new("!(true == true)", "(!(true == true))"),
     ];
     test_program(tests);
 }
@@ -90,11 +154,21 @@ fn test_infix_expressions() {
         let program: Program = p.parse_program();
         check_and_print_errors(&p, &program);
         assert_eq!(program.statements.len(), 1);
-        if let Statement::ExpressionStatement(Expression::InfixExpression(token, l_exp, r_exp)) = &program.statements[0] {
-            assert_eq!(token, &t.operator);
-            assert_eq!(l_exp.as_ref(), &Expression::from(&t.left_value).unwrap(), "left value check");
-            assert_eq!(r_exp.as_ref(), &Expression::from(&t.right_value).unwrap(), "left value check");
+        let statement = &program.statements[0];
+        if let Statement::ExpressionStatement(exp) = statement {
+            test_infix_exp(&exp, t.operator, t.left_value, t.right_value);
         }
+    }
+}
+
+
+fn test_infix_exp(exp: &Expression, operator: Token, left_value: Token, right_value: Token) {
+    if let Expression::InfixExpression(token, l_exp, r_exp) = exp {
+        assert_eq!(token.clone(), operator);
+        assert_eq!(l_exp.as_ref(), &Expression::from(left_value).unwrap(), "left value check");
+        assert_eq!(r_exp.as_ref(), &Expression::from(right_value).unwrap(), "right value check");
+    } else {
+        panic!("Expected infix expression, got {}", exp);
     }
 }
 
@@ -123,9 +197,8 @@ fn test_prefix_expressions() {
         check_and_print_errors(&p, &program);
         assert_eq!(program.statements.len(), 1);
         if let Statement::ExpressionStatement(Expression::PrefixExpression(token, exp)) = &program.statements[0] {
-
             assert_eq!(token, &t.prefix);
-            assert_eq!(exp.as_ref(), &Expression::from(&t.value).unwrap(), "left value check");
+            assert_eq!(exp.as_ref(), &Expression::from(t.value).unwrap(), "left value check");
         }
     }
 }
