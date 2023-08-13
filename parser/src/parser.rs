@@ -90,12 +90,34 @@ impl<'a> Parser<'a> {
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
         let expression = self.parse_expression(Precedence::LOWEST)?;
 
-        if let Token::RSquirly | Token::Semicolon = &self.peek_token {
+        if let Token::Semicolon = &self.peek_token {
             self.next_token();
         }
         return Ok(Statement::ExpressionStatement(expression));
     }
 
+
+    fn parse_fn_expression(&mut self) -> Result<Expression, ParserError> {
+        self.expect_peek(TokenType::Lparen)?;
+        self.next_token();
+
+        let mut params = Vec::<Identifier>::new();
+        while !matches!(&self.cur_token,Token::Rparen) {
+            if let Token::Ident(ident) = &self.cur_token {
+                params.push(ident.clone());
+            } else {
+                return Err(self.peek_error(TokenType::Identifier));
+            }
+
+            self.next_token();
+            if let Token::Comma = &self.cur_token {
+                self.next_token();
+            }
+        }
+        self.expect_peek(TokenType::LSquirly)?;
+
+        return Ok(Expression::FnExpression(params, self.parse_block_statement()?));
+    }
 
     fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
         self.expect_peek(TokenType::Lparen)?;
@@ -117,12 +139,13 @@ impl<'a> Parser<'a> {
     fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
         self.next_token();
         let mut statements = Vec::<Statement>::new();
-        while !matches!(&self.cur_token, Token::RSquirly) {
+        while !matches!(&self.cur_token, Token::RSquirly)  {
             if let Some(s) = self.parse_statement() {
-                statements.push(s)
+                statements.push(s);
             }
             self.next_token();
         }
+        self.next_token();
         return Ok(BlockStatement { statements });
     }
 
@@ -176,6 +199,7 @@ impl<'a> Parser<'a> {
             Token::Bool(b) => return self.parse_bool(*b),
             Token::Lparen => return self.parse_grouped_expression(),
             Token::If => return self.parse_if_expression(),
+            Token::Function => return self.parse_fn_expression(),
             _ => {}
         };
 
@@ -220,7 +244,8 @@ impl<'a> Parser<'a> {
             Token::Bool(_) |
             Token::Lparen |
             Token::LSquirly |
-            Token::If
+            Token::If |
+            Token::Function
             => true,
             _ => false
         };

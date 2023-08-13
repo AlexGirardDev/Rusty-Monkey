@@ -2,8 +2,6 @@ use lexer::lexer::Lexer;
 use lexer::token::Token;
 use lexer::token::Token::{Bool, Int};
 use crate::ast::{Expression, Program, Statement};
-use crate::parse_error::TokenType;
-use crate::parse_error::TokenType::Dash;
 use crate::parser::Parser;
 
 struct Test {
@@ -27,6 +25,30 @@ fn test_program(tests: Vec<Test>) {
 }
 
 #[test]
+fn test_fn_expressions() {
+    let input = "fn(x,y) { x + y; }";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    check_and_print_errors(&p, &program);
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+    if let Statement::ExpressionStatement(i) = statement {
+        if let Expression::FnExpression(params,block) = i {
+            assert_eq!(params.len(), 2);
+            assert_eq!(String::from("x"), params[0]);
+            assert_eq!(String::from("y"), params[1]);
+            if let Statement::ExpressionStatement(e) = &block.statements[0] {
+                test_infix_exp(e, Token::Plus, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
+            } else {
+                panic!("Expected if ident statement with , got {}", statement);
+            }
+        } else {
+            panic!("Expected if expression statement, got {}", statement);
+        }
+    }
+}
+
+#[test]
 fn test_if_expressions() {
     let input = "if (x < y) { x }";
     let mut p = Parser::new(Lexer::new(input));
@@ -43,8 +65,7 @@ fn test_if_expressions() {
             assert_eq!(if_exp.statements.len(), 1);
             if let Statement::ExpressionStatement(Expression::Identifier(ident)) = &if_exp.statements[0] {
                 assert_eq!(ident, "x");
-            }
-            else{
+            } else {
                 panic!("Expected if ident statement with , got {}", statement);
             }
             assert_eq!(else_exp, &None);
@@ -71,15 +92,13 @@ fn test_if_else_expressions() {
             assert_eq!(if_exp.statements.len(), 1);
             if let Statement::ExpressionStatement(Expression::Identifier(ident)) = &if_exp.statements[0] {
                 assert_eq!(ident, "x");
-            }
-            else{
+            } else {
                 panic!("Expected if ident statement with , got {}", statement);
             }
 
             if let Statement::ExpressionStatement(Expression::IntLiteral(i)) = &else_exp.as_ref().unwrap().statements[0] {
                 assert_eq!(*i, 10);
-            }
-            else{
+            } else {
                 panic!("Expected if ident statement with , got {}", statement);
             }
         } else {

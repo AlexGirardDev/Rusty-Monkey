@@ -26,6 +26,7 @@ pub enum Expression {
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Token, Box<Expression>, Box<Expression>),
     IfExpression(Box<Expression>, BlockStatement, Option<BlockStatement>),
+    FnExpression(Vec<Identifier>, BlockStatement),
 }
 
 
@@ -44,6 +45,7 @@ impl std::fmt::Display for Expression {
                     None => write!(f, "if {} {}", cond, if_block)
                 }
             }
+            Expression::FnExpression(idents, blk) => { write!(f, "fn ({} ) {}", idents.join(", "), blk) }
         };
     }
 }
