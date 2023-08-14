@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "lexer",
-    "repl"
+    "repl",
+    "eval"
 ]
