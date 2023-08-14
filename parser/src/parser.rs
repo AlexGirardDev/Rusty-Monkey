@@ -1,3 +1,6 @@
+use std::os::unix::raw::mode_t;
+use std::string;
+use std::sync::Mutex;
 use crate::ast::{Identifier, Program, Statement, Expression, Precedence, BlockStatement};
 use lexer::lexer::Lexer;
 use lexer::token::Token;
@@ -94,24 +97,39 @@ impl<'a> Parser<'a> {
 
     fn parse_fn_expression(&mut self) -> Result<Expression, ParserError> {
         self.expect_peek(TokenType::Lparen)?;
-        self.next_token();
-
-        let mut params = Vec::<Identifier>::new();
-        while !matches!(&self.cur_token,Token::RParent) {
-            if let Token::Ident(ident) = &self.cur_token {
-                params.push(ident.clone());
-            } else {
-                return Err(self.peek_error(TokenType::Identifier));
-            }
-
-            self.next_token();
-            if let Token::Comma = &self.cur_token {
-                self.next_token();
-            }
-        }
+        let params = self.parse_fn_params()?;
         self.expect_peek(TokenType::LSquirly)?;
 
         return Ok(Expression::FnExpression(params, self.parse_block_statement()?));
+    }
+
+    fn parse_fn_params(&mut self) -> Result<Vec<Identifier>, ParserError> {
+        let mut idents = Vec::<Identifier>::new();
+        if matches!(&self.peek_token, Token::RParent) {
+            self.next_token();
+            return Ok(idents);
+        }
+
+        self.next_token();
+
+        if let Token::Ident(ident) = &self.cur_token {
+            idents.push(ident.clone());
+        } else {
+            return Err(self.peek_error(TokenType::Identifier));
+        }
+
+        while matches!(&self.peek_token,Token::Comma) {
+            self.next_token();
+            self.next_token();
+
+            if let Token::Ident(ident) = &self.cur_token {
+                idents.push(ident.clone());
+            } else {
+                return Err(self.peek_error(TokenType::Identifier));
+            }
+        }
+        self.expect_peek(TokenType::Rparen)?;
+        return Ok(idents);
     }
 
     fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
@@ -158,11 +176,43 @@ impl<'a> Parser<'a> {
                 return Ok(left_exp);
             }
             self.next_token();
-            left_exp = self.parse_infix_expression(left_exp)?;
+            left_exp = match &self.cur_token {
+                Token::LParen => self.parse_call_expression(left_exp)?,
+                _ => self.parse_infix_expression(left_exp)?
+            };
             println!("{}", left_exp);
         }
 
         return Ok(left_exp);
+    }
+
+    fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
+        if let Expression::Identifier(i) = &left_side {} else {
+            return Err(ParserError::ParserError(format!("Was was expecting ident expression but got: {}", left_side)));
+        };
+        let params = self.parse_call_arguments()?;
+        Ok(Expression::CallExpression(Box::new(left_side), params))
+    }
+
+
+    fn parse_call_arguments(&mut self) -> Result<Vec<Expression>, ParserError> {
+        let mut params = Vec::<Expression>::new();
+        if matches!(&self.peek_token, Token::RParent) {
+            self.next_token();
+            return Ok(params);
+        }
+
+        self.next_token();
+
+        params.push(self.parse_expression(Precedence::LOWEST)?);
+
+        while matches!(&self.peek_token,Token::Comma) {
+            self.next_token();
+            self.next_token();
+            params.push(self.parse_expression(Precedence::LOWEST)?);
+        }
+        self.expect_peek(TokenType::Rparen)?;
+        return Ok(params);
     }
 
 
@@ -244,6 +294,7 @@ impl<'a> Parser<'a> {
             Token::Plus |
             Token::Dash |
             Token::ForwardSlash |
+            Token::LParen |
             Token::Asterisk => true,
             _ => false
         };
@@ -280,7 +331,7 @@ impl ExtractValue for String {
         if let Token::Ident(value) = token {
             Ok(value)
         } else {
-            Err(ParserError::System) // or whatever error type you want
+            Err(ParserError::WrongToken { expected_token: TokenType::Identifier, actual_token: TokenType::from(&token) }) // or whatever error type you want
         }
     }
 }
@@ -296,7 +347,7 @@ impl ExtractValue for i64 {
         if let Token::Int(value) = token {
             Ok(value)
         } else {
-            Err(ParserError::System) // or whatever error type you want
+            Err(ParserError::WrongToken { expected_token: TokenType::Int, actual_token: TokenType::from(&token) }) // or whatever error type you want
         }
     }
 }

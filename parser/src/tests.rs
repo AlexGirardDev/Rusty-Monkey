@@ -1,6 +1,5 @@
 use lexer::lexer::Lexer;
 use lexer::token::Token;
-use lexer::token::Token::{Bool, Int};
 use crate::ast::{Expression, Program, Statement};
 use crate::parser::Parser;
 
@@ -20,9 +19,36 @@ fn test_program(tests: Vec<Test>) {
         let mut p = Parser::new(Lexer::new(&test.input));
         let program: Program = p.parse_program();
         check_and_print_errors(&p, &program);
-        assert_eq!(program.to_string(), test.expected_output)
+        assert_eq!(program.to_string(), test.expected_output, "Actual,Expected")
     }
 }
+
+#[test]
+fn test_fn_call_expressions() {
+    let input = "add(1, 2 * 3, 4+5)";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    check_and_print_errors(&p, &program);
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+    if let Statement::ExpressionStatement(Expression::CallExpression(id, params)) = statement {
+        if let Expression::Identifier(ident) = id.as_ref() {
+            assert_eq!(ident, "add");
+        } else {
+            panic!("Expected if expression statement, got {}", statement);
+        }
+
+        assert_eq!(params.len(), 3);
+        test_int_exp(&params[0], 1);
+        test_infix_exp(&params[1], Token::Asterisk, Token::Int(2), Token::Int(3));
+        test_infix_exp(&params[2], Token::Plus, Token::Int(4), Token::Int(5));
+        // if let Statement::ExpressionStatement(e) = &block.statements[0] {
+        //     test_infix_exp(e, Token::Plus, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
+        // } else {
+        //     panic!("Expected if ident statement with , got {}", statement);
+    }
+}
+
 
 #[test]
 fn test_fn_expressions() {
@@ -33,7 +59,7 @@ fn test_fn_expressions() {
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
     if let Statement::ExpressionStatement(i) = statement {
-        if let Expression::FnExpression(params,block) = i {
+        if let Expression::FnExpression(params, block) = i {
             assert_eq!(params.len(), 2);
             assert_eq!(String::from("x"), params[0]);
             assert_eq!(String::from("y"), params[1]);
@@ -137,6 +163,11 @@ fn test_op_prec_expressions() {
         Test::new("(5+5)*2", "((5 + 5) * 2)"),
         Test::new("2 / (5 + 5)", "(2 / (5 + 5))"),
         Test::new("!(true == true)", "(!(true == true))"),
+        Test::new("a + add(b * c) + d", "((a + add((b * c))) + d)"),
+        Test::new("add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"),
+        Test::new("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"),
+        // Test::new("a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"),
+        // Test::new("add(a * b[2], b[1], 2 * [1, 2][1])", "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"),
     ];
     test_program(tests);
 }
@@ -156,16 +187,16 @@ fn test_infix_expressions() {
     }
 
     let tests: Vec<InfixTest> = vec![
-        InfixTest::new("5 - 5", Int(5), Token::Dash, Int(5)),
-        InfixTest::new("5 * 5", Int(5), Token::Asterisk, Int(5)),
-        InfixTest::new("5 / 5", Int(5), Token::ForwardSlash, Int(5)),
-        InfixTest::new("5 > 5", Int(5), Token::GreaterThan, Int(5)),
-        InfixTest::new("5 < 5", Int(5), Token::LessThan, Int(5)),
-        InfixTest::new("5 == 5", Int(5), Token::Equal, Int(5)),
-        InfixTest::new("5 != 5", Int(5), Token::NotEqual, Int(5)),
-        InfixTest::new("true == true", Bool(true), Token::Equal, Bool(true)),
-        InfixTest::new("true != false", Bool(true), Token::NotEqual, Bool(false)),
-        InfixTest::new("false == false", Bool(false), Token::Equal, Bool(false)),
+        InfixTest::new("5 - 5", Token::Int(5), Token::Dash, Token::Int(5)),
+        InfixTest::new("5 * 5", Token::Int(5), Token::Asterisk, Token::Int(5)),
+        InfixTest::new("5 / 5", Token::Int(5), Token::ForwardSlash, Token::Int(5)),
+        InfixTest::new("5 > 5", Token::Int(5), Token::GreaterThan, Token::Int(5)),
+        InfixTest::new("5 < 5", Token::Int(5), Token::LessThan, Token::Int(5)),
+        InfixTest::new("5 == 5", Token::Int(5), Token::Equal, Token::Int(5)),
+        InfixTest::new("5 != 5", Token::Int(5), Token::NotEqual, Token::Int(5)),
+        InfixTest::new("true == true", Token::Bool(true), Token::Equal, Token::Bool(true)),
+        InfixTest::new("true != false", Token::Bool(true), Token::NotEqual, Token::Bool(false)),
+        InfixTest::new("false == false", Token::Bool(false), Token::Equal, Token::Bool(false)),
     ];
 
     for t in tests {
@@ -191,6 +222,14 @@ fn test_infix_exp(exp: &Expression, operator: Token, left_value: Token, right_va
     }
 }
 
+fn test_int_exp(exp: &Expression, value: i64) {
+    if let Expression::IntLiteral(i) = &exp {
+        assert_eq!(*i, value);
+    } else {
+        panic!("Expected int literal exp, got {}", exp);
+    }
+}
+
 #[test]
 fn test_prefix_expressions() {
     struct PrefixTest {
@@ -204,10 +243,10 @@ fn test_prefix_expressions() {
         }
     }
     let tests: Vec<PrefixTest> = vec![
-        PrefixTest::new("!5", Token::Bang, Int(5)),
-        PrefixTest::new("-15", Token::Dash, Int(15)),
-        PrefixTest::new("!true", Token::Bang, Bool(true)),
-        PrefixTest::new("!false", Token::Bang, Bool(false)),
+        PrefixTest::new("!5", Token::Bang, Token::Int(5)),
+        PrefixTest::new("-15", Token::Dash, Token::Int(15)),
+        PrefixTest::new("!true", Token::Bang, Token::Bool(true)),
+        PrefixTest::new("!false", Token::Bang, Token::Bool(false)),
     ];
 
     for t in tests {

@@ -1,3 +1,4 @@
+use std::fmt::write;
 use lexer::token::Token;
 
 #[derive(Debug, PartialEq)]
@@ -27,6 +28,7 @@ pub enum Expression {
     InfixExpression(Token, Box<Expression>, Box<Expression>),
     IfExpression(Box<Expression>, BlockStatement, Option<BlockStatement>),
     FnExpression(Vec<Identifier>, BlockStatement),
+    CallExpression(Box<Expression>, Vec<Expression>),
 }
 
 
@@ -45,7 +47,17 @@ impl std::fmt::Display for Expression {
                     None => write!(f, "if {} {}", cond, if_block)
                 }
             }
-            Expression::FnExpression(idents, blk) => { write!(f, "fn ({} ) {}", idents.join(", "), blk) }
+            Expression::FnExpression(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
+            Expression::CallExpression(func, params) => {
+                write!(f, "{}(", func)?;
+                for (i, param) in params.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ", )?;
+                    }
+                    write!(f, "{}", param)?;
+                }
+                write!(f, ")")
+            }
         };
     }
 }
@@ -97,6 +109,7 @@ impl Precedence {
             Token::LessThan | Token::GreaterThan => Precedence::LESS_GREATER,
             Token::Plus | Token::Dash => Precedence::SUM,
             Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
+            Token::LParen => Precedence::CALL,
             _ => Precedence::LOWEST
         };
     }
