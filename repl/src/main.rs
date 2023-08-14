@@ -1,5 +1,9 @@
+use std::io::Write;
+use std::os::linux::raw::stat;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
+use lexer::token::Token::Int;
+use parser::parse_error::ParserError::ParserError;
 use parser::parser::Parser;
 
 fn main() {
@@ -18,13 +22,20 @@ impl Repl {
         println!("Feel free to type in commands");
         loop {
             let mut line = String::new();
-            println!(">>");
+            print!(">>>");
+            let _ = std::io::stdout().flush();
             std::io::stdin().read_line(&mut line).unwrap();
-            let mut l = Lexer::new(&line);
-            let mut tok = l.next_token();
-            while tok != Token::Eof {
-                println!("{}", tok);
-                tok = l.next_token();
+            let mut parser = Parser::new(Lexer::new(&line));
+            let program = parser.parse_program();
+            if parser.parse_errors.is_empty() {
+                for statement in program.statements {
+                    println!("{}", statement);
+                }
+            } else {
+                println!("Ruh Roh, looks like we ran into some errors while parsing");
+                for e in parser.parse_errors {
+                    println!("{}", e);
+                }
             }
         }
     }

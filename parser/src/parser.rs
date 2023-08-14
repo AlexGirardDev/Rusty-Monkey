@@ -180,7 +180,6 @@ impl<'a> Parser<'a> {
                 Token::LParen => self.parse_call_expression(left_exp)?,
                 _ => self.parse_infix_expression(left_exp)?
             };
-            println!("{}", left_exp);
         }
 
         return Ok(left_exp);
