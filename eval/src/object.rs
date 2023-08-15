@@ -1,5 +1,6 @@
-use std::ptr::write;
+use std::fmt;
 
+#[derive(PartialEq, Debug)]
 pub enum Object {
     String(String),
     Int(i64),

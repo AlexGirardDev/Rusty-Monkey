@@ -1,4 +1,4 @@
 #![allow(dead_code)]
-pub mod eval;
-pub mod object;
+pub mod evaluator;
+mod object;
 mod tests;
