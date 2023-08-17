@@ -31,6 +31,31 @@ fn test_eval_int_exp() {
     }
 }
 
+#[test]
+fn test_eval_bool_exp() {
+    struct Test {
+        input: String,
+        expected_output: Object,
+    }
+    impl Test {
+        pub fn new(input: &str, output: Object) -> Self {
+            Test {
+                input: String::from(input),
+                expected_output: output,
+            }
+        }
+    }
+
+    let tests: Vec<Test> = vec![
+        Test::new("true", Object::Bool(true)),
+        Test::new("false", Object::Bool(false)),
+    ];
+    for test in tests {
+        let obj = test_eval(test.input);
+        assert_eq!(obj, test.expected_output);
+    }
+}
+
 fn test_eval(input: String) -> Object {
     let program = get_program(input);
     return match eval(program) {

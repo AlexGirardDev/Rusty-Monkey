@@ -6,6 +6,7 @@ pub fn eval(program: Program) -> Option<Object> {
         match st {
             Statement::ExpressionStatement(exp) => match exp {
                 Expression::IntLiteral(i) => return Some(Object::Int(i)),
+                Expression::Bool(b) => return Some(Object::Bool(b)),
                 _ => {}
             },
             _ => {}
