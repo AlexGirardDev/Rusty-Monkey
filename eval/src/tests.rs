@@ -7,60 +7,41 @@ use std::collections::hash_map::Values;
 use std::os::linux::raw::ino_t;
 
 #[test]
-fn test_eval_int_exp() {
-    struct Test {
-        input: String,
-        expected_output: Object,
-    }
-    impl Test {
-        pub fn new(input: &str, output: Object) -> Self {
-            Test {
-                input: String::from(input),
-                expected_output: output,
-            }
-        }
-    }
-
-    let tests: Vec<Test> = vec![
-        Test::new("5", Object::Int(5)),
-        Test::new("10", Object::Int(10)),
+fn test_eval_bang_operator_exp() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("!true", Object::Bool(false)),
+        SingleValueTest::new("!false", Object::Bool(true)),
+        SingleValueTest::new("!5", Object::Bool(false)),
+        SingleValueTest::new("!!true", Object::Bool(true)),
+        SingleValueTest::new("!!!!!!!!!!!!!!!!!!!!!!!!false", Object::Bool(false)),
+        SingleValueTest::new("!!5", Object::Bool(true)),
     ];
-    for test in tests {
-        let obj = test_eval(test.input);
-        assert_eq!(obj, test.expected_output);
-    }
+    SingleValueTest::test(tests);
+}
+
+#[test]
+fn test_eval_int_exp() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("5", Object::Int(5)),
+        SingleValueTest::new("10", Object::Int(10)),
+    ];
+    SingleValueTest::test(tests);
 }
 
 #[test]
 fn test_eval_bool_exp() {
-    struct Test {
-        input: String,
-        expected_output: Object,
-    }
-    impl Test {
-        pub fn new(input: &str, output: Object) -> Self {
-            Test {
-                input: String::from(input),
-                expected_output: output,
-            }
-        }
-    }
-
-    let tests: Vec<Test> = vec![
-        Test::new("true", Object::Bool(true)),
-        Test::new("false", Object::Bool(false)),
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("true", Object::Bool(true)),
+        SingleValueTest::new("false", Object::Bool(false)),
     ];
-    for test in tests {
-        let obj = test_eval(test.input);
-        assert_eq!(obj, test.expected_output);
-    }
+    SingleValueTest::test(tests);
 }
 
 fn test_eval(input: String) -> Object {
     let program = get_program(input);
     return match eval(program) {
-        Some(o) => o,
-        None => panic!("wowee"),
+        Ok(o) => o,
+        Err(e) => panic!("{}", e),
     };
 }
 
@@ -90,5 +71,25 @@ fn check_and_print_errors(parser: &Parser, program: &Program) {
         println!("============");
         println!(" - {}", program);
         panic!("ruh roh, program had errors")
+    }
+}
+
+struct SingleValueTest {
+    input: String,
+    expected_output: Object,
+}
+
+impl SingleValueTest {
+    pub fn new(input: &str, output: Object) -> Self {
+        SingleValueTest {
+            input: String::from(input),
+            expected_output: output,
+        }
+    }
+    pub fn test(tests: Vec<SingleValueTest>) {
+        for test in tests {
+            let obj = test_eval(test.input);
+            assert_eq!(obj, test.expected_output);
+        }
     }
 }
