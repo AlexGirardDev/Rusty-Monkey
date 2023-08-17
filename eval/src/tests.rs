@@ -24,6 +24,8 @@ fn test_eval_int_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("5", Object::Int(5)),
         SingleValueTest::new("10", Object::Int(10)),
+        SingleValueTest::new("-5", Object::Int(-5)),
+        SingleValueTest::new("-10", Object::Int(-10)),
     ];
     SingleValueTest::test(tests);
 }

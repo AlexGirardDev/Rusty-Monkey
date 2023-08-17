@@ -18,7 +18,7 @@ pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
     return match exp {
         Expression::IntLiteral(i) => Ok(Object::Int(*i)),
         Expression::Bool(b) => Ok(Object::Bool(*b)),
-        Expression::PrefixExpression(t,right) => eval_prefix_expression(t,right),
+        Expression::PrefixExpression(t, right) => eval_prefix_expression(t, right),
         _ => Ok(Object::Null)
     };
 }
@@ -26,6 +26,7 @@ pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
 fn eval_prefix_expression(token: &Token, exp: &Box<Expression>) -> Result<Object, EvalError> {
     return match token {
         Token::Bang => Ok(eval_bang_operator_expression(eval_expression(exp.as_ref())?)?),
+        Token::Dash => Ok(eval_dash_operator_expression(eval_expression(exp.as_ref())?)?),
         _ => Ok(Object::Null)
     };
 }
@@ -37,4 +38,11 @@ fn eval_bang_operator_expression(right: Object) -> Result<Object, EvalError> {
         _ => false
     };
     return Ok(Object::Bool(result));
+}
+
+fn eval_dash_operator_expression(right: Object) -> Result<Object, EvalError> {
+    return match right {
+        Object::Int(i) => Ok(Object::Int(-i)),
+        _ => Ok(Object::Null)
+    };
 }
