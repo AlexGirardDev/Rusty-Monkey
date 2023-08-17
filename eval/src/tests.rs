@@ -1,10 +1,10 @@
-use std::collections::hash_map::Values;
-use std::os::linux::raw::ino_t;
+use crate::eval::eval;
+use crate::object::Object;
 use lexer::lexer::Lexer;
 use parser::ast::Program;
 use parser::parser::Parser;
-use crate::evaluator::eval;
-use crate::object::Object;
+use std::collections::hash_map::Values;
+use std::os::linux::raw::ino_t;
 
 #[test]
 fn test_eval_int_exp() {
@@ -14,7 +14,10 @@ fn test_eval_int_exp() {
     }
     impl Test {
         pub fn new(input: &str, output: Object) -> Self {
-            Test { input: String::from(input), expected_output: output }
+            Test {
+                input: String::from(input),
+                expected_output: output,
+            }
         }
     }
 
@@ -32,10 +35,9 @@ fn test_eval(input: String) -> Object {
     let program = get_program(input);
     return match eval(program) {
         Some(o) => o,
-        None => panic!("wowee")
+        None => panic!("wowee"),
     };
 }
-
 
 fn get_program(input: String) -> Program {
     let mut p = Parser::new(Lexer::new(&input));
