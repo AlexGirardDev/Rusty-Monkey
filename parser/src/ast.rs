@@ -1,4 +1,3 @@
-use std::fmt::write;
 use lexer::token::Token;
 
 #[derive(Debug, PartialEq)]

@@ -1,11 +1,7 @@
 use eval::eval::eval;
 use lexer::lexer::Lexer;
-use lexer::token::Token;
-use lexer::token::Token::Int;
-use parser::parse_error::ParserError::ParserError;
 use parser::parser::Parser;
 use std::io::Write;
-use std::os::linux::raw::stat;
 
 fn main() {
     Repl::start();

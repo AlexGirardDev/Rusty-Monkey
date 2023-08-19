@@ -7,12 +7,12 @@ use parser::parser::Parser;
 #[test]
 fn test_eval_bang_operator_exp() {
     let tests: Vec<SingleValueTest> = vec![
-        SingleValueTest::new("!true", Object::Bool(false)),
-        SingleValueTest::new("!false", Object::Bool(true)),
-        SingleValueTest::new("!5", Object::Bool(false)),
-        SingleValueTest::new("!!true", Object::Bool(true)),
-        SingleValueTest::new("!!!!!!!!!!!!!!!!!!!!!!!!false", Object::Bool(false)),
-        SingleValueTest::new("!!5", Object::Bool(true)),
+        SingleValueTest::new("!true", false),
+        SingleValueTest::new("!false", true),
+        SingleValueTest::new("!5", false),
+        SingleValueTest::new("!!true", true),
+        SingleValueTest::new("!!!!!!!!!!!!!!!!!!!!!!!!false", false),
+        SingleValueTest::new("!!5", true),
     ];
     SingleValueTest::test(tests);
 }
@@ -20,22 +20,22 @@ fn test_eval_bang_operator_exp() {
 #[test]
 fn test_eval_int_exp() {
     let tests: Vec<SingleValueTest> = vec![
-        SingleValueTest::new("5", Object::Int(5)),
-        SingleValueTest::new("10", Object::Int(10)),
-        SingleValueTest::new("5 + 5 + 5 + 5 - 10", Object::Int(10)),
-        SingleValueTest::new("2*2*2*2*2", Object::Int(32)),
-        SingleValueTest::new("-50+100+-50", Object::Int(0)),
-        SingleValueTest::new("5+5+5+5-10", Object::Int(10)),
-        SingleValueTest::new("2*2*2*2*2", Object::Int(32)),
-        SingleValueTest::new("-50+100+ -50", Object::Int(0)),
-        SingleValueTest::new("5*2+10", Object::Int(20)),
-        SingleValueTest::new("5+2*10", Object::Int(25)),
-        SingleValueTest::new("20 + 2 * -10", Object::Int(0)),
-        SingleValueTest::new("50/2 * 2 +10", Object::Int(60)),
-        SingleValueTest::new("2*(5+10)", Object::Int(30)),
-        SingleValueTest::new("3*3*3+10", Object::Int(37)),
-        SingleValueTest::new("3*(3*3)+10", Object::Int(37)),
-        SingleValueTest::new("(5+10*2+15/3)*2+-10", Object::Int(50)),
+        SingleValueTest::new("5", 5),
+        SingleValueTest::new("10", 10),
+        SingleValueTest::new("5 + 5 + 5 + 5 - 10", 10),
+        SingleValueTest::new("2*2*2*2*2", 32),
+        SingleValueTest::new("-50+100+-50", 0),
+        SingleValueTest::new("5+5+5+5-10", 10),
+        SingleValueTest::new("2*2*2*2*2", 32),
+        SingleValueTest::new("-50+100+ -50", 0),
+        SingleValueTest::new("5*2+10", 20),
+        SingleValueTest::new("5+2*10", 25),
+        SingleValueTest::new("20 + 2 * -10", 0),
+        SingleValueTest::new("50/2 * 2 +10", 60),
+        SingleValueTest::new("2*(5+10)", 30),
+        SingleValueTest::new("3*3*3+10", 37),
+        SingleValueTest::new("3*(3*3)+10", 37),
+        SingleValueTest::new("(5+10*2+15/3)*2+-10", 50),
     ];
     SingleValueTest::test(tests);
 }
@@ -45,6 +45,11 @@ fn test_eval_bool_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("true", Object::Bool(true)),
         SingleValueTest::new("false", Object::Bool(false)),
+		SingleValueTest::new("1<2", true),
+		SingleValueTest::new("1>2", false),
+		SingleValueTest::new("1<1", false),
+		SingleValueTest::new("1>1", false),
+		SingleValueTest::new("1==1", true),
     ];
     SingleValueTest::test(tests);
 }
@@ -92,10 +97,10 @@ struct SingleValueTest {
 }
 
 impl SingleValueTest {
-    pub fn new(input: &str, output: Object) -> Self {
+    pub fn new(input: &str, output: impl Into<Object>) -> Self {
         SingleValueTest {
             input: String::from(input),
-            expected_output: output,
+            expected_output: output.into(),
         }
     }
     pub fn test(tests: Vec<SingleValueTest>) {

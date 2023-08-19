@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-#[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Ident(String),
@@ -17,7 +16,9 @@ pub enum Token {
     Equal,
     NotEqual,
     LessThan,
+    LessThanEqual,
     GreaterThan,
+    GreaterThanEqual,
 
     Plus,
     Comma,
@@ -36,7 +37,7 @@ pub enum Token {
     Bool(bool),
 }
 
-/**/impl Display for Token {
+impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
             Token::Ident(x) => write!(f, "{}", x),
@@ -51,7 +52,9 @@ pub enum Token {
             Token::Equal => write!(f, "=="),
             Token::NotEqual => write!(f, "!="),
             Token::LessThan => write!(f, "<"),
+            Token::LessThanEqual => write!(f, "<="),
             Token::GreaterThan => write!(f, ">"),
+            Token::GreaterThanEqual => write!(f, ">="),
             Token::Plus => write!(f, "+"),
             Token::Comma => write!(f, ","),
             Token::Semicolon => write!(f, ";"),

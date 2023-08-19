@@ -2,13 +2,30 @@ use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use crate::eval_error::EvalError;
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug,PartialEq)]
 pub enum Object {
     String(String),
     Int(i64),
     Bool(bool),
     Null,
 
+}
+
+impl From<i64> for Object {
+    fn from(v: i64) -> Self {
+        Object::Int(v)
+    }
+}
+impl From<bool> for Object {
+    fn from(v: bool) -> Self {
+        Object::Bool(v)
+    }
+}
+
+impl<'a> From<&'a str> for Object {
+    fn from(s: &'a str) -> Self {
+        Object::String(String::from(s))
+    }
 }
 
 impl Add for Object {
@@ -54,6 +71,7 @@ impl Mul for Object {
         }
     }
 }
+
 
 impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

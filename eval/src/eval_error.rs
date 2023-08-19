@@ -1,11 +1,15 @@
-use std::{fmt};
+use std::{fmt, io::Write};
+use lexer::token::Token;
+
 use crate::object::Object;
 
 #[derive(Debug)]
 pub enum EvalError {
     GenericError(String),
     InvalidIntOperation(Object,String),
-    InvalidOperation(Object,String)
+    InvalidOperation(Object,String),
+    IncompatibleTypes(Object,Object,String),
+    WrongComparisonToken(Token)
     
 }
 
@@ -17,7 +21,9 @@ impl fmt::Display for EvalError {
         match self {
             EvalError::GenericError(str) => write!(f, "{}", str),
             EvalError::InvalidIntOperation(value,t) => write!(f,"{} is an invalid int operation with {}", value,t),
-            EvalError::InvalidOperation(lhs, opp) =>  write!(f,"{} does not support the {} opperation",lhs,opp)
+            EvalError::InvalidOperation(lhs, opp) =>  write!(f,"{} does not support the {} opperation",lhs,opp),
+            EvalError::IncompatibleTypes(lhs, rhs, opp) => write!(f,"cannot preform {} between {} and {}",opp,lhs,rhs),
+            EvalError::WrongComparisonToken(t) => write!(f,"{} is not a valid comparison token",t)
         }
     }
 }

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 use crate::ast::{Expression, Program, Statement};
@@ -8,8 +9,12 @@ struct Test {
     expected_output: String,
 }
 
-impl Test {
-    pub fn new(input: &str, output: &str) -> Self {
+trait TraitName {
+     fn new(input: &str, output: &str) -> Self;
+}
+
+impl TraitName for Test {
+     fn new(input: &str, output: &str) -> Self {
         Test { input: String::from(input), expected_output: String::from(output) }
     }
 }

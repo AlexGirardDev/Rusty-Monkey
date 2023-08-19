@@ -1,6 +1,6 @@
-use std::{fmt, io};
+use std::fmt;
+ 
 use lexer::token::Token;
-use crate::ast::Expression;
 
 #[derive(Debug)]
 pub enum ParserError {
@@ -43,7 +43,9 @@ impl From<&Token> for TokenType {
             Token::Equal => TokenType::Equal,
             Token::NotEqual => TokenType::NotEqual,
             Token::LessThan => TokenType::LessThan,
+            Token::LessThanEqual => TokenType::LessThanEqual,
             Token::GreaterThan => TokenType::GreaterThan,
+            Token::GreaterThanEqual => TokenType::GreaterThanEqual,
             Token::Plus => TokenType::Plus,
             Token::Comma => TokenType::Comma,
             Token::Semicolon => TokenType::Semicolon,
@@ -76,7 +78,9 @@ impl fmt::Display for TokenType {
             TokenType::Equal => write!(f, "="),
             TokenType::NotEqual => write!(f, "!="),
             TokenType::LessThan => write!(f, "<"),
+            TokenType::LessThanEqual => write!(f, "<="),
             TokenType::GreaterThan => write!(f, ">"),
+            TokenType::GreaterThanEqual => write!(f, ">="),
             TokenType::Plus => write!(f, "+"),
             TokenType::Comma => write!(f, ","),
             TokenType::Semicolon => write!(f, ";"),
@@ -100,6 +104,8 @@ pub enum TokenType {
     Equal,
     NotEqual,
     LessThan,
+    LessThanEqual,
+    GreaterThanEqual,
     GreaterThan,
     Plus,
     Comma,

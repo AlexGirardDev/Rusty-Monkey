@@ -1,11 +1,7 @@
-use std::os::unix::raw::mode_t;
-use std::string;
-use std::sync::Mutex;
-use crate::ast::{Identifier, Program, Statement, Expression, Precedence, BlockStatement};
+use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
+use crate::parse_error::{ParserError, TokenType};
 use lexer::lexer::Lexer;
 use lexer::token::Token;
-use crate::parse_error::{ParserError, TokenType};
-
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
@@ -49,7 +45,7 @@ impl<'a> Parser<'a> {
         let statement = match &self.cur_token {
             Token::Let => self.parse_let_statement(),
             Token::Return => self.parse_return_statement(),
-            _ => self.parse_expression_statement()
+            _ => self.parse_expression_statement(),
         };
 
         return match statement {
@@ -60,7 +56,7 @@ impl<'a> Parser<'a> {
                     self.parse_errors.push(e);
                     None
                 }
-            }
+            },
         };
     }
 
@@ -94,13 +90,15 @@ impl<'a> Parser<'a> {
         return Ok(Statement::ExpressionStatement(expression));
     }
 
-
     fn parse_fn_expression(&mut self) -> Result<Expression, ParserError> {
         self.expect_peek(TokenType::Lparen)?;
         let params = self.parse_fn_params()?;
         self.expect_peek(TokenType::LSquirly)?;
 
-        return Ok(Expression::FnExpression(params, self.parse_block_statement()?));
+        return Ok(Expression::FnExpression(
+            params,
+            self.parse_block_statement()?,
+        ));
     }
 
     fn parse_fn_params(&mut self) -> Result<Vec<Identifier>, ParserError> {
@@ -118,7 +116,7 @@ impl<'a> Parser<'a> {
             return Err(self.peek_error(TokenType::Identifier));
         }
 
-        while matches!(&self.peek_token,Token::Comma) {
+        while matches!(&self.peek_token, Token::Comma) {
             self.next_token();
             self.next_token();
 
@@ -144,9 +142,15 @@ impl<'a> Parser<'a> {
         let else_block = if let Token::Else = &self.cur_token {
             self.next_token();
             Some(self.parse_block_statement()?)
-        } else { None };
+        } else {
+            None
+        };
 
-        return Ok(Expression::IfExpression(Box::new(cond), if_block, else_block));
+        return Ok(Expression::IfExpression(
+            Box::new(cond),
+            if_block,
+            else_block,
+        ));
     }
 
     fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
@@ -169,16 +173,14 @@ impl<'a> Parser<'a> {
 
         let mut left_exp = self.parse_prefix_expression()?;
 
-        while !matches!(self.peek_token, Token::Semicolon)
-            && precedence < self.peek_precedence()
-        {
+        while !matches!(self.peek_token, Token::Semicolon) && precedence < self.peek_precedence() {
             if !Parser::is_infix_token(&self.peek_token) {
                 return Ok(left_exp);
             }
             self.next_token();
             left_exp = match &self.cur_token {
                 Token::LParen => self.parse_call_expression(left_exp)?,
-                _ => self.parse_infix_expression(left_exp)?
+                _ => self.parse_infix_expression(left_exp)?,
             };
         }
 
@@ -186,13 +188,12 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
-        if let Expression::Identifier(i) = &left_side {} else {
+        let Expression::Identifier(_) = &left_side else {
             return Err(ParserError::ParserError(format!("Was was expecting ident expression but got: {}", left_side)));
         };
         let params = self.parse_call_arguments()?;
         Ok(Expression::CallExpression(Box::new(left_side), params))
     }
-
 
     fn parse_call_arguments(&mut self) -> Result<Vec<Expression>, ParserError> {
         let mut params = Vec::<Expression>::new();
@@ -205,7 +206,7 @@ impl<'a> Parser<'a> {
 
         params.push(self.parse_expression(Precedence::LOWEST)?);
 
-        while matches!(&self.peek_token,Token::Comma) {
+        while matches!(&self.peek_token, Token::Comma) {
             self.next_token();
             self.next_token();
             params.push(self.parse_expression(Precedence::LOWEST)?);
@@ -213,7 +214,6 @@ impl<'a> Parser<'a> {
         self.expect_peek(TokenType::Rparen)?;
         return Ok(params);
     }
-
 
     fn parse_identifier(&self, ident: &String) -> Result<Expression, ParserError> {
         return Ok(Expression::Identifier(ident.clone()));
@@ -226,7 +226,6 @@ impl<'a> Parser<'a> {
     fn parse_bool(&self, b: bool) -> Result<Expression, ParserError> {
         return Ok(Expression::Bool(b));
     }
-
 
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
         match &self.cur_token {
@@ -241,7 +240,10 @@ impl<'a> Parser<'a> {
 
         let token = self.cur_token.clone();
         self.next_token();
-        return Ok(Expression::PrefixExpression(token, Box::new(self.parse_expression(Precedence::PREFIX)?)));
+        return Ok(Expression::PrefixExpression(
+            token,
+            Box::new(self.parse_expression(Precedence::PREFIX)?),
+        ));
     }
 
     fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
@@ -257,7 +259,11 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         let right_exp = self.parse_expression(prec)?;
-        return Ok(Expression::InfixExpression(token, Box::new(left_side), Box::new(right_exp)));
+        return Ok(Expression::InfixExpression(
+            token,
+            Box::new(left_side),
+            Box::new(right_exp),
+        ));
     }
 
     fn peek_precedence(&self) -> i8 {
@@ -270,36 +276,38 @@ impl<'a> Parser<'a> {
 
     fn is_prefix_token(token: &Token) -> bool {
         return match token {
-            Token::Dash |
-            Token::Bang |
-            Token::Int(_) |
-            Token::Ident(_) |
-            Token::Bool(_) |
-            Token::LParen |
-            Token::LBracket |
-            Token::If |
-            Token::Function
-            => true,
-            _ => false
+            Token::Dash
+            | Token::Bang
+            | Token::Int(_)
+            | Token::Ident(_)
+            | Token::Bool(_)
+            | Token::LParen
+            | Token::LBracket
+            | Token::If
+            | Token::Function => true,
+            _ => false,
         };
     }
 
     fn is_infix_token(token: &Token) -> bool {
         return match token {
-            Token::Equal |
-            Token::NotEqual |
-            Token::LessThan |
-            Token::GreaterThan |
-            Token::Plus |
-            Token::Dash |
-            Token::ForwardSlash |
-            Token::LParen |
-            Token::Asterisk => true,
-            _ => false
+            Token::Equal
+            | Token::NotEqual
+            | Token::LessThan
+            | Token::GreaterThan
+            | Token::Plus
+            | Token::Dash
+            | Token::ForwardSlash
+            | Token::LParen
+            | Token::Asterisk => true,
+            _ => false,
         };
     }
 
-    fn expect_peek<T: ExtractValue>(&mut self, expected_token: TokenType) -> Result<T, ParserError> {
+    fn expect_peek<T: ExtractValue>(
+        &mut self,
+        expected_token: TokenType,
+    ) -> Result<T, ParserError> {
         if TokenType::from(&self.peek_token) == expected_token {
             self.next_token();
             T::extract(self.cur_token.clone())
@@ -308,21 +316,25 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek_error(&self, expected_token: TokenType) -> ParserError
-    {
-        return ParserError::WrongPeekToken { expected_token, actual_token: TokenType::from(&self.peek_token) };
+    fn peek_error(&self, expected_token: TokenType) -> ParserError {
+        return ParserError::WrongPeekToken {
+            expected_token,
+            actual_token: TokenType::from(&self.peek_token),
+        };
     }
 
-    fn cur_error(&self, expected_token: TokenType) -> ParserError
-    {
-        return ParserError::WrongCurrentToken { expected_token, actual_token: TokenType::from(&self.cur_token) };
+    fn cur_error(&self, expected_token: TokenType) -> ParserError {
+        return ParserError::WrongCurrentToken {
+            expected_token,
+            actual_token: TokenType::from(&self.cur_token),
+        };
     }
 }
 
 pub trait ExtractValue {
     fn extract(token: Token) -> Result<Self, ParserError>
-        where
-            Self: Sized;
+    where
+        Self: Sized;
 }
 
 impl ExtractValue for String {
@@ -330,7 +342,10 @@ impl ExtractValue for String {
         if let Token::Ident(value) = token {
             Ok(value)
         } else {
-            Err(ParserError::WrongToken { expected_token: TokenType::Identifier, actual_token: TokenType::from(&token) }) // or whatever error type you want
+            Err(ParserError::WrongToken {
+                expected_token: TokenType::Identifier,
+                actual_token: TokenType::from(&token),
+            }) // or whatever error type you want
         }
     }
 }
@@ -346,7 +361,10 @@ impl ExtractValue for i64 {
         if let Token::Int(value) = token {
             Ok(value)
         } else {
-            Err(ParserError::WrongToken { expected_token: TokenType::Int, actual_token: TokenType::from(&token) }) // or whatever error type you want
+            Err(ParserError::WrongToken {
+                expected_token: TokenType::Int,
+                actual_token: TokenType::from(&token),
+            }) // or whatever error type you want
         }
     }
 }
