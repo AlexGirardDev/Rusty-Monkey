@@ -1,8 +1,12 @@
-use std::{fmt, io};
+use std::{fmt};
+use crate::object::Object;
 
 #[derive(Debug)]
 pub enum EvalError {
     GenericError(String),
+    InvalidIntOperation(Object,String),
+    InvalidOperation(Object,String)
+    
 }
 
 
@@ -12,6 +16,8 @@ impl fmt::Display for EvalError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             EvalError::GenericError(str) => write!(f, "{}", str),
+            EvalError::InvalidIntOperation(value,t) => write!(f,"{} is an invalid int operation with {}", value,t),
+            EvalError::InvalidOperation(lhs, opp) =>  write!(f,"{} does not support the {} opperation",lhs,opp)
         }
     }
 }

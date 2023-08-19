@@ -1,4 +1,6 @@
 use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
+use crate::eval_error::EvalError;
 
 #[derive(PartialEq, Debug)]
 pub enum Object {
@@ -7,6 +9,50 @@ pub enum Object {
     Bool(bool),
     Null,
 
+}
+
+impl Add for Object {
+    type Output = Result<Self, EvalError>;
+
+    fn add(self, rhs: Self) -> Result<Self, EvalError> {
+        match (self, rhs) {
+            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l + r)),
+            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"add".to_string()))
+        }
+    }
+}
+
+impl Sub for Object {
+    type Output = Result<Self, EvalError>;
+
+    fn sub(self, rhs: Self) -> Result<Self, EvalError> {
+        match (self, rhs) {
+            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l - r)),
+            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"subtract".to_string()))
+        }
+    }
+}
+
+impl Div for Object {
+    type Output = Result<Self, EvalError>;
+
+    fn div(self, rhs: Self) -> Result<Self, EvalError> {
+        match (self, rhs) {
+            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l / r)),
+            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"divide".to_string()))
+        }
+    }
+}
+
+impl Mul for Object {
+    type Output = Result<Self, EvalError>;
+
+    fn mul(self, rhs: Self) -> Result<Self, EvalError> {
+        match (self, rhs) {
+            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l * r)),
+            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"multiply".to_string()))
+        }
+    }
 }
 
 impl fmt::Display for Object {

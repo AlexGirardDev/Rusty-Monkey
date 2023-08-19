@@ -3,8 +3,6 @@ use crate::object::Object;
 use lexer::lexer::Lexer;
 use parser::ast::Program;
 use parser::parser::Parser;
-use std::collections::hash_map::Values;
-use std::os::linux::raw::ino_t;
 
 #[test]
 fn test_eval_bang_operator_exp() {
@@ -24,8 +22,20 @@ fn test_eval_int_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("5", Object::Int(5)),
         SingleValueTest::new("10", Object::Int(10)),
-        SingleValueTest::new("-5", Object::Int(-5)),
-        SingleValueTest::new("-10", Object::Int(-10)),
+        SingleValueTest::new("5 + 5 + 5 + 5 - 10", Object::Int(10)),
+        SingleValueTest::new("2*2*2*2*2", Object::Int(32)),
+        SingleValueTest::new("-50+100+-50", Object::Int(0)),
+        SingleValueTest::new("5+5+5+5-10", Object::Int(10)),
+        SingleValueTest::new("2*2*2*2*2", Object::Int(32)),
+        SingleValueTest::new("-50+100+ -50", Object::Int(0)),
+        SingleValueTest::new("5*2+10", Object::Int(20)),
+        SingleValueTest::new("5+2*10", Object::Int(25)),
+        SingleValueTest::new("20 + 2 * -10", Object::Int(0)),
+        SingleValueTest::new("50/2 * 2 +10", Object::Int(60)),
+        SingleValueTest::new("2*(5+10)", Object::Int(30)),
+        SingleValueTest::new("3*3*3+10", Object::Int(37)),
+        SingleValueTest::new("3*(3*3)+10", Object::Int(37)),
+        SingleValueTest::new("(5+10*2+15/3)*2+-10", Object::Int(50)),
     ];
     SingleValueTest::test(tests);
 }
