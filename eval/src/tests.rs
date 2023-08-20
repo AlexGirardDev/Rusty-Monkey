@@ -50,6 +50,10 @@ fn test_eval_bool_exp() {
 		SingleValueTest::new("1<1", false),
 		SingleValueTest::new("1>1", false),
 		SingleValueTest::new("1==1", true),
+		SingleValueTest::new("(1<2) == true", true),
+		SingleValueTest::new("(1>2) == true", false),
+		SingleValueTest::new("(1<2) != true", false),
+		SingleValueTest::new("(1>2) != true", true),
     ];
     SingleValueTest::test(tests);
 }
