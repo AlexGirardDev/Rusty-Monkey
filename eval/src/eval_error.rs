@@ -1,4 +1,4 @@
-use std::{fmt, io::Write};
+use std::fmt;
 use lexer::token::Token;
 
 use crate::object::Object;
