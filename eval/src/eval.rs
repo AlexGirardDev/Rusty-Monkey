@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-use crate::eval_error::EvalError;
 use crate::object::Object;
-use lexer::token::{Token, self};
-use parser::ast::{Expression, Program, Statement};
+use crate::eval_error::EvalError;
+use lexer::token::Token;
+use parser::ast::{BlockStatement, Expression, Statement};
 
-pub fn eval(program: Program) -> Result<Object, EvalError> {
-    for st in program.statements {
+pub fn eval(program: &BlockStatement) -> Result<Object, EvalError> {
+    for st in &program.statements {
         match st {
             Statement::ExpressionStatement(exp) => return eval_expression(&exp),
             _ => {}
@@ -20,19 +20,37 @@ pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
         Expression::IntLiteral(i) => Ok((*i).into()),
         Expression::Bool(b) => Ok((*b).into()),
         Expression::PrefixExpression(t, right) => eval_prefix_expression(t, right),
-        Expression::InfixExpression(t, left, right) => eval_infix_expression(t, left, right),
+        Expression::InfixExpression(t, left, right) => {
+            eval_infix_objects(t, eval_expression(left)?, eval_expression(right)?)
+        }
+        Expression::IfExpression(con, if_exp, else_exp) => {
+            eval_if_else_expression(con, if_exp, else_exp)
+        }
         _ => Ok(Object::Null),
     };
 }
 
-fn eval_infix_expression(
-    token: &Token,
-    left_exp: &Box<Expression>,
-    right_exp: &Box<Expression>,
+fn eval_if_else_expression(
+    cond: &Box<Expression>,
+    if_exp: &BlockStatement,
+    else_exp: &Option<BlockStatement>,
 ) -> Result<Object, EvalError> {
-    let left = eval_expression(left_exp)?;
-    let right = eval_expression(right_exp)?;
-    eval_infix_objects(token, left, right)
+    if is_truthy(eval_expression(cond.as_ref())?) {
+        eval(&if_exp)
+    } else {
+        match else_exp {
+            Some(exp) => eval(&exp),
+            None => Ok(Object::Null),
+        }
+    }
+}
+
+fn is_truthy(obj : impl Into<Object>) -> bool{
+    match obj.into()  {
+        Object::Bool(b)=>b,
+        Object::Null => false,
+        _=> true
+    }
 }
 
 fn eval_infix_objects(token: &Token, left: Object, right: Object) -> Result<Object, EvalError> {
@@ -41,13 +59,15 @@ fn eval_infix_objects(token: &Token, left: Object, right: Object) -> Result<Obje
         Token::Plus => left + right,
         Token::ForwardSlash => left / right,
         Token::Asterisk => left * right,
-        Token::NotEqual => eval_obj_comparison(left, right,ObjectComparison::NotEqual ),
-        Token::Equal => eval_obj_comparison(left, right,ObjectComparison::Equal ),
-        Token::LessThan => eval_obj_comparison(left, right,ObjectComparison::LessThan ),
-        Token::LessThanEqual => eval_obj_comparison(left, right,ObjectComparison::LessThanEqual ),
-        Token::GreaterThan => eval_obj_comparison(left, right,ObjectComparison::GreaterThan ),
-        Token::GreaterThanEqual => eval_obj_comparison(left, right,ObjectComparison::GreaterThanEqual ),
-        t => Err(EvalError::IncompatibleTypes(left,right,t.to_string())), 
+        Token::NotEqual => eval_obj_comparison(left, right, ObjectComparison::NotEqual),
+        Token::Equal => eval_obj_comparison(left, right, ObjectComparison::Equal),
+        Token::LessThan => eval_obj_comparison(left, right, ObjectComparison::LessThan),
+        Token::LessThanEqual => eval_obj_comparison(left, right, ObjectComparison::LessThanEqual),
+        Token::GreaterThan => eval_obj_comparison(left, right, ObjectComparison::GreaterThan),
+        Token::GreaterThanEqual => {
+            eval_obj_comparison(left, right, ObjectComparison::GreaterThanEqual)
+        }
+        t => Err(EvalError::IncompatibleTypes(left, right, t.to_string())),
     };
 }
 
@@ -69,53 +89,27 @@ fn eval_obj_comparison(
                 ObjectComparison::GreaterThanEqual => l >= r,
                 ObjectComparison::LessThan => l < r,
                 ObjectComparison::LessThanEqual => l <= r,
-                _ => false
+                _ => false,
             };
             result.into()
-        },
+        }
         ObjectComparison::Equal | ObjectComparison::NotEqual => {
             let result = match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => l == r,
                 (Object::String(l), Object::String(r)) => l == r,
                 (Object::Int(l), Object::Int(r)) => l == r,
                 (Object::Null, Object::Null) => true,
-                (l, r) => return Err(EvalError::IncompatibleTypes(l, r,comp.to_string()) ),
+                (l, r) => return Err(EvalError::IncompatibleTypes(l, r, comp.to_string())),
             };
-              match  comp {
+            match comp {
                 ObjectComparison::NotEqual => !result,
-                _ => result
+                _ => result,
             }
         }
-
     };
     Ok(r.into())
 }
 
-// fn eval_object_gt(left: Object, right: Object, inclusive: bool) -> Result<Object, EvalError> {
-//     if let (Object::Int(l), Object::Int(r)) = (left, right) {
-//         let result = (inclusive && l == r) || l > r;
-//         Ok(result.into())
-//     } else {
-//         Err(EvalError::IncompatibleTypes(left, right, ">".to_string()))
-//     }
-// }
-// fn eval_object_lt(left: Object, right: Object, inclusive: bool) -> Result<Object, EvalError> {
-//     if let (Object::Int(l), Object::Int(r)) = (left, right) {
-//         let result = (inclusive && l == r) || l < r;
-//         Ok(result.into())
-//     } else {
-//         Err(EvalError::IncompatibleTypes(left, right, "<".to_string()))
-//     }
-// }
-// // fn eval_object_lt(left: Object, right: Object, inclusive: bool)-> Result<Object, EvalError> {
-//     let result = match (left, right) {
-//         (Object::Bool(l), Object::Bool(r)) => l == r,
-//         (Object::String(l), Object::String(r)) => l == r,
-//         (Object::Null, Object::Null) => true,
-//         (l, r) => return Err(EvalError::IncompatibleTypes(l, r, "<",to_string())),
-//
-// }
-//
 fn eval_object_equality(left: Object, right: Object, flip: bool) -> Result<Object, EvalError> {
     let result = match (left, right) {
         (Object::Bool(l), Object::Bool(r)) => l == r,
@@ -165,13 +159,13 @@ enum ObjectComparison {
 
 impl Display for ObjectComparison {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self{
-            ObjectComparison::GreaterThan => write!(f,">"),
-            ObjectComparison::GreaterThanEqual => write!(f,">="),
-            ObjectComparison::LessThan => write!(f,"<"),
-            ObjectComparison::LessThanEqual => write!(f,"<="),
-            ObjectComparison::Equal => write!(f,"=="),
-            ObjectComparison::NotEqual => write!(f,"!=")
+        match self {
+            ObjectComparison::GreaterThan => write!(f, ">"),
+            ObjectComparison::GreaterThanEqual => write!(f, ">="),
+            ObjectComparison::LessThan => write!(f, "<"),
+            ObjectComparison::LessThanEqual => write!(f, "<="),
+            ObjectComparison::Equal => write!(f, "=="),
+            ObjectComparison::NotEqual => write!(f, "!="),
         }
     }
 }

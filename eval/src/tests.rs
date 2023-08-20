@@ -5,6 +5,23 @@ use parser::ast::Program;
 use parser::parser::Parser;
 
 #[test]
+fn test_if_else_exp() {
+
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("if(true){10}", 10),
+        SingleValueTest::new("if(false){11}", Object::Null),
+        // SingleValueTest::new("if(true){11}", 10),
+        // SingleValueTest::new("if(true){11}", 10),
+        // SingleValueTest::new("if(true){11}", 10),
+        // SingleValueTest::new("!false", true),
+        // SingleValueTest::new("!5", false),
+        // SingleValueTest::new("!!true", true),
+        // SingleValueTest::new("!!!!!!!!!!!!!!!!!!!!!!!!false", false),
+        // SingleValueTest::new("!!5", true),
+    ];
+    SingleValueTest::test(tests);
+}
+#[test]
 fn test_eval_bang_operator_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("!true", false),
@@ -60,7 +77,7 @@ fn test_eval_bool_exp() {
 
 fn test_eval(input: String) -> Object {
     let program = get_program(input);
-    return match eval(program) {
+    return match eval(&program) {
         Ok(o) => o,
         Err(e) => panic!("{}", e),
     };

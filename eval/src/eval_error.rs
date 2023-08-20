@@ -9,7 +9,8 @@ pub enum EvalError {
     InvalidIntOperation(Object,String),
     InvalidOperation(Object,String),
     IncompatibleTypes(Object,Object,String),
-    WrongComparisonToken(Token)
+    WrongComparisonToken(Token),
+    WrongObjectType(Object,String)
     
 }
 
@@ -23,7 +24,8 @@ impl fmt::Display for EvalError {
             EvalError::InvalidIntOperation(value,t) => write!(f,"{} is an invalid int operation with {}", value,t),
             EvalError::InvalidOperation(lhs, opp) =>  write!(f,"{} does not support the {} opperation",lhs,opp),
             EvalError::IncompatibleTypes(lhs, rhs, opp) => write!(f,"cannot preform {} between {} and {}",opp,lhs,rhs),
-            EvalError::WrongComparisonToken(t) => write!(f,"{} is not a valid comparison token",t)
+            EvalError::WrongComparisonToken(t) => write!(f,"{} is not a valid comparison token",t),
+            EvalError::WrongObjectType(obj, expected) => write!(f,"got {} but was expecting {}", obj,expected)
         }
     }
 }

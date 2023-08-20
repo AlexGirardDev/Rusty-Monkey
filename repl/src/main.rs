@@ -25,7 +25,7 @@ impl Repl {
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
             if parser.parse_errors.is_empty() {
-                println!("{}", eval(program).unwrap());
+                println!("{}", eval(&program).unwrap());
             } else {
                 println!("Ruh Roh, looks like we ran into some errors while parsing");
                 for e in parser.parse_errors {

@@ -323,12 +323,12 @@ impl<'a> Parser<'a> {
         };
     }
 
-    fn cur_error(&self, expected_token: TokenType) -> ParserError {
-        return ParserError::WrongCurrentToken {
-            expected_token,
-            actual_token: TokenType::from(&self.cur_token),
-        };
-    }
+    // fn cur_error(&self, expected_token: TokenType) -> ParserError {
+    //     return ParserError::WrongCurrentToken {
+    //         expected_token,
+    //         actual_token: TokenType::from(&self.cur_token),
+    //     };
+    // }
 }
 
 pub trait ExtractValue {
