@@ -284,7 +284,7 @@ fn token_to_expression(token: Token) -> Expression {
         Token::Int(i) => Expression::IntLiteral(i.clone()),
         Token::Bool(b) => Expression::Bool(*b),
         Token::Ident(s) => Expression::Identifier(s.clone()),
-        t => panic!("could not convert {} to an expression", ),
+        t => panic!("could not convert {} to an expression",t ),
     }
 }
 
