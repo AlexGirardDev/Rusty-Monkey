@@ -1,5 +1,6 @@
 use lexer::token::Token;
 
+
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     Let(Identifier, Expression),
@@ -12,7 +13,7 @@ impl std::fmt::Display for Statement {
         return match self {
             Statement::Let(i, e) => write!(f, "let {} = {};", i, e),
             Statement::Return(e) => write!(f, "{} {};", Token::Return, e),
-            Statement::ExpressionStatement(e) => write!(f, "{}", e)
+            Statement::ExpressionStatement(e) => write!(f, "{}", e),
         };
     }
 }
@@ -30,6 +31,12 @@ pub enum Expression {
     CallExpression(Box<Expression>, Vec<Expression>),
 }
 
+impl From<i64> for Expression {
+    fn from(value: i64) -> Self {
+        Expression::IntLiteral(value)
+    }
+}
+
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -39,19 +46,19 @@ impl std::fmt::Display for Expression {
             Expression::IntLiteral(i) => write!(f, "{}", i),
             Expression::Bool(b) => write!(f, "{}", b),
             Expression::PrefixExpression(op, e) => write!(f, "({}{})", op, e),
-            Expression::InfixExpression(op, l_exp, r_exp) => write!(f, "({} {} {})", l_exp, op, r_exp),
-            Expression::IfExpression(cond, if_block, else_block) => {
-                match else_block {
-                    Some(e) => write!(f, "if {} {} else {}", cond, if_block, e),
-                    None => write!(f, "if {} {}", cond, if_block)
-                }
+            Expression::InfixExpression(op, l_exp, r_exp) => {
+                write!(f, "({} {} {})", l_exp, op, r_exp)
             }
+            Expression::IfExpression(cond, if_block, else_block) => match else_block {
+                Some(e) => write!(f, "if {} {} else {}", cond, if_block, e),
+                None => write!(f, "if {} {}", cond, if_block),
+            },
             Expression::FnExpression(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
             Expression::CallExpression(func, params) => {
                 write!(f, "{}(", func)?;
                 for (i, param) in params.iter().enumerate() {
                     if i > 0 {
-                        write!(f, ", ", )?;
+                        write!(f, ", ",)?;
                     }
                     write!(f, "{}", param)?;
                 }
@@ -61,19 +68,8 @@ impl std::fmt::Display for Expression {
     }
 }
 
-impl Expression {
-    pub fn from(token: Token) -> Option<Expression> {
-        return match token {
-            Token::Int(i) => Some(Expression::IntLiteral(i)),
-            Token::Bool(b) => Some(Expression::Bool(b)),
-            Token::Ident(s) => Some(Expression::Identifier(s.clone())),
-            _ => None,
-        };
-    }
-}
 
 pub type Identifier = String;
-
 
 pub type Program = BlockStatement;
 
@@ -109,11 +105,10 @@ impl Precedence {
             Token::Plus | Token::Dash => Precedence::SUM,
             Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
             Token::LParen => Precedence::CALL,
-            _ => Precedence::LOWEST
+            _ => Precedence::LOWEST,
         };
     }
 }
-
 
 // #[derive(Debug)]
 // pub enum Node {

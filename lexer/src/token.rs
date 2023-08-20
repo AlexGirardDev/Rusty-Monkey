@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, string};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -37,6 +37,23 @@ pub enum Token {
     Bool(bool),
 }
 
+impl From<i64> for Token {
+    fn from(value: i64) -> Self {
+        Token::Int(value)
+    }
+}
+
+impl From<bool> for Token {
+    fn from(value: bool) -> Self {
+        Token::Bool(value)
+    }
+}
+
+impl From<String> for Token {
+    fn from(value:String ) -> Self {
+        Token::Ident(value)
+    }}
+
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
@@ -72,4 +89,3 @@ impl Display for Token {
         };
     }
 }
-        

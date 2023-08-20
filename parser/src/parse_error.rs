@@ -7,6 +7,7 @@ pub enum ParserError {
     WrongCurrentToken { expected_token: TokenType, actual_token: TokenType },
     WrongPeekToken { expected_token: TokenType, actual_token: TokenType },
     WrongToken { expected_token: TokenType, actual_token: TokenType },
+    InvalidTokenToExpression(Token),
     UnexpectedStatementStart(Token),
     NoValidPrefix(TokenType),
     ParserError(String),
@@ -24,6 +25,7 @@ impl fmt::Display for ParserError {
             ParserError::UnexpectedStatementStart(token) => write!(f, "{} is not a valid starting to a statement", token),
             ParserError::NoValidPrefix(token) => write!(f, "{} is not a valid prefix token", token),
             ParserError::ParserError(str) => write!(f, "{}", str),
+            ParserError::InvalidTokenToExpression(t) => write!(f, "{} cannot be converted to an expression", t),
         }
     }
 }
