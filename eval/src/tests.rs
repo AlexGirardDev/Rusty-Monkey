@@ -1,9 +1,23 @@
 use crate::eval::eval;
+use crate::node::Node;
 use crate::object::Object;
+use colored::Colorize;
 use lexer::lexer::Lexer;
 use parser::ast::Program;
 use parser::parser::Parser;
 
+#[test]
+fn test_return_exp() {
+
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("return 10;", 10),
+		SingleValueTest::new("return 10; 9;", 10),
+		SingleValueTest::new("return 2*5;9;", 10),
+		SingleValueTest::new("9; return 2*5; 9;", 10),
+		SingleValueTest::new("if (10>1) { if (10>1) { return 10;} return 1;}", 10)
+	];
+   SingleValueTest::test(tests);
+}
 #[test]
 fn test_if_else_exp() {
 
@@ -17,11 +31,10 @@ fn test_if_else_exp() {
 		SingleValueTest::new("if (1<2) { 10} else {20}", 10),
 		SingleValueTest::new("if (1>2) {10} else {20}", 20),
 		SingleValueTest::new("if (1>=1) {10} else {100}", 10),
-		SingleValueTest::new("if (1<=1) {10} else {100}", 10),
+		SingleValueTest::new("if (1<=1) {return 10;} else {100}", 10),
         SingleValueTest::new("if(true){11}", 11),
         SingleValueTest::new("if(true){11}", 11),
         SingleValueTest::new("if(true){11}", 11),
-        SingleValueTest::new("!!5", true),
     ];
     SingleValueTest::test(tests);
 }
@@ -80,9 +93,9 @@ fn test_eval_bool_exp() {
     SingleValueTest::test(tests);
 }
 
-fn test_eval(input: String) -> Object {
-    let program = get_program(input);
-    return match eval(&program) {
+fn test_eval(input: impl Into<String>) -> Object {
+    let program = get_program(input.into());
+    return match eval(Node::Program(program)) {
         Ok(o) => o,
         Err(e) => panic!("{}", e),
     };
@@ -116,8 +129,8 @@ impl SingleValueTest {
     }
     pub fn test(tests: Vec<SingleValueTest>) {
         for test in tests {
-            let obj = test_eval(test.input);
-            assert_eq!(obj, test.expected_output);
+            let obj = test_eval(&test.input);
+            assert_eq!(obj, test.expected_output,"Input: {}",test.input.bright_yellow());
         }
     }
 }

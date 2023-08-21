@@ -1,22 +1,55 @@
 use std::fmt::Display;
 
-use crate::object::Object;
 use crate::eval_error::EvalError;
+use crate::{node::Node, object::Object};
 use lexer::token::Token;
-use parser::ast::{BlockStatement, Expression, Statement};
+use parser::ast::{BlockStatement, Expression, Statement, Program};
 
-pub fn eval(program: &BlockStatement) -> Result<Object, EvalError> {
-    for st in &program.statements {
-        match st {
-            Statement::ExpressionStatement(exp) => return eval_expression(&exp),
-            Statement::Return(exp) => return eval_expression(&exp),
-            _ => {}
+pub fn eval<'a>(node: impl Into<Node<'a>>) -> Result<Object, EvalError> {
+    return Ok(match node.into() {
+        Node::BlockStatement(s) => eval_block(s)?,
+        Node::Program(p) => eval_program(&p)?,
+        Node::Statement(s) => eval_statement(&s)?,
+        Node::Expression(e) => eval_expression(&e)?,
+        _ => todo!("hmm"),
+    });
+}
+
+pub fn eval_block(block: &BlockStatement) -> Result<Object, EvalError> {
+    println!("eval_block-{}",block);
+    let mut result: Object = Object::Null;
+    for st in &block.statements {
+        result = eval_statement(&st)?;
+        if let Object::Return(_) = result {
+            return Ok(result);
         }
     }
-    return Err(EvalError::GenericError(String::from("rip")));
+    return Ok(result);
+}
+
+pub fn eval_program(block: &Program) -> Result<Object, EvalError> {
+    println!("eval_block-{}",block);
+    let mut result: Object = Object::Null;
+    for st in &block.statements {
+        result = eval_statement(&st)?;
+        if let Object::Return(r) = result {
+            return Ok(*r);
+        }
+    }
+    return Ok(result);
+}
+
+pub fn eval_statement(statement: &Statement) -> Result<Object, EvalError> {
+    println!("eval_statement-{}",statement);
+    match statement {
+        Statement::ExpressionStatement(exp) => return eval_expression(&exp),
+        Statement::Return(exp) => return Ok(Object::Return(eval_expression(&exp)?.into())),
+        _ => todo!("hmm"),
+    }
 }
 
 pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
+    println!("eval_exp-{}",exp);
     return match exp {
         Expression::IntLiteral(i) => Ok((*i).into()),
         Expression::Bool(b) => Ok((*b).into()),
@@ -26,7 +59,7 @@ pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
         }
         Expression::IfExpression(con, if_exp, else_exp) => {
             eval_if_else_expression(con, if_exp, else_exp)
-        },
+        }
         _ => Ok(Object::Null),
     };
 }
@@ -37,20 +70,20 @@ fn eval_if_else_expression(
     else_exp: &Option<BlockStatement>,
 ) -> Result<Object, EvalError> {
     if is_truthy(eval_expression(cond.as_ref())?) {
-        eval(&if_exp)
+        eval(if_exp)
     } else {
         match else_exp {
-            Some(exp) => eval(&exp),
+            Some(exp) => eval(exp),
             None => Ok(Object::Null),
         }
     }
 }
 
-fn is_truthy(obj : impl Into<Object>) -> bool{
-    match obj.into()  {
-        Object::Bool(b)=>b,
+fn is_truthy(obj: impl Into<Object>) -> bool {
+    match obj.into() {
+        Object::Bool(b) => b,
         Object::Null => false,
-        _=> true
+        _ => true,
     }
 }
 
