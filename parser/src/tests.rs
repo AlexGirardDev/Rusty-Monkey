@@ -22,7 +22,7 @@ fn test_program(tests: Vec<Test>) {
     for test in tests {
         let mut p = Parser::new(Lexer::new(&test.input));
         let program: Program = p.parse_program();
-        check_and_print_errors(&p, &program);
+        p.check_and_print_errors(&program);
         assert_eq!(program.to_string(), test.expected_output, "Actual,Expected")
     }
 }
@@ -32,7 +32,7 @@ fn test_fn_call_expressions() {
     let input = "add(1, 2 * 3, 4+5)";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors(&program);
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
     if let Statement::ExpressionStatement(Expression::CallExpression(id, params)) = statement {
@@ -58,7 +58,7 @@ fn test_fn_expressions() {
     let input = "fn(x,y) { x + y; }";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors( &program);
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
     if let Statement::ExpressionStatement(i) = statement {
@@ -87,7 +87,7 @@ fn test_if_expressions() {
     let input = "if (x < y) { x }";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors(&program);
 
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
@@ -97,8 +97,8 @@ fn test_if_expressions() {
             test_infix_exp(
                 condition,
                 Token::LessThan,
-                Token::Ident(String::from("x")),
-                Token::Ident(String::from("y")),
+                "x",
+                "y",
             );
             assert_eq!(if_exp.statements.len(), 1);
             if let Statement::ExpressionStatement(Expression::Identifier(ident)) =
@@ -120,7 +120,7 @@ fn test_if_else_expressions() {
     let input = "if (x < y) { x } else { 10 }";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors(&program);
 
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
@@ -231,7 +231,9 @@ fn test_infix_expressions() {
         InfixTest::new("5 * 5", 5, Token::Asterisk, 5),
         InfixTest::new("5 / 5", 5, Token::ForwardSlash, 5),
         InfixTest::new("5 > 5", 5, Token::GreaterThan, 5),
+        InfixTest::new("5 >= 5", 5, Token::GreaterThanEqual, 5),
         InfixTest::new("5 < 5", 5, Token::LessThan, 5),
+        InfixTest::new("5 <= 5", 5, Token::LessThanEqual, 5),
         InfixTest::new("5 == 5", 5, Token::Equal, 5),
         InfixTest::new("5 != 5", 5, Token::NotEqual, 5),
         InfixTest::new("true == true", true, Token::Equal, true),
@@ -242,7 +244,7 @@ fn test_infix_expressions() {
     for t in tests {
         let mut p = Parser::new(Lexer::new(&t.input));
         let program: Program = p.parse_program();
-        check_and_print_errors(&p, &program);
+        p.check_and_print_errors(&program);
         assert_eq!(program.statements.len(), 1);
         let statement = &program.statements[0];
         if let Statement::ExpressionStatement(exp) = statement {
@@ -308,7 +310,7 @@ fn test_prefix_expressions() {
     for t in tests {
         let mut p = Parser::new(Lexer::new(&t.input));
         let program: Program = p.parse_program();
-        check_and_print_errors(&p, &program);
+        p.check_and_print_errors(&program);
         assert_eq!(program.statements.len(), 1);
         if let Statement::ExpressionStatement(Expression::PrefixExpression(token, exp)) =
             &program.statements[0]
@@ -386,7 +388,7 @@ fn test_let_statements() {
     let mut p = Parser::new(Lexer::new(&input));
 
     let program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors(&program);
     let expected_statements: Vec<String> =
         vec![String::from("x"), String::from("y"), String::from("foobar")];
     assert_eq!(program.statements.len(), expected_statements.len());
@@ -413,7 +415,7 @@ fn test_return_statements() {
     let mut p = Parser::new(Lexer::new(&input));
 
     let program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors( &program);
     assert_eq!(program.statements.len(), expected_count);
     for i in 0..expected_count {
         let statement = &program.statements[i];
@@ -449,19 +451,3 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
     return Ok(());
 }
 
-fn check_and_print_errors(parser: &Parser, program: &Program) {
-    if !parser.parse_errors.is_empty() {
-        println!("==============");
-        println!("=Parse errors=");
-        println!("==============");
-        for parse_error in &parser.parse_errors {
-            println!(" - {}", parse_error);
-        }
-
-        println!("============");
-        println!("=Statements=");
-        println!("============");
-        println!(" - {}", program);
-        panic!("ruh roh, program had errors")
-    }
-}

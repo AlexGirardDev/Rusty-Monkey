@@ -1,6 +1,5 @@
 use lexer::token::Token;
 
-
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     Let(Identifier, Expression),
@@ -37,7 +36,6 @@ impl From<i64> for Expression {
     }
 }
 
-
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         return match self {
@@ -67,7 +65,6 @@ impl std::fmt::Display for Expression {
         };
     }
 }
-
 
 pub type Identifier = String;
 
@@ -101,7 +98,10 @@ impl Precedence {
     pub fn from(token: &Token) -> i8 {
         return match token {
             Token::Equal | Token::NotEqual => Precedence::EQUALS,
-            Token::LessThan | Token::GreaterThan => Precedence::LESS_GREATER,
+            Token::LessThan
+            | Token::GreaterThan
+            | Token::LessThanEqual
+            | Token::GreaterThanEqual => Precedence::LESS_GREATER,
             Token::Plus | Token::Dash => Precedence::SUM,
             Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
             Token::LParen => Precedence::CALL,

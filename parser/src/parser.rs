@@ -1,5 +1,6 @@
 use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
 use crate::parse_error::{ParserError, TokenType};
+use colored::Colorize;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 
@@ -34,6 +35,9 @@ impl<'a> Parser<'a> {
         }
 
         return Program { statements };
+    }
+    pub fn get_program_input(&self) -> String {
+        self.lexer.get_input()
     }
 
     fn next_token(&mut self) {
@@ -294,6 +298,8 @@ impl<'a> Parser<'a> {
             Token::Equal
             | Token::NotEqual
             | Token::LessThan
+            | Token::LessThanEqual
+            | Token::GreaterThanEqual
             | Token::GreaterThan
             | Token::Plus
             | Token::Dash
@@ -323,12 +329,21 @@ impl<'a> Parser<'a> {
         };
     }
 
-    // fn cur_error(&self, expected_token: TokenType) -> ParserError {
-    //     return ParserError::WrongCurrentToken {
-    //         expected_token,
-    //         actual_token: TokenType::from(&self.cur_token),
-    //     };
-    // }
+    pub fn check_and_print_errors(&self, program: &Program) {
+        if !self.parse_errors.is_empty() {
+            println!("{}", "Input:".yellow().underline());
+            println!("{}", self.get_program_input());
+            println!();
+            println!("{}", "Errors:".yellow().underline());
+            for parse_error in &self.parse_errors {
+                println!(" - {}", parse_error.to_string().red());
+            }
+
+            println!("{}", "Statements:".yellow().underline());
+            println!(" - {}", program);
+            panic!("ruh roh, program had errors")
+        }
+    }
 }
 
 pub trait ExtractValue {

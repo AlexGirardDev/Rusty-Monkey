@@ -9,6 +9,7 @@ pub fn eval(program: &BlockStatement) -> Result<Object, EvalError> {
     for st in &program.statements {
         match st {
             Statement::ExpressionStatement(exp) => return eval_expression(&exp),
+            Statement::Return(exp) => return eval_expression(&exp),
             _ => {}
         }
     }
@@ -25,7 +26,7 @@ pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
         }
         Expression::IfExpression(con, if_exp, else_exp) => {
             eval_if_else_expression(con, if_exp, else_exp)
-        }
+        },
         _ => Ok(Object::Null),
     };
 }

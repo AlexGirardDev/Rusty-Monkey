@@ -7,5 +7,6 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+colored = "2.0.4"
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }

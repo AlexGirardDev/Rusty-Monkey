@@ -10,14 +10,18 @@ fn test_if_else_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("if(true){10}", 10),
         SingleValueTest::new("if(false){11}", Object::Null),
-        // SingleValueTest::new("if(true){11}", 10),
-        // SingleValueTest::new("if(true){11}", 10),
-        // SingleValueTest::new("if(true){11}", 10),
-        // SingleValueTest::new("!false", true),
-        // SingleValueTest::new("!5", false),
-        // SingleValueTest::new("!!true", true),
-        // SingleValueTest::new("!!!!!!!!!!!!!!!!!!!!!!!!false", false),
-        // SingleValueTest::new("!!5", true),
+		SingleValueTest::new("if (true) {10}", 10),
+		SingleValueTest::new("if (false) {10}", Object::Null),
+		SingleValueTest::new("if (1) {10}", 10),
+		SingleValueTest::new("if (1<2) {10}", 10),
+		SingleValueTest::new("if (1<2) { 10} else {20}", 10),
+		SingleValueTest::new("if (1>2) {10} else {20}", 20),
+		SingleValueTest::new("if (1>=1) {10} else {100}", 10),
+		SingleValueTest::new("if (1<=1) {10} else {100}", 10),
+        SingleValueTest::new("if(true){11}", 11),
+        SingleValueTest::new("if(true){11}", 11),
+        SingleValueTest::new("if(true){11}", 11),
+        SingleValueTest::new("!!5", true),
     ];
     SingleValueTest::test(tests);
 }
@@ -71,6 +75,7 @@ fn test_eval_bool_exp() {
 		SingleValueTest::new("(1>2) == true", false),
 		SingleValueTest::new("(1<2) != true", false),
 		SingleValueTest::new("(1>2) != true", true),
+
     ];
     SingleValueTest::test(tests);
 }
@@ -86,7 +91,7 @@ fn test_eval(input: String) -> Object {
 fn get_program(input: String) -> Program {
     let mut p = Parser::new(Lexer::new(&input));
     let program = p.parse_program();
-    check_and_print_errors(&p, &program);
+    p.check_and_print_errors(&program);
     return program;
 }
 
@@ -95,22 +100,7 @@ fn get_program(input: String) -> Program {
 //         assert_eq!(i, value);
 //     } else { panic!("Expected int but got {} ", object) }
 // }
-fn check_and_print_errors(parser: &Parser, program: &Program) {
-    if !parser.parse_errors.is_empty() {
-        println!("==============");
-        println!("=Parse errors=");
-        println!("==============");
-        for parse_error in &parser.parse_errors {
-            println!(" - {}", parse_error);
-        }
 
-        println!("============");
-        println!("=Statements=");
-        println!("============");
-        println!(" - {}", program);
-        panic!("ruh roh, program had errors")
-    }
-}
 
 struct SingleValueTest {
     input: String,

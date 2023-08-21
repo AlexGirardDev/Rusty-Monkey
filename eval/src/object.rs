@@ -8,6 +8,7 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     Null,
+    Return(Box<Object>)
 
 }
 
@@ -79,6 +80,7 @@ impl fmt::Display for Object {
             Object::String(s) => write!(f, "{}", s),
             Object::Int(i) => write!(f, "{}", i),
             Object::Bool(b) => write!(f, "{}", b),
+            Object::Return(r) => write!(f,"return {}",r),
             Object::Null => write!(f, "null"),
         }
     }
