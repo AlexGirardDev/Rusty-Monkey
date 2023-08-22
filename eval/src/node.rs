@@ -3,8 +3,8 @@ use parser::ast::{Program, Statement, BlockStatement, Expression};
 use crate::object::Object;
 
 
-pub enum Node{
-    BlockStatement(BlockStatement),
+pub enum Node<'a>{
+    BlockStatement(&'a BlockStatement),
     Program(Program),
     Object(Object),
     Statement(Statement),

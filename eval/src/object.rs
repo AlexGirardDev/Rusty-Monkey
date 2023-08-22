@@ -35,7 +35,8 @@ impl Add for Object {
     fn add(self, rhs: Self) -> Result<Self, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l + r)),
-            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"add".to_string()))
+            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.into(),rhs)),
+            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs,"+".to_string(),rhs))
         }
     }
 }
@@ -46,7 +47,9 @@ impl Sub for Object {
     fn sub(self, rhs: Self) -> Result<Self, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l - r)),
-            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"subtract".to_string()))
+            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.into(),rhs)),
+
+            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs,"-".to_string(),rhs))
         }
     }
 }
@@ -57,7 +60,8 @@ impl Div for Object {
     fn div(self, rhs: Self) -> Result<Self, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l / r)),
-            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"divide".to_string()))
+            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.into(),rhs)),
+            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs,"/".to_string(),rhs))
         }
     }
 }
@@ -68,7 +72,8 @@ impl Mul for Object {
     fn mul(self, rhs: Self) -> Result<Self, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(l * r)),
-            (lhs,_) => Err(EvalError::InvalidOperation(lhs,"multiply".to_string()))
+            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.into(),rhs)),
+            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs,"*".to_string(),rhs))
         }
     }
 }

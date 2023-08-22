@@ -1,4 +1,5 @@
 use crate::eval::eval;
+use crate::eval_error::EvalError;
 use crate::node::Node;
 use crate::object::Object;
 use colored::Colorize;
@@ -7,31 +8,42 @@ use parser::ast::Program;
 use parser::parser::Parser;
 
 #[test]
-fn test_return_exp() {
+fn test_error_exp() {
+    let tests: Vec<ErrorTest> = vec![
+        ErrorTest::new_type_missmatch("5+true", 5, true),
+        ErrorTest::new_type_missmatch("5+true;5", 5, true),
+        ErrorTest::new_invalid_operation("true+true;5", true, "+", true),
+        // SingleValueTest::new("return 2*5;9;", 10),
+        // SingleValueTest::new("9; return 2*5; 9;", 10),
+        // SingleValueTest::new("if (10>1) { if (10>1) { return 10;} return 1;}", 10),
+    ];
+    ErrorTest::test(tests);
+}
 
+#[test]
+fn test_return_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("return 10;", 10),
-		SingleValueTest::new("return 10; 9;", 10),
-		SingleValueTest::new("return 2*5;9;", 10),
-		SingleValueTest::new("9; return 2*5; 9;", 10),
-		SingleValueTest::new("if (10>1) { if (10>1) { return 10;} return 1;}", 10)
-	];
-   SingleValueTest::test(tests);
+        SingleValueTest::new("return 10; 9;", 10),
+        SingleValueTest::new("return 2*5;9;", 10),
+        SingleValueTest::new("9; return 2*5; 9;", 10),
+        SingleValueTest::new("if (10>1) { if (10>1) { return 10;} return 1;}", 10),
+    ];
+    SingleValueTest::test(tests);
 }
 #[test]
 fn test_if_else_exp() {
-
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("if(true){10}", 10),
         SingleValueTest::new("if(false){11}", Object::Null),
-		SingleValueTest::new("if (true) {10}", 10),
-		SingleValueTest::new("if (false) {10}", Object::Null),
-		SingleValueTest::new("if (1) {10}", 10),
-		SingleValueTest::new("if (1<2) {10}", 10),
-		SingleValueTest::new("if (1<2) { 10} else {20}", 10),
-		SingleValueTest::new("if (1>2) {10} else {20}", 20),
-		SingleValueTest::new("if (1>=1) {10} else {100}", 10),
-		SingleValueTest::new("if (1<=1) {return 10;} else {100}", 10),
+        SingleValueTest::new("if (true) {10}", 10),
+        SingleValueTest::new("if (false) {10}", Object::Null),
+        SingleValueTest::new("if (1) {10}", 10),
+        SingleValueTest::new("if (1<2) {10}", 10),
+        SingleValueTest::new("if (1<2) { 10} else {20}", 10),
+        SingleValueTest::new("if (1>2) {10} else {20}", 20),
+        SingleValueTest::new("if (1>=1) {10} else {100}", 10),
+        SingleValueTest::new("if (1<=1) {return 10;} else {100}", 10),
         SingleValueTest::new("if(true){11}", 11),
         SingleValueTest::new("if(true){11}", 11),
         SingleValueTest::new("if(true){11}", 11),
@@ -79,26 +91,22 @@ fn test_eval_bool_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("true", Object::Bool(true)),
         SingleValueTest::new("false", Object::Bool(false)),
-		SingleValueTest::new("1<2", true),
-		SingleValueTest::new("1>2", false),
-		SingleValueTest::new("1<1", false),
-		SingleValueTest::new("1>1", false),
-		SingleValueTest::new("1==1", true),
-		SingleValueTest::new("(1<2) == true", true),
-		SingleValueTest::new("(1>2) == true", false),
-		SingleValueTest::new("(1<2) != true", false),
-		SingleValueTest::new("(1>2) != true", true),
-
+        SingleValueTest::new("1<2", true),
+        SingleValueTest::new("1>2", false),
+        SingleValueTest::new("1<1", false),
+        SingleValueTest::new("1>1", false),
+        SingleValueTest::new("1==1", true),
+        SingleValueTest::new("(1<2) == true", true),
+        SingleValueTest::new("(1>2) == true", false),
+        SingleValueTest::new("(1<2) != true", false),
+        SingleValueTest::new("(1>2) != true", true),
     ];
     SingleValueTest::test(tests);
 }
 
-fn test_eval(input: impl Into<String>) -> Object {
+fn test_eval(input: impl Into<String>) -> Result<Object, EvalError> {
     let program = get_program(input.into());
-    return match eval(Node::Program(program)) {
-        Ok(o) => o,
-        Err(e) => panic!("{}", e),
-    };
+    eval(Node::Program(program))
 }
 
 fn get_program(input: String) -> Program {
@@ -114,10 +122,14 @@ fn get_program(input: String) -> Program {
 //     } else { panic!("Expected int but got {} ", object) }
 // }
 
-
 struct SingleValueTest {
     input: String,
     expected_output: Object,
+}
+
+struct ErrorTest {
+    input: String,
+    expected_output: EvalError,
 }
 
 impl SingleValueTest {
@@ -129,8 +141,62 @@ impl SingleValueTest {
     }
     pub fn test(tests: Vec<SingleValueTest>) {
         for test in tests {
-            let obj = test_eval(&test.input);
-            assert_eq!(obj, test.expected_output,"Input: {}",test.input.bright_yellow());
+            let obj = test_eval(&test.input).unwrap();
+            assert_eq!(
+                obj,
+                test.expected_output,
+                "Input: {}",
+                test.input.bright_yellow()
+            );
+        }
+    }
+}
+
+// impl From<(Object, String, Object)> for ErrorTest {
+//     fn from(lhs: impl Into<Object>, opp: impl  Into<String>,  rhs : impl Into<Object>){
+//
+//
+//         // add code here
+//     }
+// }
+
+impl ErrorTest {
+    pub fn new(input: &str, output: EvalError) -> Self {
+        ErrorTest {
+            input: String::from(input),
+            expected_output: output,
+        }
+    }
+
+    pub fn new_type_missmatch(input: &str, lhs: impl Into<Object>, rhs: impl Into<Object>) -> Self {
+        ErrorTest {
+            input: String::from(input),
+            expected_output: EvalError::TypeMismatch(lhs.into(), rhs.into()),
+        }
+    }
+
+    pub fn new_invalid_operation(
+        input: &str,
+        lhs: impl Into<Object>,
+        opp: impl Into<String>,
+        rhs: impl Into<Object>,
+    ) -> Self {
+        ErrorTest {
+            input: String::from(input),
+            expected_output: EvalError::InvalidOperator(lhs.into(), opp.into(), rhs.into()),
+        }
+    }
+
+    // pub fn new_invalid_prefix(input: &str, Into<Object>, opp: impl Into<String>,rhs: impl Into<Object> ) -> Self {
+    //     ErrorTest {
+    //         input: String::from(input),
+    //         expected_output: EvalError::InvalidOperator(lhs.into(),opp.into(), rhs.into()),
+    //     }
+    // }
+    pub fn test(tests: Vec<ErrorTest>) {
+        for test in tests {
+            let e = test_eval(&test.input).unwrap_err();
+            assert_eq!(e, test.expected_output, "Input: {}", test.input);
         }
     }
 }

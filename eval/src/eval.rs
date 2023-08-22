@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::eval_error::EvalError;
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
-use parser::ast::{BlockStatement, Expression, Statement, Program};
+use parser::ast::{BlockStatement, Expression, Program, Statement};
 
 pub fn eval<'a>(node: impl Into<Node<'a>>) -> Result<Object, EvalError> {
     return Ok(match node.into() {
@@ -16,7 +16,7 @@ pub fn eval<'a>(node: impl Into<Node<'a>>) -> Result<Object, EvalError> {
 }
 
 pub fn eval_block(block: &BlockStatement) -> Result<Object, EvalError> {
-    println!("eval_block-{}",block);
+    println!("eval_block-{}", block);
     let mut result: Object = Object::Null;
     for st in &block.statements {
         result = eval_statement(&st)?;
@@ -28,7 +28,7 @@ pub fn eval_block(block: &BlockStatement) -> Result<Object, EvalError> {
 }
 
 pub fn eval_program(block: &Program) -> Result<Object, EvalError> {
-    println!("eval_block-{}",block);
+    println!("eval_block-{}", block);
     let mut result: Object = Object::Null;
     for st in &block.statements {
         result = eval_statement(&st)?;
@@ -40,7 +40,7 @@ pub fn eval_program(block: &Program) -> Result<Object, EvalError> {
 }
 
 pub fn eval_statement(statement: &Statement) -> Result<Object, EvalError> {
-    println!("eval_statement-{}",statement);
+    println!("eval_statement-{}", statement);
     match statement {
         Statement::ExpressionStatement(exp) => return eval_expression(&exp),
         Statement::Return(exp) => return Ok(Object::Return(eval_expression(&exp)?.into())),
@@ -49,7 +49,7 @@ pub fn eval_statement(statement: &Statement) -> Result<Object, EvalError> {
 }
 
 pub fn eval_expression(exp: &Expression) -> Result<Object, EvalError> {
-    println!("eval_exp-{}",exp);
+    println!("eval_exp-{}", exp);
     return match exp {
         Expression::IntLiteral(i) => Ok((*i).into()),
         Expression::Bool(b) => Ok((*b).into()),
@@ -101,7 +101,7 @@ fn eval_infix_objects(token: &Token, left: Object, right: Object) -> Result<Obje
         Token::GreaterThanEqual => {
             eval_obj_comparison(left, right, ObjectComparison::GreaterThanEqual)
         }
-        t => Err(EvalError::IncompatibleTypes(left, right, t.to_string())),
+        t => Err(EvalError::InvalidOperator(left, t.to_string(), right)),
     };
 }
 
@@ -116,7 +116,7 @@ fn eval_obj_comparison(
         | ObjectComparison::LessThan
         | ObjectComparison::LessThanEqual => {
             let (Object::Int(l), Object::Int(r)) = (&left, &right) else { 
-                    return Err(EvalError::IncompatibleTypes(left, right,comp.to_string() )) };
+                    return Err(EvalError::InvalidOperator(left, comp.to_string(),right )) };
 
             let result = match comp {
                 ObjectComparison::GreaterThan => l > r,
@@ -133,7 +133,7 @@ fn eval_obj_comparison(
                 (Object::String(l), Object::String(r)) => l == r,
                 (Object::Int(l), Object::Int(r)) => l == r,
                 (Object::Null, Object::Null) => true,
-                (l, r) => return Err(EvalError::IncompatibleTypes(l, r, comp.to_string())),
+                (l, r) => return Err(EvalError::InvalidOperator(l, comp.to_string(), r)),
             };
             match comp {
                 ObjectComparison::NotEqual => !result,
@@ -149,7 +149,13 @@ fn eval_object_equality(left: Object, right: Object, flip: bool) -> Result<Objec
         (Object::Bool(l), Object::Bool(r)) => l == r,
         (Object::String(l), Object::String(r)) => l == r,
         (Object::Null, Object::Null) => true,
-        (l, r) => return Err(EvalError::IncompatibleTypes(l, r, "equality".to_string())),
+        (l, r) => {
+            return Err(EvalError::InvalidOperator(
+                l,
+                if flip { "!=" } else { "==" }.to_string(),
+                r,
+            ))
+        }
     };
     return Ok(if flip { !result } else { result }.into());
 }
@@ -162,7 +168,7 @@ fn eval_prefix_expression(token: &Token, exp: &Box<Expression>) -> Result<Object
         Token::Dash => Ok(eval_minus_operator_expression(eval_expression(
             exp.as_ref(),
         )?)?),
-        _ => Ok(Object::Null),
+        _ => Err(EvalError::InvalidPrefix(token.clone())),
     };
 }
 
