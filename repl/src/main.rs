@@ -1,4 +1,4 @@
-use eval::eval::eval;
+use eval::{eval::eval, enviorment::Environment};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
 use std::io::Write;
@@ -24,8 +24,11 @@ impl Repl {
             std::io::stdin().read_line(&mut line).unwrap();
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
+            let mut env = Environment::default();
             if parser.parse_errors.is_empty() {
-                println!("{}", eval(&program).unwrap());
+
+
+                println!("{}", eval(&program,&mut env).unwrap());
             } else {
                 println!("Ruh Roh, looks like we ran into some errors while parsing");
                 for e in parser.parse_errors {
