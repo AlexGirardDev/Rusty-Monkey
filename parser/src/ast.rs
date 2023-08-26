@@ -1,3 +1,5 @@
+use std::clone;
+
 use lexer::token::Token;
 
 #[derive(Debug, PartialEq)]

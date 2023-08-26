@@ -16,6 +16,7 @@ impl Repl {
             "Hello {}! This is the Monkey programming language!",
             whoami::realname()
         );
+
         println!("Feel free to type in commands");
         loop {
             let mut line = String::new();
@@ -24,11 +25,9 @@ impl Repl {
             std::io::stdin().read_line(&mut line).unwrap();
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
-            let mut env = Environment::default();
+            let env = Environment::default();
             if parser.parse_errors.is_empty() {
-
-
-                println!("{}", eval(&program,&mut env).unwrap());
+                println!("{}", eval(program.into(),&env).unwrap());
             } else {
                 println!("Ruh Roh, looks like we ran into some errors while parsing");
                 for e in parser.parse_errors {
