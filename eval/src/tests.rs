@@ -7,8 +7,44 @@ use crate::node::Node;
 use crate::object::Object;
 use colored::Colorize;
 use lexer::lexer::Lexer;
-use parser::ast::Program;
+use lexer::token::Token;
+use parser::ast::{Program, Statement, Expression};
 use parser::parser::Parser;
+
+#[test]
+fn test_function_object() {
+    match test_eval("fn(x) {x +2}") {
+        Ok(obj) => {
+            if let Object::Function(ident, blk) = obj.as_ref() {
+                assert_eq!(ident.len(), 1);
+                assert_eq!(ident[0], "x");
+                assert_eq!(blk.statements.len(), 1);
+                match &blk.statements[0] {
+                    Statement::ExpressionStatement(Expression::InfixExpression(
+                        Token::Plus,
+                        l,
+                        r,
+                    )) => {
+                        if let Expression::Identifier(ident) = l.as_ref() {
+                            assert_eq!(ident, "x");
+                        } else {
+                            panic!("Expected x ident but got {l}");
+                        }
+                        if let Expression::IntLiteral(i) = r.as_ref() {
+                            assert_eq!(*i, 2);
+                        } else {
+                            panic!("Expected 2 ident but got {r}");
+                        }
+                    }
+                    e => panic!("Expected ExpressionStatement with Infix expression, got {e}"),
+                }
+            } else {
+                panic!("expected fn but got {obj}");
+            }
+        }
+        Err(e) => panic!("{e}"),
+    }
+}
 
 #[test]
 fn test_let_statements() {
@@ -173,7 +209,10 @@ impl ErrorTest {
     pub fn new_type_missmatch(input: &str, lhs: impl Into<Object>, rhs: impl Into<Object>) -> Self {
         ErrorTest {
             input: String::from(input),
-            expected_output: EvalError::TypeMismatch(lhs.into().to_string(), rhs.into().to_string()),
+            expected_output: EvalError::TypeMismatch(
+                lhs.into().to_string(),
+                rhs.into().to_string(),
+            ),
         }
     }
 

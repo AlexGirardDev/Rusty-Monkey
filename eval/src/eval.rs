@@ -7,20 +7,20 @@ use crate::{node::Node, object::Object};
 use lexer::token::Token;
 use parser::ast::{BlockStatement, Expression, Program, Statement};
 
-pub fn eval<'a>(node: impl Into<Node<'a>>, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval(node: Node, env: &Environment) -> Result<Rc<Object>, EvalError> {
     return Ok(match node.into() {
         Node::BlockStatement(s) => eval_block(s, env)?,
-        Node::Program(p) => eval_program(&p, env)?.into(),
-        Node::Statement(s) => eval_statement(&s, env)?,
-        Node::Expression(e) => eval_expression(&e, env)?,
+        Node::Program(p) => eval_program(p, env)?.into(),
+        Node::Statement(s) => eval_statement(s, env)?,
+        Node::Expression(e) => eval_expression(e, env)?,
         _ => todo!("hmm"),
     });
 }
 
-pub fn eval_block(block: &BlockStatement, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_block(block: BlockStatement, env: &Environment) -> Result<Rc<Object>, EvalError> {
     let mut result: Rc<Object> = Object::Null.into();
-    for st in &block.statements {
-        result = eval_statement(&st, env)?;
+    for st in block.statements {
+        result = eval_statement(st, env)?;
         if let Object::Return(_) = *result {
             return Ok(result);
         }
@@ -28,10 +28,10 @@ pub fn eval_block(block: &BlockStatement, env: &Environment) -> Result<Rc<Object
     return Ok(result);
 }
 
-pub fn eval_program(block: &Program, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_program(block: Program, env: &Environment) -> Result<Rc<Object>, EvalError> {
     let mut result: Rc<Object> = Object::Null.into();
-    for st in &block.statements {
-        result = eval_statement(&st, env)?;
+    for st in block.statements {
+        result = eval_statement(st, env)?;
         if let Object::Return(r) = result.as_ref() {
             return Ok(r.clone());
         }
@@ -39,55 +39,60 @@ pub fn eval_program(block: &Program, env: &Environment) -> Result<Rc<Object>, Ev
     return Ok(result);
 }
 
-pub fn eval_statement(statement: &Statement, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_statement(statement: Statement, env: &Environment) -> Result<Rc<Object>, EvalError> {
     match statement {
-        Statement::ExpressionStatement(exp) => return eval_expression(&exp, env),
+        Statement::ExpressionStatement(exp) => return eval_expression(exp, env),
         Statement::Return(exp) => {
-            let ex = eval_expression(&exp, env)?;
+            let ex = eval_expression(exp, env)?;
             return Ok(Object::Return(ex).into());
         }
         Statement::Let(ident, exp) => {
-            let val = eval_expression(&exp, env)?;
+            let val = eval_expression(exp, env)?;
             env.set(ident, val);
             Ok(Object::Null.into())
         }
     }
 }
 
-pub fn eval_expression(exp: &Expression, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_expression(exp: Expression, env: &Environment) -> Result<Rc<Object>, EvalError> {
     return match exp {
-        Expression::IntLiteral(i) => Ok(Object::Int(*i).into()),
-        Expression::Bool(b) => Ok(Object::Bool(*b).into()),
+        Expression::IntLiteral(i) => Ok(Object::Int(i).into()),
+        Expression::Bool(b) => Ok(Object::Bool(b).into()),
         Expression::PrefixExpression(t, right) => eval_prefix_expression(t, right, env),
         Expression::InfixExpression(t, left, right) => {
             return eval_infix_objects(
                 t,
-                eval_expression(left, env)?,
-                eval_expression(right, env)?,
+                eval_expression(*left, env)?,
+                eval_expression(*right, env)?,
             );
         }
         Expression::IfExpression(con, if_exp, else_exp) => {
             return eval_if_else_expression(con, if_exp, else_exp, env);
         }
-        Expression::Identifier(ident) => match env.get(ident) {
+        Expression::Identifier(ident) => match env.get(&ident) {
             Some(v) => Ok(v),
-            None => Err(EvalError::IdentifierNotFount(ident.to_string())),
+            None => Err(EvalError::IdentifierNotFount(ident)),
+        },
+        Expression::FnExpression(idents,blk) => {
+
+            return Ok(Object::Function(idents.clone(), blk).into())
+
         },
         _ => Ok(Object::Null.into()),
     };
 }
 
 fn eval_if_else_expression(
-    cond: &Box<Expression>,
-    if_exp: &BlockStatement,
-    else_exp: &Option<BlockStatement>,
+    cond: Box<Expression>,
+    if_exp: BlockStatement,
+    else_exp: Option<BlockStatement>,
     env: &Environment,
 ) -> Result<Rc<Object>, EvalError> {
-    if is_truthy(eval_expression(cond.as_ref(), env)?) {
-        eval(if_exp, env)
+    if is_truthy(eval_expression(*cond, env)?) {
+        eval(if_exp.into(), env)
     } else {
         match else_exp {
-            Some(exp) => eval(exp, env),
+            Some(exp) => eval(exp.into(), env),
             None => Ok(Object::Null.into()),
         }
     }
@@ -102,7 +107,7 @@ fn is_truthy(obj: impl Into<Rc<Object>>) -> bool {
 }
 
 fn eval_infix_objects(
-    token: &Token,
+    token: Token,
     left: Rc<Object>,
     right: Rc<Object>,
 ) -> Result<Rc<Object>, EvalError> {
@@ -194,11 +199,11 @@ fn eval_object_equality(
 }
 
 fn eval_prefix_expression(
-    token: &Token,
-    exp: &Box<Expression>,
+    token: Token,
+    exp: Box<Expression>,
     env: &Environment,
 ) -> Result<Rc<Object>, EvalError> {
-    let exp = eval_expression(exp.as_ref(), env)?;
+    let exp = eval_expression(*exp, env)?;
     return match token {
         Token::Bang => Ok(eval_bang_operator_expression(exp)?.into()),
         Token::Dash => Ok(eval_minus_operator_expression(exp)?.into()),

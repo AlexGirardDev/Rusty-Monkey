@@ -1,16 +1,19 @@
 use std::rc::Rc;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
+use parser::ast::{Identifier, BlockStatement};
+
 use crate::eval_error::EvalError;
 
-#[derive(Debug,PartialEq, Default, Clone)]
+#[derive(Debug,PartialEq, Default)]
 pub enum Object {
     #[default]
     Null,
     // String(String),
     Int(i64),
     Bool(bool),
-    Return(Rc<Object>)
+    Return(Rc<Object>),
+     Function(Vec<Identifier>,BlockStatement)
 
 }
 
@@ -88,6 +91,8 @@ impl fmt::Display for Object {
             Object::Bool(b) => write!(f, "{}", b),
             Object::Return(r) => write!(f,"return {}",r),
             Object::Null => write!(f, "null"),
+            Object::Function(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
         }
     }
 }
+
