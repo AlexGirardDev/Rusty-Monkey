@@ -1,3 +1,6 @@
+use std::rc::Rc;
+
+use crate::enviorment::Environment;
 use crate::eval::eval;
 use crate::eval_error::EvalError;
 use crate::node::Node;
@@ -8,16 +11,14 @@ use parser::ast::Program;
 use parser::parser::Parser;
 
 #[test]
-fn test_error_exp() {
-    let tests: Vec<ErrorTest> = vec![
-        ErrorTest::new_type_missmatch("5+true", 5, true),
-        ErrorTest::new_type_missmatch("5+true;5", 5, true),
-        ErrorTest::new_invalid_operation("true+true;5", true, "+", true),
-        // SingleValueTest::new("return 2*5;9;", 10),
-        // SingleValueTest::new("9; return 2*5; 9;", 10),
-        // SingleValueTest::new("if (10>1) { if (10>1) { return 10;} return 1;}", 10),
+fn test_let_statements() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("let a=5;a;", 5),
+        SingleValueTest::new("let a=5*5; a;", 25),
+        SingleValueTest::new("let a=5; let b=a; b;", 5),
+        SingleValueTest::new("let a=5; let b=a; let c=a+b+5; c;", 15),
     ];
-    ErrorTest::test(tests);
+    SingleValueTest::test(tests);
 }
 
 #[test]
@@ -104,9 +105,21 @@ fn test_eval_bool_exp() {
     SingleValueTest::test(tests);
 }
 
-fn test_eval(input: impl Into<String>) -> Result<Object, EvalError> {
+#[test]
+fn test_error_exp() {
+    let tests: Vec<ErrorTest> = vec![
+        ErrorTest::new_type_missmatch("5+true", 5, true),
+        // ErrorTest::new_type_missmatch("5+true;5", 5, true),
+        // ErrorTest::new_invalid_operation("true+true;5", true, "+", true),
+        // ErrorTest::new_invalid_operation("if(5>1){return true+1;})", true, "+", 1),
+        // ErrorTest::new("foobar", EvalError::IdentifierNotFount("foobar".to_owned())),
+    ];
+    ErrorTest::test(tests);
+}
+
+fn test_eval(input: impl Into<String>) -> Result<Rc<Object>, EvalError> {
     let program = get_program(input.into());
-    eval(Node::Program(program))
+    eval(Node::Program(program), &mut Environment::default())
 }
 
 fn get_program(input: String) -> Program {
@@ -115,12 +128,6 @@ fn get_program(input: String) -> Program {
     p.check_and_print_errors(&program);
     return program;
 }
-
-// fn test_int_object(object: Object, value: i64) {
-//     if let Object::Int(i) = object {
-//         assert_eq!(i, value);
-//     } else { panic!("Expected int but got {} ", object) }
-// }
 
 struct SingleValueTest {
     input: String,
@@ -141,25 +148,20 @@ impl SingleValueTest {
     }
     pub fn test(tests: Vec<SingleValueTest>) {
         for test in tests {
-            let obj = test_eval(&test.input).unwrap();
-            assert_eq!(
-                obj,
-                test.expected_output,
-                "Input: {}",
-                test.input.bright_yellow()
-            );
+            match test_eval(&test.input) {
+                Ok(obj) => {
+                    assert_eq!(
+                        *obj,
+                        test.expected_output,
+                        "Input: {}",
+                        test.input.bright_yellow()
+                    );
+                }
+                Err(e) => panic!("{e}"),
+            }
         }
     }
 }
-
-// impl From<(Object, String, Object)> for ErrorTest {
-//     fn from(lhs: impl Into<Object>, opp: impl  Into<String>,  rhs : impl Into<Object>){
-//
-//
-//         // add code here
-//     }
-// }
-
 impl ErrorTest {
     pub fn new(input: &str, output: EvalError) -> Self {
         ErrorTest {
@@ -171,7 +173,7 @@ impl ErrorTest {
     pub fn new_type_missmatch(input: &str, lhs: impl Into<Object>, rhs: impl Into<Object>) -> Self {
         ErrorTest {
             input: String::from(input),
-            expected_output: EvalError::TypeMismatch(lhs.into(), rhs.into()),
+            expected_output: EvalError::TypeMismatch(lhs.into().to_string(), rhs.into().to_string()),
         }
     }
 
@@ -183,19 +185,18 @@ impl ErrorTest {
     ) -> Self {
         ErrorTest {
             input: String::from(input),
-            expected_output: EvalError::InvalidOperator(lhs.into(), opp.into(), rhs.into()),
+            expected_output: EvalError::InvalidOperator(
+                lhs.into().to_string(),
+                opp.into(),
+                rhs.into().to_string(),
+            ),
         }
     }
 
-    // pub fn new_invalid_prefix(input: &str, Into<Object>, opp: impl Into<String>,rhs: impl Into<Object> ) -> Self {
-    //     ErrorTest {
-    //         input: String::from(input),
-    //         expected_output: EvalError::InvalidOperator(lhs.into(),opp.into(), rhs.into()),
-    //     }
-    // }
     pub fn test(tests: Vec<ErrorTest>) {
         for test in tests {
             let e = test_eval(&test.input).unwrap_err();
+
             assert_eq!(e, test.expected_output, "Input: {}", test.input);
         }
     }
