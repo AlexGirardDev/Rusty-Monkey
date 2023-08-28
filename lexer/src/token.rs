@@ -63,7 +63,7 @@ impl From<&str> for Token {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return match self {
+        match self {
             Token::Ident(x) => write!(f, "{}", x),
             Token::Int(x) => write!(f, "{}", x),
             Token::Illegal => write!(f, "Illegal"),
@@ -93,6 +93,6 @@ impl Display for Token {
             Token::Return => write!(f, "return"),
             Token::Bool(true) => write!(f, "true"),
             Token::Bool(false) => write!(f, "false"),
-        };
+        }
     }
 }

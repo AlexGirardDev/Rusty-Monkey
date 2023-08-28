@@ -9,11 +9,11 @@ pub enum Statement {
 
 impl std::fmt::Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return match self {
+        match self {
             Statement::Let(i, e) => write!(f, "let {} = {};", i, e),
             Statement::Return(e) => write!(f, "{} {};", Token::Return, e),
             Statement::ExpressionStatement(e) => write!(f, "{}", e),
-        };
+        }
     }
 }
 
@@ -38,7 +38,7 @@ impl From<i64> for Expression {
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return match self {
+        match self {
             Expression::Constant => write!(f, "Constant expression???"),
             Expression::Identifier(i) => write!(f, "{}", i),
             Expression::IntLiteral(i) => write!(f, "{}", i),
@@ -62,7 +62,7 @@ impl std::fmt::Display for Expression {
                 }
                 write!(f, ")")
             }
-        };
+        }
     }
 }
 
@@ -80,7 +80,7 @@ impl std::fmt::Display for BlockStatement {
         for statement in &self.statements {
             write!(f, "{}", statement)?;
         }
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -96,7 +96,7 @@ impl Precedence {
     pub const CALL: i8 = 6;
 
     pub fn from(token: &Token) -> i8 {
-        return match token {
+        match token {
             Token::Equal | Token::NotEqual => Precedence::EQUALS,
             Token::LessThan
             | Token::GreaterThan
@@ -106,6 +106,6 @@ impl Precedence {
             Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
             Token::LParen => Precedence::CALL,
             _ => Precedence::LOWEST,
-        };
+        }
     }
 }

@@ -289,7 +289,7 @@ fn test_infix_exp(
 }
 fn token_to_expression(token: Token) -> Expression {
     match &token {
-        Token::Int(i) => Expression::IntLiteral(i.clone()),
+        Token::Int(i) => Expression::IntLiteral(*i),
         Token::Bool(b) => Expression::Bool(*b),
         Token::Ident(s) => Expression::Identifier(s.clone()),
         t => panic!("could not convert {} to an expression", t),
@@ -449,7 +449,6 @@ fn test_return_statements() {
 fn test_let_statement(statement: &Statement, name: &str) -> Result<(), String> {
     match statement {
         Statement::Let(x, ..) => {
-            // test to make sure its a let type
             assert_eq!(x, name); // test to make sure name is correct
         }
         _ => {
@@ -457,7 +456,7 @@ fn test_let_statement(statement: &Statement, name: &str) -> Result<(), String> {
         }
     };
 
-    return Ok(());
+    Ok(())
 }
 
 fn test_return_statement(statement: &Statement) -> Result<(), String> {
@@ -468,5 +467,5 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
         }
     };
 
-    return Ok(());
+    Ok(())
 }

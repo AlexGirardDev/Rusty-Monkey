@@ -22,7 +22,7 @@ impl<'a> Parser<'a> {
 
         parse.next_token();
         parse.next_token();
-        return parse;
+        parse
     }
 
     pub fn parse_program(&mut self) -> Program {
@@ -34,7 +34,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        return Program { statements };
+        Program { statements }
     }
     pub fn get_program_input(&self) -> String {
         self.lexer.get_input()
@@ -52,7 +52,7 @@ impl<'a> Parser<'a> {
             _ => self.parse_expression_statement(),
         };
 
-        return match statement {
+        match statement {
             Ok(statement) => Some(statement),
             Err(e) => match e {
                 ParserError::UnexpectedStatementStart(_) => None,
@@ -61,7 +61,7 @@ impl<'a> Parser<'a> {
                     None
                 }
             },
-        };
+        }
     }
 
     fn parse_let_statement(&mut self) -> Result<Statement, ParserError> {
@@ -73,7 +73,7 @@ impl<'a> Parser<'a> {
         if let Token::Semicolon = &self.peek_token {
             self.next_token();
         }
-        return Ok(Statement::Let(ident, exp));
+        Ok(Statement::Let(ident, exp))
     }
 
     fn parse_return_statement(&mut self) -> Result<Statement, ParserError> {
@@ -82,7 +82,7 @@ impl<'a> Parser<'a> {
         if let Token::Semicolon = &self.peek_token {
             self.next_token();
         }
-        return Ok(Statement::Return(exp));
+        Ok(Statement::Return(exp))
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
@@ -92,7 +92,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        return Ok(Statement::ExpressionStatement(expression));
+        Ok(Statement::ExpressionStatement(expression))
     }
 
     fn parse_fn_expression(&mut self) -> Result<Expression, ParserError> {
@@ -100,10 +100,10 @@ impl<'a> Parser<'a> {
         let params = self.parse_fn_params()?;
         self.expect_peek(TokenType::LSquirly)?;
 
-        return Ok(Expression::FnExpression(
+        Ok(Expression::FnExpression(
             params,
             self.parse_block_statement()?,
-        ));
+        ))
     }
 
     fn parse_fn_params(&mut self) -> Result<Vec<Identifier>, ParserError> {
@@ -132,7 +132,7 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect_peek(TokenType::Rparen)?;
-        return Ok(idents);
+        Ok(idents)
     }
 
     fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
@@ -151,11 +151,11 @@ impl<'a> Parser<'a> {
             None
         };
 
-        return Ok(Expression::IfExpression(
+        Ok(Expression::IfExpression(
             Box::new(cond),
             if_block,
             else_block,
-        ));
+        ))
     }
 
     fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
@@ -168,7 +168,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
         // self.next_token();
-        return Ok(BlockStatement { statements });
+        Ok(BlockStatement { statements })
     }
 
     fn parse_expression(&mut self, precedence: i8) -> Result<Expression, ParserError> {
@@ -188,7 +188,7 @@ impl<'a> Parser<'a> {
             };
         }
 
-        return Ok(left_exp);
+        Ok(left_exp)
     }
 
     fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
@@ -213,19 +213,19 @@ impl<'a> Parser<'a> {
             params.push(self.parse_expression(Precedence::LOWEST)?);
         }
         self.expect_peek(TokenType::Rparen)?;
-        return Ok(params);
+        Ok(params)
     }
 
-    fn parse_identifier(&self, ident: &String) -> Result<Expression, ParserError> {
-        return Ok(Expression::Identifier(ident.clone()));
+    fn parse_identifier(&self, ident: &str) -> Result<Expression, ParserError> {
+        Ok(Expression::Identifier(ident.to_owned()))
     }
 
     fn parse_int_literal(&self, int: i64) -> Result<Expression, ParserError> {
-        return Ok(Expression::IntLiteral(int));
+        Ok(Expression::IntLiteral(int))
     }
 
     fn parse_bool(&self, b: bool) -> Result<Expression, ParserError> {
-        return Ok(Expression::Bool(b));
+        Ok(Expression::Bool(b))
     }
 
     fn parse_prefix_expression(&mut self) -> Result<Expression, ParserError> {
@@ -241,17 +241,17 @@ impl<'a> Parser<'a> {
 
         let token = self.cur_token.clone();
         self.next_token();
-        return Ok(Expression::PrefixExpression(
+        Ok(Expression::PrefixExpression(
             token,
             Box::new(self.parse_expression(Precedence::PREFIX)?),
-        ));
+        ))
     }
 
     fn parse_grouped_expression(&mut self) -> Result<Expression, ParserError> {
         self.next_token();
         let exp = self.parse_expression(Precedence::LOWEST)?;
         self.expect_peek(TokenType::Rparen)?;
-        return Ok(exp);
+        Ok(exp)
     }
 
     fn parse_infix_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
@@ -260,51 +260,51 @@ impl<'a> Parser<'a> {
         self.next_token();
 
         let right_exp = self.parse_expression(prec)?;
-        return Ok(Expression::InfixExpression(
+        Ok(Expression::InfixExpression(
             token,
             Box::new(left_side),
             Box::new(right_exp),
-        ));
+        ))
     }
 
     fn peek_precedence(&self) -> i8 {
-        return Precedence::from(&self.peek_token);
+        Precedence::from(&self.peek_token)
     }
 
     fn cur_precedence(&self) -> i8 {
-        return Precedence::from(&self.cur_token);
+        Precedence::from(&self.cur_token)
     }
 
     fn is_prefix_token(token: &Token) -> bool {
-        return match token {
+        matches!(
+            token,
             Token::Dash
-            | Token::Bang
-            | Token::Int(_)
-            | Token::Ident(_)
-            | Token::Bool(_)
-            | Token::LParen
-            | Token::LBracket
-            | Token::If
-            | Token::Function => true,
-            _ => false,
-        };
+                | Token::Bang
+                | Token::Int(_)
+                | Token::Ident(_)
+                | Token::Bool(_)
+                | Token::LParen
+                | Token::LBracket
+                | Token::If
+                | Token::Function
+        )
     }
 
     fn is_infix_token(token: &Token) -> bool {
-        return match token {
+        matches!(
+            token,
             Token::Equal
-            | Token::NotEqual
-            | Token::LessThan
-            | Token::LessThanEqual
-            | Token::GreaterThanEqual
-            | Token::GreaterThan
-            | Token::Plus
-            | Token::Dash
-            | Token::ForwardSlash
-            | Token::LParen
-            | Token::Asterisk => true,
-            _ => false,
-        };
+                | Token::NotEqual
+                | Token::LessThan
+                | Token::LessThanEqual
+                | Token::GreaterThanEqual
+                | Token::GreaterThan
+                | Token::Plus
+                | Token::Dash
+                | Token::ForwardSlash
+                | Token::LParen
+                | Token::Asterisk
+        )
     }
 
     fn expect_peek<T: ExtractValue>(
@@ -320,10 +320,10 @@ impl<'a> Parser<'a> {
     }
 
     fn peek_error(&self, expected_token: TokenType) -> ParserError {
-        return ParserError::WrongPeekToken {
+        ParserError::WrongPeekToken {
             expected_token,
             actual_token: TokenType::from(&self.peek_token),
-        };
+        }
     }
 
     pub fn check_and_print_errors(&self, program: &Program) {

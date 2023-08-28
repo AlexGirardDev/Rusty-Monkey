@@ -18,7 +18,7 @@ impl<'a> Lexer<'a> {
         };
 
         lex.read_char();
-        return lex;
+        lex
     }
     pub fn get_input(&self) -> String {
         String::from_utf8(self.input.to_vec()).unwrap()
@@ -85,7 +85,7 @@ impl<'a> Lexer<'a> {
             }
         };
         self.read_char();
-        return token;
+        token
     }
 
     fn read_int(&mut self) -> i64 {

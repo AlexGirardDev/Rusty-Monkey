@@ -39,7 +39,7 @@ impl Add for &Object {
 
     fn add(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
-            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l + *r).into()),
+            (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l + *r).into()),
             (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(), rhs.to_string())),
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),
@@ -55,7 +55,7 @@ impl Sub for &Object {
 
     fn sub(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
-            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l - *r).into()),
+            (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l - *r).into()),
             (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(), rhs.to_string())),
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),
@@ -71,9 +71,9 @@ impl Div for &Object {
 
     fn div(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
-            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l / *r).into()),
+            (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l / *r).into()),
             (Object::Int(lhs), rhs) => {
-                return Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()));
+                 Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()))
             }
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),
@@ -89,9 +89,9 @@ impl Mul for &Object {
 
     fn mul(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
-            (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l * *r).into()),
+            (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l * *r).into()),
             (Object::Int(lhs), rhs) => {
-                return Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()));
+                Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()))
             }
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),

@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+#[derive(Default)]
 pub struct Environment<'a> {
     store: RefCell<HashMap<String, Rc<Object>>>,
     outer: Option<&'a Environment<'a>>,
@@ -26,15 +27,6 @@ impl<'a> Environment<'a> {
         Environment {
             outer: Some(env),
             ..Default::default()
-        }
-    }
-}
-
-impl<'a> Default for Environment<'a> {
-    fn default() -> Self {
-        Self {
-            store: Default::default(),
-            outer: Default::default(),
         }
     }
 }
