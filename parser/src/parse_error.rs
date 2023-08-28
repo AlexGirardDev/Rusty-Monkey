@@ -1,31 +1,64 @@
 use std::fmt;
- 
+
 use lexer::token::Token;
 
 #[derive(Debug)]
 pub enum ParserError {
-    WrongCurrentToken { expected_token: TokenType, actual_token: TokenType },
-    WrongPeekToken { expected_token: TokenType, actual_token: TokenType },
-    WrongToken { expected_token: TokenType, actual_token: TokenType },
+    WrongCurrentToken {
+        expected_token: TokenType,
+        actual_token: TokenType,
+    },
+    WrongPeekToken {
+        expected_token: TokenType,
+        actual_token: TokenType,
+    },
+    WrongToken {
+        expected_token: TokenType,
+        actual_token: TokenType,
+    },
     InvalidTokenToExpression(Token),
     UnexpectedStatementStart(Token),
     NoValidPrefix(TokenType),
     ParserError(String),
 }
 
-
 impl std::error::Error for ParserError {}
 
 impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ParserError::WrongCurrentToken { actual_token, expected_token } => write!(f, "Expected {} token but found an {}", expected_token, actual_token),
-            ParserError::WrongPeekToken { actual_token, expected_token } => write!(f, "Peeked ahead and expected {} token but found an {}", expected_token, actual_token),
-            ParserError::WrongToken { actual_token, expected_token } => write!(f, "Expected {} token but found an {}", expected_token, actual_token),
-            ParserError::UnexpectedStatementStart(token) => write!(f, "{} is not a valid starting to a statement", token),
+            ParserError::WrongCurrentToken {
+                actual_token,
+                expected_token,
+            } => write!(
+                f,
+                "Expected {} token but found an {}",
+                expected_token, actual_token
+            ),
+            ParserError::WrongPeekToken {
+                actual_token,
+                expected_token,
+            } => write!(
+                f,
+                "Peeked ahead and expected {} token but found an {}",
+                expected_token, actual_token
+            ),
+            ParserError::WrongToken {
+                actual_token,
+                expected_token,
+            } => write!(
+                f,
+                "Expected {} token but found an {}",
+                expected_token, actual_token
+            ),
+            ParserError::UnexpectedStatementStart(token) => {
+                write!(f, "{} is not a valid starting to a statement", token)
+            }
             ParserError::NoValidPrefix(token) => write!(f, "{} is not a valid prefix token", token),
             ParserError::ParserError(str) => write!(f, "{}", str),
-            ParserError::InvalidTokenToExpression(t) => write!(f, "{} cannot be converted to an expression", t),
+            ParserError::InvalidTokenToExpression(t) => {
+                write!(f, "{} cannot be converted to an expression", t)
+            }
         }
     }
 }
@@ -87,7 +120,7 @@ impl fmt::Display for TokenType {
             TokenType::Comma => write!(f, ","),
             TokenType::Semicolon => write!(f, ";"),
             TokenType::Identifier => write!(f, "ident"),
-            e => write!(f, "{:?}", e)
+            e => write!(f, "{:?}", e),
         }
     }
 }
@@ -123,4 +156,3 @@ pub enum TokenType {
     Return,
     Bool,
 }
-

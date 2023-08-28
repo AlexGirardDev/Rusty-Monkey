@@ -91,6 +91,7 @@ impl<'a> Parser<'a> {
         if let Token::Semicolon = &self.peek_token {
             self.next_token();
         }
+
         return Ok(Statement::ExpressionStatement(expression));
     }
 
@@ -142,9 +143,9 @@ impl<'a> Parser<'a> {
         self.expect_peek(TokenType::Rparen)?;
         self.expect_peek(TokenType::LSquirly)?;
         let if_block = self.parse_block_statement()?;
-
-        let else_block = if let Token::Else = &self.cur_token {
+        let else_block = if let Token::Else = &self.peek_token {
             self.next_token();
+            self.expect_peek(TokenType::LSquirly)?;
             Some(self.parse_block_statement()?)
         } else {
             None
@@ -166,7 +167,7 @@ impl<'a> Parser<'a> {
             }
             self.next_token();
         }
-        self.next_token();
+        // self.next_token();
         return Ok(BlockStatement { statements });
     }
 
@@ -174,14 +175,13 @@ impl<'a> Parser<'a> {
         if !Parser::is_prefix_token(&self.cur_token) {
             return Err(ParserError::NoValidPrefix(TokenType::from(&self.cur_token)));
         }
-
         let mut left_exp = self.parse_prefix_expression()?;
-
         while !matches!(self.peek_token, Token::Semicolon) && precedence < self.peek_precedence() {
             if !Parser::is_infix_token(&self.peek_token) {
                 return Ok(left_exp);
             }
             self.next_token();
+
             left_exp = match &self.cur_token {
                 Token::LParen => self.parse_call_expression(left_exp)?,
                 _ => self.parse_infix_expression(left_exp)?,
@@ -192,9 +192,6 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
-        let Expression::Identifier(_) = &left_side else {
-            return Err(ParserError::ParserError(format!("Was was expecting ident expression but got: {}", left_side)));
-        };
         let params = self.parse_call_arguments()?;
         Ok(Expression::CallExpression(Box::new(left_side), params))
     }

@@ -1,4 +1,4 @@
 pub mod ast;
-pub mod parser;
 pub mod parse_error;
+pub mod parser;
 mod tests;

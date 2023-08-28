@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
+pub mod environment;
 pub mod eval;
-mod object;
 mod eval_error;
+mod node;
+mod object;
 #[cfg(test)]
 mod tests;
-mod node;
-pub mod enviorment;

@@ -53,12 +53,42 @@ fn test_fn_call_expressions() {
     }
 }
 
+// #[test]
+fn test_fn_expressions_chained() {
+    // env::set_var("RUST_BACKTRACE", "1");
+    let input = "fn(x,y) { x + y; }(5)";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    p.check_and_print_errors(&program);
+    assert_eq!(program.statements.len(), 3);
+    let statement = &program.statements[0];
+    if let Statement::ExpressionStatement(i) = statement {
+        if let Expression::FnExpression(params, block) = i {
+            assert_eq!(params.len(), 2);
+            assert_eq!(String::from("x"), params[0]);
+            assert_eq!(String::from("y"), params[1]);
+            if let Statement::ExpressionStatement(e) = &block.statements[0] {
+                test_infix_exp(e, Token::Plus, "x", "y");
+            } else {
+                panic!("Expected if ident statement with , got {}", statement);
+            }
+        } else {
+            panic!("Expected if expression statement, got {}", statement);
+        }
+    }
+
+    assert_eq!(
+        &program.statements[1],
+        &Statement::ExpressionStatement(Expression::IntLiteral(5))
+    )
+}
+
 #[test]
 fn test_fn_expressions() {
     let input = "fn(x,y) { x + y; }";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
-    p.check_and_print_errors( &program);
+    p.check_and_print_errors(&program);
     assert_eq!(program.statements.len(), 1);
     let statement = &program.statements[0];
     if let Statement::ExpressionStatement(i) = statement {
@@ -67,12 +97,7 @@ fn test_fn_expressions() {
             assert_eq!(String::from("x"), params[0]);
             assert_eq!(String::from("y"), params[1]);
             if let Statement::ExpressionStatement(e) = &block.statements[0] {
-                test_infix_exp(
-                    e,
-                    Token::Plus,
-                    "x",
-                    "y",
-                );
+                test_infix_exp(e, Token::Plus, "x", "y");
             } else {
                 panic!("Expected if ident statement with , got {}", statement);
             }
@@ -94,12 +119,7 @@ fn test_if_expressions() {
 
     if let Statement::ExpressionStatement(i) = statement {
         if let Expression::IfExpression(condition, if_exp, else_exp) = i {
-            test_infix_exp(
-                condition,
-                Token::LessThan,
-                "x",
-                "y",
-            );
+            test_infix_exp(condition, Token::LessThan, "x", "y");
             assert_eq!(if_exp.statements.len(), 1);
             if let Statement::ExpressionStatement(Expression::Identifier(ident)) =
                 &if_exp.statements[0]
@@ -406,7 +426,7 @@ fn test_let_statements() {
 
 #[test]
 fn test_return_statements() {
-    let input = "return 5;\
+    let input = "return (5)\
     return 10;\
     return 838383;
     ";
@@ -415,7 +435,7 @@ fn test_return_statements() {
     let mut p = Parser::new(Lexer::new(&input));
 
     let program = p.parse_program();
-    p.check_and_print_errors( &program);
+    p.check_and_print_errors(&program);
     assert_eq!(program.statements.len(), expected_count);
     for i in 0..expected_count {
         let statement = &program.statements[i];
@@ -450,4 +470,3 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
 
     return Ok(());
 }
-

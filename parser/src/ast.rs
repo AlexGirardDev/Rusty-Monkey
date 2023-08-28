@@ -1,8 +1,6 @@
-use std::clone;
-
 use lexer::token::Token;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Let(Identifier, Expression),
     Return(Expression),
@@ -19,7 +17,7 @@ impl std::fmt::Display for Statement {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Constant,
     Identifier(Identifier),
@@ -72,7 +70,7 @@ pub type Identifier = String;
 
 pub type Program = BlockStatement;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct BlockStatement {
     pub statements: Vec<Statement>,
 }
@@ -111,10 +109,3 @@ impl Precedence {
         };
     }
 }
-
-// #[derive(Debug)]
-// pub enum Node {
-//     Statement(Statement),
-//     Expression(Expression),
-//     Program(Program),
-// }

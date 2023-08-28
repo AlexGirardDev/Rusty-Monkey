@@ -20,7 +20,7 @@ impl<'a> Lexer<'a> {
         lex.read_char();
         return lex;
     }
-    pub fn get_input(&self)->String{
+    pub fn get_input(&self) -> String {
         String::from_utf8(self.input.to_vec()).unwrap()
     }
 
@@ -51,21 +51,20 @@ impl<'a> Lexer<'a> {
             b'-' => Token::Dash,
             b'/' => Token::ForwardSlash,
             b'*' => Token::Asterisk,
-            b'<' => match self.peak_char(){
+            b'<' => match self.peak_char() {
                 b'=' => {
                     self.read_char();
                     Token::LessThanEqual
                 }
-                _=> Token::LessThan,
-            }
-            b'>' => match self.peak_char(){
-
+                _ => Token::LessThan,
+            },
+            b'>' => match self.peak_char() {
                 b'=' => {
                     self.read_char();
                     Token::GreaterThanEqual
                 }
-                _=> Token::GreaterThan,
-            }
+                _ => Token::GreaterThan,
+            },
             ch => {
                 if ch.is_ascii_digit() {
                     return Token::Int(self.read_int());
@@ -157,8 +156,7 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-        let input =
-            "let five = 5;\
+        let input = "let five = 5;\
             let ten = 10;\
             let add = fn (x, y)\
             {\
@@ -260,4 +258,3 @@ if (5 < 10) {
     // {token.SEMICOLON, ";"},
     // {token.EOF, ""},
 }
-

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::enviorment::Environment;
+use crate::environment::Environment;
 use crate::eval::eval;
 use crate::eval_error::EvalError;
 use crate::node::Node;
@@ -8,9 +8,21 @@ use crate::object::Object;
 use colored::Colorize;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
-use parser::ast::{Program, Statement, Expression};
+use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
 
+#[test]
+fn test_function_application() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("let identity=fn(x){x;}; identity(5);", 5),
+        SingleValueTest::new("let identity=fn(x){return x;}; identity(5);", 5),
+        SingleValueTest::new("let double=fn(x){x*2;}; double(5);", 10),
+        SingleValueTest::new("let add = fn(x, y) { x+y;}; add(5,5) + (0)", 10),
+        SingleValueTest::new("let add=fn(x,y){x+y;}; add(5+5, add(5,5));", 20),
+        SingleValueTest::new("fn(x){x;}(5)", 5),
+    ];
+    SingleValueTest::test(tests);
+}
 #[test]
 fn test_function_object() {
     match test_eval("fn(x) {x +2}") {
@@ -51,6 +63,8 @@ fn test_let_statements() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("let a=5;a;", 5),
         SingleValueTest::new("let a=5*5; a;", 25),
+        SingleValueTest::new("let a=5;a", 5),
+        SingleValueTest::new("let a=5;(a)", 5),
         SingleValueTest::new("let a=5; let b=a; b;", 5),
         SingleValueTest::new("let a=5; let b=a; let c=a+b+5; c;", 15),
     ];
@@ -104,6 +118,7 @@ fn test_eval_bang_operator_exp() {
 fn test_eval_int_exp() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("5", 5),
+        SingleValueTest::new("(5)", 5),
         SingleValueTest::new("10", 10),
         SingleValueTest::new("5 + 5 + 5 + 5 - 10", 10),
         SingleValueTest::new("2*2*2*2*2", 32),

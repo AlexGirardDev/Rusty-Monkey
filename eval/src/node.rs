@@ -1,43 +1,34 @@
-use parser::ast::{Program, Statement, BlockStatement, Expression};
+use parser::ast::{BlockStatement, Expression, Program, Statement};
 
 use crate::object::Object;
 
-
-pub enum Node{
+pub enum Node {
     BlockStatement(BlockStatement),
     Program(Program),
     Object(Object),
     Statement(Statement),
-    Expression(Expression)
-
+    Expression(Expression),
 }
-impl From<Object> for Node{
+impl From<Object> for Node {
     fn from(v: Object) -> Self {
         Node::Object(v)
     }
 }
 
-impl From<BlockStatement> for Node{
-    fn from(value:BlockStatement) -> Self {
+impl From<BlockStatement> for Node {
+    fn from(value: BlockStatement) -> Self {
         Node::BlockStatement(value)
     }
 }
-// impl<'a> From<BlockStatement> for Node<'a> {
-//     fn from(v: &BlockStatement) -> Self {
-//         Node::BlockStatement(v)
-//     }
-// }
-//
 
-impl From<Statement> for Node{
+impl From<Statement> for Node {
     fn from(v: Statement) -> Self {
         Node::Statement(v)
     }
 }
 
-impl From<Expression> for Node{
+impl From<Expression> for Node {
     fn from(v: Expression) -> Self {
         Node::Expression(v)
     }
 }
-

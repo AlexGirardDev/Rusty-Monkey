@@ -50,14 +50,16 @@ impl From<bool> for Token {
 }
 
 impl From<String> for Token {
-    fn from(value:String ) -> Self {
+    fn from(value: String) -> Self {
         Token::Ident(value)
-    }}
+    }
+}
 
 impl From<&str> for Token {
-    fn from(value:&str ) -> Self {
+    fn from(value: &str) -> Self {
         Token::Ident(value.to_string())
-    }}
+    }
+}
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,4 +1,4 @@
-use eval::{eval::eval, enviorment::Environment};
+use eval::{environment::Environment, eval::eval};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
 use std::io::Write;
@@ -27,7 +27,7 @@ impl Repl {
             let program = parser.parse_program();
             let env = Environment::default();
             if parser.parse_errors.is_empty() {
-                println!("{}", eval(program.into(),&env).unwrap());
+                println!("{}", eval(program.into(), &env).unwrap());
             } else {
                 println!("Ruh Roh, looks like we ran into some errors while parsing");
                 for e in parser.parse_errors {

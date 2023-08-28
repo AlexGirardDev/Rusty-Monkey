@@ -1,11 +1,11 @@
-use std::rc::Rc;
+use parser::ast::{BlockStatement, Identifier};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
-use parser::ast::{Identifier, BlockStatement};
+use std::rc::Rc;
 
 use crate::eval_error::EvalError;
 
-#[derive(Debug,PartialEq, Default)]
+#[derive(Debug, PartialEq, Default)]
 pub enum Object {
     #[default]
     Null,
@@ -13,8 +13,7 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     Return(Rc<Object>),
-     Function(Vec<Identifier>,BlockStatement)
-
+    Function(Vec<Identifier>, BlockStatement),
 }
 
 impl From<i64> for Object {
@@ -22,6 +21,7 @@ impl From<i64> for Object {
         Object::Int(v)
     }
 }
+
 impl From<bool> for Object {
     fn from(v: bool) -> Self {
         Object::Bool(v)
@@ -40,8 +40,12 @@ impl Add for &Object {
     fn add(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l + *r).into()),
-            (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(),rhs.to_string())),
-            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs.to_string(),"+".to_string(),rhs.to_string()))
+            (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(), rhs.to_string())),
+            (lhs, rhs) => Err(EvalError::InvalidOperator(
+                lhs.to_string(),
+                "+".to_string(),
+                rhs.to_string(),
+            )),
         }
     }
 }
@@ -52,8 +56,12 @@ impl Sub for &Object {
     fn sub(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l - *r).into()),
-            (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(),rhs.to_string())),
-            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs.to_string(),"-".to_string(),rhs.to_string()))
+            (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(), rhs.to_string())),
+            (lhs, rhs) => Err(EvalError::InvalidOperator(
+                lhs.to_string(),
+                "-".to_string(),
+                rhs.to_string(),
+            )),
         }
     }
 }
@@ -64,8 +72,14 @@ impl Div for &Object {
     fn div(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l / *r).into()),
-            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.to_string(),rhs.to_string())),
-            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs.to_string(),"/".to_string(),rhs.to_string()))
+            (Object::Int(lhs), rhs) => {
+                return Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()));
+            }
+            (lhs, rhs) => Err(EvalError::InvalidOperator(
+                lhs.to_string(),
+                "/".to_string(),
+                rhs.to_string(),
+            )),
         }
     }
 }
@@ -76,12 +90,17 @@ impl Mul for &Object {
     fn mul(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => return Ok(Object::Int(*l * *r).into()),
-            (Object::Int(lhs), rhs) => return Err(EvalError::TypeMismatch(lhs.to_string(),rhs.to_string())),
-            (lhs,rhs) => Err(EvalError::InvalidOperator(lhs.to_string(),"*".to_string(),rhs.to_string()))
+            (Object::Int(lhs), rhs) => {
+                return Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()));
+            }
+            (lhs, rhs) => Err(EvalError::InvalidOperator(
+                lhs.to_string(),
+                "*".to_string(),
+                rhs.to_string(),
+            )),
         }
     }
 }
-
 
 impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -89,10 +108,9 @@ impl fmt::Display for Object {
             // Object::String(s) => write!(f, "{}", s),
             Object::Int(i) => write!(f, "{}", i),
             Object::Bool(b) => write!(f, "{}", b),
-            Object::Return(r) => write!(f,"return {}",r),
+            Object::Return(r) => write!(f, "return {}", r),
             Object::Null => write!(f, "null"),
             Object::Function(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
         }
     }
 }
-

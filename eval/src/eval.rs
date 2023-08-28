@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::rc::Rc;
 
-use crate::enviorment::Environment;
+use crate::environment::Environment;
 use crate::eval_error::EvalError;
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
@@ -73,11 +73,46 @@ pub fn eval_expression(exp: Expression, env: &Environment) -> Result<Rc<Object>,
             Some(v) => Ok(v),
             None => Err(EvalError::IdentifierNotFount(ident)),
         },
-        Expression::FnExpression(idents,blk) => {
+        Expression::FnExpression(idents, blk) => {
+            return Ok(Object::Function(idents.clone(), blk).into());
+        }
+        Expression::CallExpression(fun, values) => {
+            let mut values: Vec<Rc<Object>> = values
+                .into_iter()
+                .map(|v| eval_expression(v, env))
+                .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
+            let inner_env = Environment::new(env);
 
-            return Ok(Object::Function(idents.clone(), blk).into())
+            let block_statement = match *fun {
+                Expression::Identifier(ident) => {
+                    let fn_obj = env
+                        .get(&ident)
+                        .ok_or(EvalError::IdentifierNotFount(ident))?;
+                    let Object::Function(idents, block_statement) = fn_obj.as_ref()
+                        else {
+                            return Err(EvalError::ImpossibleState(format!("expected function from env lookup but got {fn_obj}")));
+                        };
 
-        },
+                    for key in idents.iter() {
+                        inner_env.set(key, values.pop().unwrap())
+                    }
+                    block_statement.to_owned()
+                }
+                Expression::FnExpression(i, block) => {
+                    for key in i.iter() {
+                        inner_env.set(key, values.pop().unwrap())
+                    }
+                    block
+                }
+                er => {
+                    return Err(EvalError::ImpossibleState(format!(
+                        "CallExpression exp property must be Ident or FnExpression but got {er}"
+                    )));
+                }
+            };
+
+            return eval_block(block_statement, &inner_env);
+        }
         _ => Ok(Object::Null.into()),
     };
 }
@@ -143,8 +178,9 @@ fn eval_obj_comparison(
         | ObjectComparison::GreaterThanEqual
         | ObjectComparison::LessThan
         | ObjectComparison::LessThanEqual => {
-            let (Object::Int(l), Object::Int(r)) = (left.as_ref(), right.as_ref()) else { 
-                    return Err(EvalError::InvalidOperator(left.to_string(), comp.to_string(),right.to_string() )) };
+            let (Object::Int(l), Object::Int(r)) = (left.as_ref(), right.as_ref()) else {
+                return Err(EvalError::InvalidOperator(left.to_string(), comp.to_string(), right.to_string()));
+            };
 
             let result = match comp {
                 ObjectComparison::GreaterThan => l > r,
@@ -166,7 +202,7 @@ fn eval_obj_comparison(
                         l.to_string(),
                         comp.to_string(),
                         r.to_string(),
-                    ))
+                    ));
                 }
             };
             match comp {
@@ -192,7 +228,7 @@ fn eval_object_equality(
                 l.to_string(),
                 if flip { "!=" } else { "==" }.to_string(),
                 r.to_string(),
-            ))
+            ));
         }
     };
     return Ok(Object::Bool(if flip { !result } else { result }).into());
