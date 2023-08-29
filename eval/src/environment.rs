@@ -23,7 +23,7 @@ impl<'a> Environment<'a> {
         self.store.borrow_mut().insert(key.into(), value);
     }
 
-    pub fn new(env: &'a Environment) -> Self {
+    pub fn new_closed(env: &'a Environment) -> Self {
         Environment {
             outer: Some(env),
             ..Default::default()

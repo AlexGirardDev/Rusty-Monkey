@@ -13,7 +13,7 @@ pub fn eval(node: Node, env: &Environment) -> Result<Rc<Object>, EvalError> {
         Node::Program(p) => eval_program(p, env)?,
         Node::Statement(s) => eval_statement(s, env)?,
         Node::Expression(e) => eval_expression(e, env)?,
-        Node::Object(o) => o.into()
+        Node::Object(o) => o.into(),
     })
 }
 
@@ -77,7 +77,7 @@ pub fn eval_expression(exp: Expression, env: &Environment) -> Result<Rc<Object>,
                 .into_iter()
                 .map(|v| eval_expression(v, env))
                 .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
-            let inner_env = Environment::new(env);
+            let inner_env = Environment::new_closed(env);
 
             let block_statement = match *fun {
                 Expression::Identifier(ident) => {

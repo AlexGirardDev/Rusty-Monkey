@@ -13,4 +13,5 @@ lexer = { path = "../lexer" }
 parser = { path = "../parser" }
 eval = { path = "../eval" }
 whoami = "1.4.1"
+colored = "2.0.4"
 # parser = { path = "../parser" }
