@@ -7,7 +7,7 @@ use std::rc::Rc;
 use crate::environment::Environment;
 use crate::eval_error::EvalError;
 
-#[derive(Debug, PartialEq,Default)]
+#[derive(Debug, PartialEq, Default)]
 pub enum Object {
     #[default]
     Null,
@@ -75,7 +75,7 @@ impl Div for &Object {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l / *r).into()),
             (Object::Int(lhs), rhs) => {
-                 Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()))
+                Err(EvalError::TypeMismatch(lhs.to_string(), rhs.to_string()))
             }
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),

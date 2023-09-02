@@ -1,9 +1,9 @@
 use colored::Colorize;
+use eval::object::Object;
 use eval::{environment::Environment, eval::eval};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
-use eval::object::Object;
-use std::{io::Write, cell::RefCell, rc::Rc};
+use std::{cell::RefCell, io::Write, rc::Rc};
 
 fn main() {
     Repl::start();
@@ -30,11 +30,9 @@ impl Repl {
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
             if parser.parse_errors.is_empty() {
-                match eval(program, &env).unwrap().as_ref(){
-                    Object::Null=> (),
-                    out => println!("{out}")
-
-
+                match eval(program, &env).unwrap().as_ref() {
+                    Object::Null => (),
+                    out => println!("{out}"),
                 };
             } else {
                 println!("Ruh Roh, looks like we ran into some errors while parsing");
