@@ -4,6 +4,7 @@ use std::fmt::Display;
 pub enum Token {
     Ident(String),
     Int(i64),
+    String(String),
 
     Illegal,
     Eof,
@@ -60,6 +61,12 @@ impl From<&str> for Token {
         Token::Ident(value.to_string())
     }
 }
+impl  Token{
+    pub fn new(token:impl Into<Token>)->Token{
+        token.into()
+    }
+
+}
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -93,6 +100,7 @@ impl Display for Token {
             Token::Return => write!(f, "return"),
             Token::Bool(true) => write!(f, "true"),
             Token::Bool(false) => write!(f, "false"),
+            Token::String(s) => write!(f, "{s}")
         }
     }
 }

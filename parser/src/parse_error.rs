@@ -94,6 +94,7 @@ impl From<&Token> for TokenType {
             Token::Else => TokenType::Else,
             Token::Return => TokenType::Return,
             Token::Bool(_) => TokenType::Bool,
+            Token::String(_) => todo!(),
         }
     }
 }
@@ -155,4 +156,5 @@ pub enum TokenType {
     Else,
     Return,
     Bool,
+    String,
 }

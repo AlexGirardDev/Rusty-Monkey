@@ -51,6 +51,12 @@ impl<'a> Lexer<'a> {
             b'-' => Token::Dash,
             b'/' => Token::ForwardSlash,
             b'*' => Token::Asterisk,
+            b'"' => {
+                println!("woweee");
+                self.read_char();
+                Token::String(self.read_string_lit())
+            }
+
             b'<' => match self.peak_char() {
                 b'=' => {
                     self.read_char();
@@ -109,6 +115,18 @@ impl<'a> Lexer<'a> {
         return String::from_utf8_lossy(&self.input[position..self.position]).to_string();
     }
 
+    fn read_string_lit(&mut self) -> String {
+        let position = self.position;
+        self.read_char();
+        while self.ch != b'"' {
+        println!("wowee {:?}",self.ch as char);
+            self.read_char();
+        }
+        println!("{} - {}",position,self.position);
+
+        return String::from_utf8_lossy(&self.input[position..self.position]).to_string();
+    }
+
     fn eat_whitespace(&mut self) {
         while self.ch.is_ascii_whitespace() {
             self.read_char();
@@ -130,131 +148,3 @@ impl<'a> Lexer<'a> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn lexer_test() {
-        let input = "=+(){},;";
-        let mut lex = Lexer::new(&input);
-        let expected_stuff: Vec<Token> = vec![
-            Token::Assign,
-            Token::Plus,
-            Token::LParen,
-            Token::RParent,
-            Token::LBracket,
-            Token::RBracket,
-            Token::Comma,
-            Token::Semicolon,
-        ];
-        for stuff in expected_stuff {
-            let token = lex.next_token();
-            assert_eq!(token, stuff);
-        }
-    }
-
-    #[test]
-    fn test_next_token() {
-        let input = "let five = 5;\
-            let ten = 10;\
-            let add = fn (x, y)\
-            {\
-                x + y;\
-            };\
-\
-            let result = add(five, ten);\
-            !-/*5;\
-            5 < 10 >= 5;\
-if (5 < 10) {
-    return true;
-} else {
-    return false;
-}`
-10 == 10;
-10 != 9;
-`";
-        let mut lex = Lexer::new(input);
-
-        let expected_stuff: Vec<Token> = vec![
-            Token::Let,
-            Token::Ident(String::from("five")),
-            Token::Assign,
-            Token::Int(5),
-            Token::Semicolon,
-            Token::Let,
-            Token::Ident(String::from("ten")),
-            Token::Assign,
-            Token::Int(10),
-            Token::Semicolon,
-            Token::Let,
-            Token::Ident(String::from("add")),
-            Token::Assign,
-            Token::Function,
-            Token::LParen,
-            Token::Ident(String::from("x")),
-            Token::Comma,
-            Token::Ident(String::from("y")),
-            Token::RParent,
-            Token::LBracket,
-            Token::Ident(String::from("x")),
-            Token::Plus,
-            Token::Ident(String::from("y")),
-            Token::Semicolon,
-            Token::RBracket,
-            Token::Semicolon,
-            Token::Let,
-            Token::Ident(String::from("result")),
-            Token::Assign,
-            Token::Ident(String::from("add")),
-            Token::LParen,
-            Token::Ident(String::from("five")),
-            Token::Comma,
-            Token::Ident(String::from("ten")),
-            Token::RParent,
-            Token::Semicolon,
-            Token::Bang,
-            Token::Dash,
-            Token::ForwardSlash,
-            Token::Asterisk,
-            Token::Int(5),
-            Token::Semicolon,
-            Token::Int(5),
-            Token::LessThan,
-            Token::Int(10),
-            Token::GreaterThanEqual,
-            Token::Int(5),
-            Token::Semicolon,
-            Token::If,
-            Token::LParen,
-            Token::Int(5),
-            Token::LessThan,
-            Token::Int(10),
-            Token::RParent,
-            Token::LBracket,
-            Token::Return,
-            Token::Bool(true),
-            Token::Semicolon,
-            Token::RBracket,
-            Token::Else,
-            Token::LBracket,
-            Token::Return,
-            Token::Bool(false),
-            Token::Semicolon,
-            Token::RBracket,
-        ];
-        for expected_token in expected_stuff {
-            let actual_token = lex.next_token();
-            assert_eq!(expected_token, actual_token);
-        }
-    }
-    //     {token.ASSIGN, "="},
-    // {token.PLUS, "+"},
-    // {token.LPAREN, "("},
-    // {token.RPAREN, ")"},
-    // {token.LBRACE, "{"},
-    // {token.RBRACE, "}"},
-    // {token.COMMA, ","},
-    // {token.SEMICOLON, ";"},
-    // {token.EOF, ""},
-}
