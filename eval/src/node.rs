@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use parser::ast::{BlockStatement, Expression, Program, Statement};
 
 use crate::object::Object;
@@ -5,13 +7,13 @@ use crate::object::Object;
 pub enum Node {
     BlockStatement(BlockStatement),
     Program(Program),
-    Object(Object),
+    Object(Rc<Object>),
     Statement(Statement),
     Expression(Expression),
 }
 impl From<Object> for Node {
     fn from(v: Object) -> Self {
-        Node::Object(v)
+        Node::Object(v.into())
     }
 }
 

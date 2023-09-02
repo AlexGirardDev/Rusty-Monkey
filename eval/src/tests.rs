@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::environment::Environment;
@@ -10,6 +11,22 @@ use lexer::lexer::Lexer;
 use lexer::token::Token;
 use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
+
+
+#[test]
+fn test_closures() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("
+  let newAdder = fn(x) { \
+             fn(y) { x + y }; \
+             }; \
+             let addTwo = newAdder(2); \
+             addTwo(2);",
+ 4),
+    ];
+    SingleValueTest::test(tests);
+}
+
 
 #[test]
 fn test_function_application() {
@@ -27,7 +44,7 @@ fn test_function_application() {
 fn test_function_object() {
     match test_eval("fn(x) {x +2}") {
         Ok(obj) => {
-            if let Object::Function(ident, blk) = obj.as_ref() {
+            if let Object::Function(ident, blk,_) = obj.as_ref() {
                 assert_eq!(ident.len(), 1);
                 assert_eq!(ident[0], "x");
                 assert_eq!(blk.statements.len(), 1);
@@ -170,7 +187,8 @@ fn test_error_exp() {
 
 fn test_eval(input: impl Into<String>) -> Result<Rc<Object>, EvalError> {
     let program = get_program(input.into());
-    eval(Node::Program(program), &mut Environment::default())
+    let env =Environment::new();
+    eval(Node::Program(program), &mut Rc::new(RefCell::new(env)))
 }
 
 fn get_program(input: String) -> Program {

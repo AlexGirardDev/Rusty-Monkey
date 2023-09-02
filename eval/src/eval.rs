@@ -1,36 +1,42 @@
+use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
 
-use crate::environment::Environment;
+use crate::environment::{Env, Environment};
 use crate::eval_error::EvalError;
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
 use parser::ast::{BlockStatement, Expression, Program, Statement};
 
-pub fn eval(node: Node, env: &Environment) -> Result<Rc<Object>, EvalError> {
-    Ok(match node {
+pub fn eval(node: impl Into<Node>, env: &Env) -> Result<Rc<Object>, EvalError> {
+    Ok(match &node.into() {
         Node::BlockStatement(s) => eval_block(s, env)?,
         Node::Program(p) => eval_program(p, env)?,
         Node::Statement(s) => eval_statement(s, env)?,
         Node::Expression(e) => eval_expression(e, env)?,
-        Node::Object(o) => o.into(),
+        Node::Object(o) => o.clone(),
     })
 }
 
-pub fn eval_block(block: BlockStatement, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_block(block: &BlockStatement, env: &Env) -> Result<Rc<Object>, EvalError> {
+    // println!("EXECUTING BLOCK");
+    // println!("{block}");
+    //
+    // println!("ENV:");
+    // println!("{env}");
     let mut result: Rc<Object> = Object::Null.into();
-    for st in block.statements {
+    for st in &block.statements {
         result = eval_statement(st, env)?;
-        if let Object::Return(_) = *result {
+        if let Object::Return(_) = result.as_ref() {
             return Ok(result);
         }
     }
     Ok(result)
 }
 
-pub fn eval_program(block: Program, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_program(block: &Program, env: &Env) -> Result<Rc<Object>, EvalError> {
     let mut result: Rc<Object> = Object::Null.into();
-    for st in block.statements {
+    for st in &block.statements {
         result = eval_statement(st, env)?;
         if let Object::Return(r) = result.as_ref() {
             return Ok(r.clone());
@@ -39,7 +45,7 @@ pub fn eval_program(block: Program, env: &Environment) -> Result<Rc<Object>, Eva
     Ok(result)
 }
 
-pub fn eval_statement(statement: Statement, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_statement(statement: &Statement, env: &Env) -> Result<Rc<Object>, EvalError> {
     match statement {
         Statement::ExpressionStatement(exp) => eval_expression(exp, env),
         Statement::Return(exp) => {
@@ -48,82 +54,138 @@ pub fn eval_statement(statement: Statement, env: &Environment) -> Result<Rc<Obje
         }
         Statement::Let(ident, exp) => {
             let val = eval_expression(exp, env)?;
-            env.set(ident, val);
+            println!("LETTTTTTTTTTT {ident}, {val}");
+            env.clone().borrow_mut().set(ident, val);
             Ok(Object::Null.into())
         }
     }
 }
 
-pub fn eval_expression(exp: Expression, env: &Environment) -> Result<Rc<Object>, EvalError> {
+pub fn eval_expression(exp: &Expression, env: &Env) -> Result<Rc<Object>, EvalError> {
     return match exp {
-        Expression::IntLiteral(i) => Ok(Object::Int(i).into()),
-        Expression::Bool(b) => Ok(Object::Bool(b).into()),
-        Expression::PrefixExpression(t, right) => eval_prefix_expression(t, *right, env),
-        Expression::InfixExpression(t, left, right) => eval_infix_objects(
-            t,
-            eval_expression(*left, env)?,
-            eval_expression(*right, env)?,
-        ),
+        Expression::IntLiteral(i) => Ok(Object::Int(*i).into()),
+        Expression::Bool(b) => Ok(Object::Bool(*b).into()),
+        Expression::PrefixExpression(t, right) => eval_prefix_expression(t, right, env),
+        Expression::InfixExpression(t, left, right) => {
+            eval_infix_objects(t, eval_expression(left, env)?, eval_expression(right, env)?)
+        }
         Expression::IfExpression(con, if_exp, else_exp) => {
-            eval_if_else_expression(*con, if_exp, else_exp, env)
+            eval_if_else_expression(con, if_exp, else_exp, env)
         }
-        Expression::Identifier(ident) => match env.get(&ident) {
+        Expression::Identifier(ident) => match env.borrow().get(ident) {
             Some(v) => Ok(v),
-            None => Err(EvalError::IdentifierNotFount(ident)),
+            None => Err({
+                println!("failed lookup of {ident} {:?}",**env);
+                EvalError::IdentifierNotFount(ident.to_string())
+            }),
         },
-        Expression::FnExpression(idents, blk) => Ok(Object::Function(idents, blk).into()),
-        Expression::CallExpression(fun, values) => {
-            let mut values: Vec<Rc<Object>> = values
-                .into_iter()
-                .map(|v| eval_expression(v, env))
-                .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
-            let inner_env = Environment::new_closed(env);
-
-            let block_statement = match *fun {
-                Expression::Identifier(ident) => {
-                    let fn_obj = env
-                        .get(&ident)
-                        .ok_or(EvalError::IdentifierNotFount(ident))?;
-                    let Object::Function(idents, block_statement) = fn_obj.as_ref()
-                        else {
-                            return Err(EvalError::ImpossibleState(format!("expected function from env lookup but got {fn_obj}")));
-                        };
-
-                    for key in idents.iter() {
-                        inner_env.set(key, values.pop().unwrap())
-                    }
-                    block_statement.to_owned()
-                }
-                Expression::FnExpression(i, block) => {
-                    for key in i.iter() {
-                        inner_env.set(key, values.pop().unwrap())
-                    }
-                    block
-                }
-                er => {
-                    return Err(EvalError::ImpossibleState(format!(
-                        "CallExpression exp property must be Ident or FnExpression but got {er}"
-                    )));
-                }
-            };
-
-            return eval_block(block_statement, &inner_env);
+        Expression::FnExpression(idents, blk) => {
+            Ok(Object::Function(idents.clone(), blk.clone(), Rc::clone(env)).into())
         }
+        Expression::CallExpression(fun, values) => eval_call_expression(fun, values, env),
         _ => Ok(Object::Null.into()),
     };
 }
+static mut WOW: i32 = 0;
+fn eval_call_expression(
+    fun: &Expression,
+    values: &[Expression],
+    env: &Env,
+) -> Result<Rc<Object>, EvalError> {
+    unsafe { WOW += 1 }
+    println!("=========");
+    unsafe {
+        println!("{WOW}");
+    }
+    println!("START FN CALL");
+    println!("FUN:{fun} ");
+    println!("VALUES:{:?} ", values);
 
+    let res = eval_expression(fun, env)?;
+    let Object::Function(idents, blk,new_env ) =  res.as_ref() else {todo!();};
+    let args: Vec<Rc<Object>> = values
+        .iter()
+        .map(|v| eval_expression(v, env))
+        .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
+    let scoped :Env= Rc::new(RefCell::new(Environment::new_closed(new_env.clone())));
+    for (i, key) in idents.iter().enumerate() {
+        scoped.borrow_mut().set(key, args[i].clone());
+    }
+
+    let result = eval_block(blk, &scoped)?;
+
+    if let Object::Return(val) = result.as_ref() {
+         return Ok(val.clone());
+    }
+    Ok(result)
+    // let block_statement: (BlockStatement, Env) = match fun.as_ref() {
+    // k
+    //     Expression::Identifier(ident) => {
+    //         let fn_obj = env
+    //             .get(ident)
+    //             .ok_or(EvalError::IdentifierNotFount(ident.to_owned()))?
+    //             .clone();
+    //         let Object::Function(idents, block_statement, env)= fn_obj.as_ref()
+    //                     else {
+    //                         return Err(EvalError::ImpossibleState(format!("expected function from env lookup but got {fn_obj}")));
+    //                     };
+    //
+    //         let values: Vec<Rc<Object>> = values
+    //             .into_iter()
+    //             .map(|v| eval_expression(v, env))
+    //             .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
+    //         for (i, key) in idents.iter().enumerate() {
+    //             env.set(key, values[i].clone());
+    //         }
+    //
+    //         (block_statement.clone(), **env)
+    //     }
+    //     Expression::FnExpression(idents, block) => {
+    //         let values: Vec<Rc<Object>> = values
+    //             .into_iter()
+    //             .map(|v| eval_expression(v, &env))
+    //             .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
+    //         for (i, key) in idents.iter().enumerate() {
+    //             env.set(key, values[i].clone());
+    //         }
+    //         (block.clone(), *env)
+    //     }
+    //     err => {
+    //         return Err(EvalError::ImpossibleState(format!(
+    //             "CallExpression exp property must be Ident or FnExpression but got {err}"
+    //         )));
+    //     }
+    // };
+    //
+    // let inner_env = Env::new_closed(block_statement.1.into());
+    // let blk_str = block_statement.0.to_string();
+    // let mut result = eval_block(&block_statement.0, &inner_env)?;
+    //
+    // println!("=========");
+    // println!("BLOCK:[{}]>", blk_str);
+    //
+    // // dbg!(&result, &inner_env);
+    // if let Object::Return(val) = result.as_ref() {
+    //     result = val.clone();
+    // }
+    // println!("RESULT:[{result}]>");
+    // println!("ENV:{inner_env}");
+    // println!("=========");
+    //
+    // unsafe { WOW -= 1 }
+    // return Ok(result);
+}
 fn eval_if_else_expression(
-    cond: Expression,
-    if_exp: BlockStatement,
-    else_exp: Option<BlockStatement>,
-    env: &Environment,
+    cond: &Expression,
+    if_exp: &BlockStatement,
+    else_exp: &Option<BlockStatement>,
+    env: &Env,
 ) -> Result<Rc<Object>, EvalError> {
     if is_truthy(eval_expression(cond, env)?) {
-        eval(if_exp.into(), env)
+        eval_block(if_exp, env)
     } else {
         match else_exp {
-            Some(exp) => eval(exp.into(), env),
+            Some(exp) => eval_block(exp, env),
             None => Ok(Object::Null.into()),
         }
     }
@@ -138,7 +200,7 @@ fn is_truthy(obj: impl Into<Rc<Object>>) -> bool {
 }
 
 fn eval_infix_objects(
-    token: Token,
+    token: &Token,
     left: Rc<Object>,
     right: Rc<Object>,
 ) -> Result<Rc<Object>, EvalError> {
@@ -230,15 +292,15 @@ fn eval_object_equality(
 }
 
 fn eval_prefix_expression(
-    token: Token,
-    exp: Expression,
-    env: &Environment,
+    token: &Token,
+    exp: &Expression,
+    env: &Env,
 ) -> Result<Rc<Object>, EvalError> {
     let exp = eval_expression(exp, env)?;
     match token {
         Token::Bang => Ok(eval_bang_operator_expression(exp)?.into()),
         Token::Dash => Ok(eval_minus_operator_expression(exp)?.into()),
-        _ => Err(EvalError::InvalidPrefix(token)),
+        _ => Err(EvalError::InvalidPrefix(token.to_owned())),
     }
 }
 

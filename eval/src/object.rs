@@ -1,11 +1,13 @@
 use parser::ast::{BlockStatement, Identifier};
+use std::cell::RefCell;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
 
+use crate::environment::Environment;
 use crate::eval_error::EvalError;
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq,Default)]
 pub enum Object {
     #[default]
     Null,
@@ -13,7 +15,7 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     Return(Rc<Object>),
-    Function(Vec<Identifier>, BlockStatement),
+    Function(Vec<Identifier>, BlockStatement, Rc<RefCell<Environment>>),
 }
 
 impl From<i64> for Object {
@@ -110,7 +112,7 @@ impl fmt::Display for Object {
             Object::Bool(b) => write!(f, "{}", b),
             Object::Return(r) => write!(f, "return {}", r),
             Object::Null => write!(f, "null"),
-            Object::Function(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
+            Object::Function(idents, blk, _) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
         }
     }
 }

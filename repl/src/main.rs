@@ -3,7 +3,7 @@ use eval::{environment::Environment, eval::eval};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
 use eval::object::Object;
-use std::io::Write;
+use std::{io::Write, cell::RefCell, rc::Rc};
 
 fn main() {
     Repl::start();
@@ -21,7 +21,7 @@ impl Repl {
         let prompt = ">>>".green();
 
         println!("Feel free to type in commands");
-        let env = Environment::default();
+        let env = Rc::new(RefCell::new(Environment::new()));
         loop {
             let mut line = String::new();
             print!("{prompt}");
@@ -30,7 +30,7 @@ impl Repl {
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
             if parser.parse_errors.is_empty() {
-                match eval(program.into(), &env).unwrap().as_ref(){
+                match eval(program, &env).unwrap().as_ref(){
                     Object::Null=> (),
                     out => println!("{out}")
 
