@@ -60,6 +60,7 @@ pub fn eval_statement(statement: &Statement, env: &Env) -> EvalResponse {
 pub fn eval_expression(exp: &Expression, env: &Env) -> EvalResponse {
     return match exp {
         Expression::IntLiteral(i) => Ok(Object::Int(*i).into()),
+        Expression::StringLiteral(s) => Ok(Object::String(s.to_owned()).into()),
         Expression::Bool(b) => Ok(Object::Bool(*b).into()),
         Expression::PrefixExpression(t, right) => eval_prefix_expression(t, right, env),
         Expression::InfixExpression(t, left, right) => {
@@ -170,7 +171,7 @@ fn eval_obj_comparison(
         ObjectComparison::Equal | ObjectComparison::NotEqual => {
             let result = match (left.as_ref(), right.as_ref()) {
                 (Object::Bool(l), Object::Bool(r)) => l == r,
-                // (Object::String(l), Object::String(r)) => l == r,
+                (Object::String(l), Object::String(r)) => l == r,
                 (Object::Int(l), Object::Int(r)) => l == r,
                 (Object::Null, Object::Null) => true,
                 (l, r) => {
@@ -193,7 +194,7 @@ fn eval_obj_comparison(
 fn eval_object_equality(left: Rc<Object>, right: Rc<Object>, flip: bool) -> EvalResponse {
     let result = match (left.as_ref(), right.as_ref()) {
         (Object::Bool(l), Object::Bool(r)) => l == r,
-        // (Object::String(l), Object::String(r)) => l == r,
+        (Object::String(l), Object::String(r)) => l == r,
         (Object::Null, Object::Null) => true,
         (l, r) => {
             return Err(EvalError::InvalidOperator(

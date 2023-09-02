@@ -11,7 +11,7 @@ use crate::eval_error::EvalError;
 pub enum Object {
     #[default]
     Null,
-    // String(String),
+    String(String),
     Int(i64),
     Bool(bool),
     Return(Rc<Object>),
@@ -30,11 +30,11 @@ impl From<bool> for Object {
     }
 }
 
-// impl<'a> From<&'a str> for Object {
-//     fn from(s: &'a str) -> Self {
-//         Object::String(String::from(s))
-//     }
-// }
+impl<'a> From<&'a str> for Object {
+    fn from(s: &'a str) -> Self {
+        Object::String(String::from(s))
+    }
+}
 
 impl Add for &Object {
     type Output = Result<Rc<Object>, EvalError>;
@@ -42,6 +42,7 @@ impl Add for &Object {
     fn add(self, rhs: Self) -> Result<Rc<Object>, EvalError> {
         match (self, rhs) {
             (Object::Int(l), Object::Int(r)) => Ok(Object::Int(*l + *r).into()),
+            (Object::String(l), Object::String(r)) => Ok(Object::String(format!("{l}{r}")).into()),
             (Object::Int(l), rhs) => Err(EvalError::TypeMismatch(l.to_string(), rhs.to_string())),
             (lhs, rhs) => Err(EvalError::InvalidOperator(
                 lhs.to_string(),
@@ -107,7 +108,7 @@ impl Mul for &Object {
 impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            // Object::String(s) => write!(f, "{}", s),
+            Object::String(s) => write!(f, "{}", s),
             Object::Int(i) => write!(f, "{}", i),
             Object::Bool(b) => write!(f, "{}", b),
             Object::Return(r) => write!(f, "return {}", r),

@@ -13,6 +13,18 @@ use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
 
 #[test]
+fn test_string_operations() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("\"foo\"", "foo"),
+        SingleValueTest::new("\"foo\"+\"bar\"", "foobar"),
+        SingleValueTest::new("\"foo\"==\"foo\"", true),
+        SingleValueTest::new("\"foo\"==\"Foo\"", false),
+        SingleValueTest::new("\"foo\"!=\"bar\"", true),
+    ];
+    SingleValueTest::test(tests);
+}
+
+#[test]
 fn test_closures() {
     let tests: Vec<SingleValueTest> = vec![SingleValueTest::new(
         "
