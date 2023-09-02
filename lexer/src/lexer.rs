@@ -52,7 +52,6 @@ impl<'a> Lexer<'a> {
             b'/' => Token::ForwardSlash,
             b'*' => Token::Asterisk,
             b'"' => {
-                println!("woweee");
                 self.read_char();
                 Token::String(self.read_string_lit())
             }
@@ -119,11 +118,8 @@ impl<'a> Lexer<'a> {
         let position = self.position;
         self.read_char();
         while self.ch != b'"' {
-        println!("wowee {:?}",self.ch as char);
             self.read_char();
         }
-        println!("{} - {}",position,self.position);
-
         return String::from_utf8_lossy(&self.input[position..self.position]).to_string();
     }
 

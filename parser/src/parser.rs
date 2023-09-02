@@ -224,6 +224,9 @@ impl<'a> Parser<'a> {
         Ok(Expression::IntLiteral(int))
     }
 
+    fn parse_string_literal(&self, value: &str) -> Result<Expression, ParserError> {
+        Ok(Expression::StringLiteral(value.to_owned()))
+    }
     fn parse_bool(&self, b: bool) -> Result<Expression, ParserError> {
         Ok(Expression::Bool(b))
     }
@@ -232,6 +235,7 @@ impl<'a> Parser<'a> {
         match &self.cur_token {
             Token::Ident(i) => return self.parse_identifier(i),
             Token::Int(i) => return self.parse_int_literal(*i),
+            Token::String(s) => return self.parse_string_literal(s),
             Token::Bool(b) => return self.parse_bool(*b),
             Token::LParen => return self.parse_grouped_expression(),
             Token::If => return self.parse_if_expression(),
@@ -287,6 +291,7 @@ impl<'a> Parser<'a> {
                 | Token::LBracket
                 | Token::If
                 | Token::Function
+                | Token::String(_)
         )
     }
 

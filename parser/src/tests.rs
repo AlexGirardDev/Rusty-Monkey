@@ -28,8 +28,23 @@ fn test_program(tests: Vec<Test>) {
 }
 
 #[test]
+fn test_string_literal_parse() {
+    let input = "\"foobar\"";
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    p.check_and_print_errors(&program);
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+    if let Statement::ExpressionStatement(s) = statement {
+        test_string_literal_exp(s, "foobar");
+    }else{
+        panic!("expected expression statement but got {statement}");
+    }
+}
+
+#[test]
 fn test_fn_call_expressions() {
-    let input = "add(1, 2 * 3, 4+5)";
+    let input = "add(1, 2 * 3, 4+5,\"test\")";
     let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
     p.check_and_print_errors(&program);
@@ -42,10 +57,11 @@ fn test_fn_call_expressions() {
             panic!("Expected if expression statement, got {}", statement);
         }
 
-        assert_eq!(params.len(), 3);
+        assert_eq!(params.len(), 4);
         test_int_exp(&params[0], 1);
         test_infix_exp(&params[1], Token::Asterisk, 2, 3);
         test_infix_exp(&params[2], Token::Plus, 4, 5);
+        test_string_literal_exp(&params[3], "test");
         // if let Statement::ExpressionStatement(e) = &block.statements[0] {
         //     test_infix_exp(e, Token::Plus, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
         // } else {
@@ -304,6 +320,13 @@ fn test_int_exp(exp: &Expression, value: i64) {
     }
 }
 
+fn test_string_literal_exp(exp: &Expression, value: &str ) {
+    if let Expression::StringLiteral(s) = &exp {
+        assert_eq!(s, value);
+    } else {
+        panic!("Expected string literal exp, got {}", exp);
+    }
+}
 #[test]
 fn test_prefix_expressions() {
     struct PrefixTest {

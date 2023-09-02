@@ -22,6 +22,7 @@ pub enum Expression {
     Constant,
     Identifier(Identifier),
     IntLiteral(i64),
+    StringLiteral(String),
     Bool(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Token, Box<Expression>, Box<Expression>),
@@ -62,6 +63,7 @@ impl std::fmt::Display for Expression {
                 }
                 write!(f, ")")
             }
+            Expression::StringLiteral(s) => write!(f,"{s}")
         }
     }
 }
