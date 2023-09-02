@@ -19,11 +19,6 @@ pub fn eval(node: impl Into<Node>, env: &Env) -> Result<Rc<Object>, EvalError> {
 }
 
 pub fn eval_block(block: &BlockStatement, env: &Env) -> Result<Rc<Object>, EvalError> {
-    // println!("EXECUTING BLOCK");
-    // println!("{block}");
-    //
-    // println!("ENV:");
-    // println!("{env}");
     let mut result: Rc<Object> = Object::Null.into();
     for st in &block.statements {
         result = eval_statement(st, env)?;
@@ -54,7 +49,6 @@ pub fn eval_statement(statement: &Statement, env: &Env) -> Result<Rc<Object>, Ev
         }
         Statement::Let(ident, exp) => {
             let val = eval_expression(exp, env)?;
-            println!("LETTTTTTTTTTT {ident}, {val}");
             env.clone().borrow_mut().set(ident, val);
             Ok(Object::Null.into())
         }
@@ -75,7 +69,6 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> Result<Rc<Object>, EvalEr
         Expression::Identifier(ident) => match env.borrow().get(ident) {
             Some(v) => Ok(v),
             None => Err({
-                println!("failed lookup of {ident} {:?}",**env);
                 EvalError::IdentifierNotFount(ident.to_string())
             }),
         },
@@ -86,21 +79,11 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> Result<Rc<Object>, EvalEr
         _ => Ok(Object::Null.into()),
     };
 }
-static mut WOW: i32 = 0;
 fn eval_call_expression(
     fun: &Expression,
     values: &[Expression],
     env: &Env,
 ) -> Result<Rc<Object>, EvalError> {
-    unsafe { WOW += 1 }
-    println!("=========");
-    unsafe {
-        println!("{WOW}");
-    }
-    println!("START FN CALL");
-    println!("FUN:{fun} ");
-    println!("VALUES:{:?} ", values);
-
     let res = eval_expression(fun, env)?;
     let Object::Function(idents, blk,new_env ) =  res.as_ref() else {todo!();};
     let args: Vec<Rc<Object>> = values
@@ -118,63 +101,8 @@ fn eval_call_expression(
          return Ok(val.clone());
     }
     Ok(result)
-    // let block_statement: (BlockStatement, Env) = match fun.as_ref() {
-    // k
-    //     Expression::Identifier(ident) => {
-    //         let fn_obj = env
-    //             .get(ident)
-    //             .ok_or(EvalError::IdentifierNotFount(ident.to_owned()))?
-    //             .clone();
-    //         let Object::Function(idents, block_statement, env)= fn_obj.as_ref()
-    //                     else {
-    //                         return Err(EvalError::ImpossibleState(format!("expected function from env lookup but got {fn_obj}")));
-    //                     };
-    //
-    //         let values: Vec<Rc<Object>> = values
-    //             .into_iter()
-    //             .map(|v| eval_expression(v, env))
-    //             .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
-    //         for (i, key) in idents.iter().enumerate() {
-    //             env.set(key, values[i].clone());
-    //         }
-    //
-    //         (block_statement.clone(), **env)
-    //     }
-    //     Expression::FnExpression(idents, block) => {
-    //         let values: Vec<Rc<Object>> = values
-    //             .into_iter()
-    //             .map(|v| eval_expression(v, &env))
-    //             .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
-    //         for (i, key) in idents.iter().enumerate() {
-    //             env.set(key, values[i].clone());
-    //         }
-    //         (block.clone(), *env)
-    //     }
-    //     err => {
-    //         return Err(EvalError::ImpossibleState(format!(
-    //             "CallExpression exp property must be Ident or FnExpression but got {err}"
-    //         )));
-    //     }
-    // };
-    //
-    // let inner_env = Env::new_closed(block_statement.1.into());
-    // let blk_str = block_statement.0.to_string();
-    // let mut result = eval_block(&block_statement.0, &inner_env)?;
-    //
-    // println!("=========");
-    // println!("BLOCK:[{}]>", blk_str);
-    //
-    // // dbg!(&result, &inner_env);
-    // if let Object::Return(val) = result.as_ref() {
-    //     result = val.clone();
-    // }
-    // println!("RESULT:[{result}]>");
-    // println!("ENV:{inner_env}");
-    // println!("=========");
-    //
-    // unsafe { WOW -= 1 }
-    // return Ok(result);
 }
+
 fn eval_if_else_expression(
     cond: &Expression,
     if_exp: &BlockStatement,
