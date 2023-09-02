@@ -62,41 +62,7 @@ fn test_fn_call_expressions() {
         test_infix_exp(&params[1], Token::Asterisk, 2, 3);
         test_infix_exp(&params[2], Token::Plus, 4, 5);
         test_string_literal_exp(&params[3], "test");
-        // if let Statement::ExpressionStatement(e) = &block.statements[0] {
-        //     test_infix_exp(e, Token::Plus, Token::Ident(String::from("x")), Token::Ident(String::from("y")));
-        // } else {
-        //     panic!("Expected if ident statement with , got {}", statement);
     }
-}
-
-// #[test]
-fn test_fn_expressions_chained() {
-    // env::set_var("RUST_BACKTRACE", "1");
-    let input = "fn(x,y) { x + y; }(5)";
-    let mut p = Parser::new(Lexer::new(input));
-    let program: Program = p.parse_program();
-    p.check_and_print_errors(&program);
-    assert_eq!(program.statements.len(), 3);
-    let statement = &program.statements[0];
-    if let Statement::ExpressionStatement(i) = statement {
-        if let Expression::FnExpression(params, block) = i {
-            assert_eq!(params.len(), 2);
-            assert_eq!(String::from("x"), params[0]);
-            assert_eq!(String::from("y"), params[1]);
-            if let Statement::ExpressionStatement(e) = &block.statements[0] {
-                test_infix_exp(e, Token::Plus, "x", "y");
-            } else {
-                panic!("Expected if ident statement with , got {}", statement);
-            }
-        } else {
-            panic!("Expected if expression statement, got {}", statement);
-        }
-    }
-
-    assert_eq!(
-        &program.statements[1],
-        &Statement::ExpressionStatement(Expression::IntLiteral(5))
-    )
 }
 
 #[test]
@@ -275,6 +241,8 @@ fn test_infix_expressions() {
         InfixTest::new("true == true", true, Token::Equal, true),
         InfixTest::new("true != false", true, Token::NotEqual, false),
         InfixTest::new("false == false", false, Token::Equal, false),
+        InfixTest::new("\"foo\" == \"bar\"", Token::String("foo".to_owned()), Token::Equal, Token::String("bar".to_owned())),
+        InfixTest::new("\"foo\" + \"bar\"", Token::String("foo".to_owned()), Token::Plus, Token::String("bar".to_owned())),
     ];
 
     for t in tests {
@@ -308,6 +276,7 @@ fn token_to_expression(token: Token) -> Expression {
         Token::Int(i) => Expression::IntLiteral(*i),
         Token::Bool(b) => Expression::Bool(*b),
         Token::Ident(s) => Expression::Identifier(s.clone()),
+        Token::String(s) => Expression::StringLiteral(s.clone()),
         t => panic!("could not convert {} to an expression", t),
     }
 }
