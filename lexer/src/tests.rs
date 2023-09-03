@@ -11,8 +11,8 @@ fn lexer_test() {
         Token::Plus,
         Token::LParen,
         Token::RParent,
-        Token::LBracket,
-        Token::RBracket,
+        Token::LBrace,
+        Token::RBrace,
         Token::Comma,
         Token::Semicolon,
     ];
@@ -43,6 +43,7 @@ if (5 < 10) {
 10 != 9;
 \"foobar\";
 \"\";
+[1,2];
 ";
     let mut lex = Lexer::new(input);
 
@@ -66,12 +67,12 @@ if (5 < 10) {
         Token::Comma,
         Token::new("y"),
         Token::RParent,
-        Token::LBracket,
+        Token::LBrace,
         Token::new("x"),
         Token::Plus,
         Token::new("y"),
         Token::Semicolon,
-        Token::RBracket,
+        Token::RBrace,
         Token::Semicolon,
         Token::Let,
         Token::new("result"),
@@ -101,17 +102,17 @@ if (5 < 10) {
         Token::LessThan,
         Token::Int(10),
         Token::RParent,
-        Token::LBracket,
+        Token::LBrace,
         Token::Return,
         Token::Bool(true),
         Token::Semicolon,
-        Token::RBracket,
+        Token::RBrace,
         Token::Else,
-        Token::LBracket,
+        Token::LBrace,
         Token::Return,
         Token::Bool(false),
         Token::Semicolon,
-        Token::RBracket,
+        Token::RBrace,
         Token::Int(10),
         Token::Equal,
         Token::Int(10),
@@ -123,6 +124,7 @@ if (5 < 10) {
         Token::String("foobar".to_owned()),
         Token::Semicolon,
         Token::String("".to_owned()),
+        // Token::lsq("".to_owned()),
     ];
     for expected_token in expected_stuff {
         let actual_token = lex.next_token();

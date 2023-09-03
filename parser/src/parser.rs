@@ -161,7 +161,7 @@ impl<'a> Parser<'a> {
     fn parse_block_statement(&mut self) -> Result<BlockStatement, ParserError> {
         self.next_token();
         let mut statements = Vec::<Statement>::new();
-        while !matches!(&self.cur_token, Token::RBracket) {
+        while !matches!(&self.cur_token, Token::RBrace) {
             if let Some(s) = self.parse_statement() {
                 statements.push(s);
             }
@@ -288,7 +288,7 @@ impl<'a> Parser<'a> {
                 | Token::Ident(_)
                 | Token::Bool(_)
                 | Token::LParen
-                | Token::LBracket
+                | Token::LBrace
                 | Token::If
                 | Token::Function
                 | Token::String(_)
