@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use lexer::token::Token;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -29,11 +30,18 @@ pub enum Expression {
     IfExpression(Box<Expression>, BlockStatement, Option<BlockStatement>),
     FnExpression(Vec<Identifier>, BlockStatement),
     CallExpression(Box<Expression>, Vec<Expression>),
+    Arrary(Vec<Expression>),
 }
 
 impl From<i64> for Expression {
     fn from(value: i64) -> Self {
         Expression::IntLiteral(value)
+    }
+}
+
+impl From<Vec<Expression>> for Expression {
+    fn from(value: Vec<Expression>) -> Self {
+        Expression::Arrary(value)
     }
 }
 
@@ -54,16 +62,10 @@ impl std::fmt::Display for Expression {
             },
             Expression::FnExpression(idents, blk) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
             Expression::CallExpression(func, params) => {
-                write!(f, "{}(", func)?;
-                for (i, param) in params.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ",)?;
-                    }
-                    write!(f, "{}", param)?;
-                }
-                write!(f, ")")
+                write!(f, "{}({})", func, params.iter().format(", "))
             }
             Expression::StringLiteral(s) => write!(f, "{s}"),
+            Expression::Arrary(values) => write!(f, "[{}]", values.iter().format(", ")),
         }
     }
 }

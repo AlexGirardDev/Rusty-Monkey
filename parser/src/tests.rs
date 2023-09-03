@@ -26,20 +26,28 @@ fn test_program(tests: Vec<Test>) {
         assert_eq!(program.to_string(), test.expected_output, "Actual,Expected")
     }
 }
+#[test]
+fn test_array_literal_parse() {
+    test_single_expression("[1,2]", Expression::Arrary(vec![1.into(), 2.into()]));
+    test_single_expression(
+        "[1,\"foo\"]",
+        Expression::Arrary(vec![1.into(), Expression::StringLiteral("foo".into())]),
+    );
+    test_single_expression(
+        "[1,\"foo\",2+3,3*4]",
+        Expression::Arrary(vec![
+            1.into(),
+            Expression::StringLiteral("foo".into()),
+            Expression::InfixExpression(Token::Plus,Box::new(2.into()), Box::new(3.into())),
+            Expression::InfixExpression(Token::Asterisk,Box::new(3.into()), Box::new(4.into())),
+        ]),
+    );
+}
 
 #[test]
 fn test_string_literal_parse() {
-    let input = "\"foobar\"";
-    let mut p = Parser::new(Lexer::new(input));
-    let program: Program = p.parse_program();
-    p.check_and_print_errors(&program);
-    assert_eq!(program.statements.len(), 1);
-    let statement = &program.statements[0];
-    if let Statement::ExpressionStatement(s) = statement {
-        test_string_literal_exp(s, "foobar");
-    } else {
-        panic!("expected expression statement but got {statement}");
-    }
+    test_single_expression("\"foobar\"", Expression::StringLiteral("foobar".into()));
+    test_single_expression("\"foo bar\"", Expression::StringLiteral("foo bar".into()));
 }
 
 #[test]
@@ -459,6 +467,19 @@ fn test_let_statement(statement: &Statement, name: &str) -> Result<(), String> {
     };
 
     Ok(())
+}
+
+fn test_single_expression(input: &str, exp: Expression) {
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    p.check_and_print_errors(&program);
+    assert_eq!(program.statements.len(), 1);
+    let statement = &program.statements[0];
+    if let Statement::ExpressionStatement(e) = statement {
+        assert_eq!(*e, exp);
+    } else {
+        panic!("expected expression but got {statement}");
+    }
 }
 
 fn test_return_statement(statement: &Statement) -> Result<(), String> {

@@ -95,6 +95,26 @@ impl<'a> Parser<'a> {
         Ok(Statement::ExpressionStatement(expression))
     }
 
+    fn parse_array(&mut self) -> Result<Expression, ParserError> {
+        let mut values = Vec::<Expression>::new();
+        if matches!(&self.peek_token, Token::RBracket) {
+            self.next_token();
+            return Ok(values.into());
+        }
+
+        self.next_token();
+
+        values.push(self.parse_expression(Precedence::LOWEST)?);
+
+        while matches!(&self.peek_token, Token::Comma) {
+            self.next_token();
+            self.next_token();
+            values.push(self.parse_expression(Precedence::LOWEST)?);
+        }
+        self.expect_peek(TokenType::RBracket)?;
+        Ok(values.into())
+    }
+
     fn parse_fn_expression(&mut self) -> Result<Expression, ParserError> {
         self.expect_peek(TokenType::Lparen)?;
         let params = self.parse_fn_params()?;
@@ -240,6 +260,7 @@ impl<'a> Parser<'a> {
             Token::LParen => return self.parse_grouped_expression(),
             Token::If => return self.parse_if_expression(),
             Token::Function => return self.parse_fn_expression(),
+            Token::LBracket => return self.parse_array(),
             _ => {}
         };
 
@@ -289,6 +310,7 @@ impl<'a> Parser<'a> {
                 | Token::Bool(_)
                 | Token::LParen
                 | Token::LBrace
+                | Token::LBracket
                 | Token::If
                 | Token::Function
                 | Token::String(_)
