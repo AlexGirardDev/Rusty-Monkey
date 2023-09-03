@@ -61,11 +61,10 @@ impl From<&str> for Token {
         Token::Ident(value.to_string())
     }
 }
-impl  Token{
-    pub fn new(token:impl Into<Token>)->Token{
+impl Token {
+    pub fn new(token: impl Into<Token>) -> Token {
         token.into()
     }
-
 }
 
 impl Display for Token {
@@ -100,7 +99,7 @@ impl Display for Token {
             Token::Return => write!(f, "return"),
             Token::Bool(true) => write!(f, "true"),
             Token::Bool(false) => write!(f, "false"),
-            Token::String(s) => write!(f, "{s}")
+            Token::String(s) => write!(f, "{s}"),
         }
     }
 }

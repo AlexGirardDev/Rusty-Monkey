@@ -143,4 +143,3 @@ impl<'a> Lexer<'a> {
         self.input[self.read_position]
     }
 }
-

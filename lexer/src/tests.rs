@@ -2,11 +2,10 @@
 
 use crate::{lexer::Lexer, token::Token};
 
-
 #[test]
 fn lexer_test() {
     let input = "=+(){},;";
-    let mut lex = Lexer::new(&input);
+    let mut lex = Lexer::new(input);
     let expected_stuff: Vec<Token> = vec![
         Token::Assign,
         Token::Plus,

@@ -37,7 +37,7 @@ fn test_string_literal_parse() {
     let statement = &program.statements[0];
     if let Statement::ExpressionStatement(s) = statement {
         test_string_literal_exp(s, "foobar");
-    }else{
+    } else {
         panic!("expected expression statement but got {statement}");
     }
 }
@@ -241,8 +241,18 @@ fn test_infix_expressions() {
         InfixTest::new("true == true", true, Token::Equal, true),
         InfixTest::new("true != false", true, Token::NotEqual, false),
         InfixTest::new("false == false", false, Token::Equal, false),
-        InfixTest::new("\"foo\" == \"bar\"", Token::String("foo".to_owned()), Token::Equal, Token::String("bar".to_owned())),
-        InfixTest::new("\"foo\" + \"bar\"", Token::String("foo".to_owned()), Token::Plus, Token::String("bar".to_owned())),
+        InfixTest::new(
+            "\"foo\" == \"bar\"",
+            Token::String("foo".to_owned()),
+            Token::Equal,
+            Token::String("bar".to_owned()),
+        ),
+        InfixTest::new(
+            "\"foo\" + \"bar\"",
+            Token::String("foo".to_owned()),
+            Token::Plus,
+            Token::String("bar".to_owned()),
+        ),
     ];
 
     for t in tests {
@@ -252,7 +262,7 @@ fn test_infix_expressions() {
         assert_eq!(program.statements.len(), 1);
         let statement = &program.statements[0];
         if let Statement::ExpressionStatement(exp) = statement {
-            test_infix_exp(&exp, t.operator, t.left_value, t.right_value);
+            test_infix_exp(exp, t.operator, t.left_value, t.right_value);
         }
     }
 }
@@ -289,7 +299,7 @@ fn test_int_exp(exp: &Expression, value: i64) {
     }
 }
 
-fn test_string_literal_exp(exp: &Expression, value: &str ) {
+fn test_string_literal_exp(exp: &Expression, value: &str) {
     if let Expression::StringLiteral(s) = &exp {
         assert_eq!(s, value);
     } else {
@@ -336,7 +346,7 @@ fn test_prefix_expressions() {
 #[test]
 fn test_identifier() {
     let input = "foobar";
-    let mut p = Parser::new(Lexer::new(&input));
+    let mut p = Parser::new(Lexer::new(input));
     let program: Program = p.parse_program();
     assert_eq!(program.statements.len(), 1);
 
@@ -364,7 +374,7 @@ fn test_identifier() {
 fn test_int_literal() {
     let input = "5;";
 
-    let mut p = Parser::new(Lexer::new(&input));
+    let mut p = Parser::new(Lexer::new(input));
 
     let program: Program = p.parse_program();
 
@@ -397,7 +407,7 @@ fn test_let_statements() {
     let foobar = 838383;
     ";
 
-    let mut p = Parser::new(Lexer::new(&input));
+    let mut p = Parser::new(Lexer::new(input));
 
     let program = p.parse_program();
     p.check_and_print_errors(&program);
@@ -409,7 +419,7 @@ fn test_let_statements() {
     }
     for (i, value_name) in expected_statements.iter().enumerate() {
         let statement = &program.statements[i];
-        let test_result = test_let_statement(&statement, value_name);
+        let test_result = test_let_statement(statement, value_name);
         if test_result.is_err() {
             panic!("{}", test_result.unwrap_err());
         }
@@ -424,14 +434,14 @@ fn test_return_statements() {
     ";
     let expected_count = 3;
 
-    let mut p = Parser::new(Lexer::new(&input));
+    let mut p = Parser::new(Lexer::new(input));
 
     let program = p.parse_program();
     p.check_and_print_errors(&program);
     assert_eq!(program.statements.len(), expected_count);
     for i in 0..expected_count {
         let statement = &program.statements[i];
-        let test_result = test_return_statement(&statement);
+        let test_result = test_return_statement(statement);
         if test_result.is_err() {
             panic!("{}", test_result.unwrap_err());
         }

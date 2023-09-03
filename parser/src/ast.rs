@@ -63,7 +63,7 @@ impl std::fmt::Display for Expression {
                 }
                 write!(f, ")")
             }
-            Expression::StringLiteral(s) => write!(f,"{s}")
+            Expression::StringLiteral(s) => write!(f, "{s}"),
         }
     }
 }
