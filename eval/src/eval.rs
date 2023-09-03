@@ -20,7 +20,7 @@ pub fn eval(node: impl Into<Node>, env: &Env) -> EvalResponse {
     })
 }
 
-pub fn eval_block(block: &BlockStatement, env: &Env) -> EvalResponse {
+fn eval_block(block: &BlockStatement, env: &Env) -> EvalResponse {
     let mut result: Rc<Object> = Object::Null.into();
     for st in &block.statements {
         result = eval_statement(st, env)?;
@@ -31,7 +31,7 @@ pub fn eval_block(block: &BlockStatement, env: &Env) -> EvalResponse {
     Ok(result)
 }
 
-pub fn eval_program(block: &Program, env: &Env) -> EvalResponse {
+fn eval_program(block: &Program, env: &Env) -> EvalResponse {
     let mut result: Rc<Object> = Object::Null.into();
     for st in &block.statements {
         result = eval_statement(st, env)?;
@@ -42,7 +42,7 @@ pub fn eval_program(block: &Program, env: &Env) -> EvalResponse {
     Ok(result)
 }
 
-pub fn eval_statement(statement: &Statement, env: &Env) -> EvalResponse {
+fn eval_statement(statement: &Statement, env: &Env) -> EvalResponse {
     match statement {
         Statement::ExpressionStatement(exp) => eval_expression(exp, env),
         Statement::Return(exp) => {
@@ -82,7 +82,17 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> EvalResponse {
 }
 fn eval_call_expression(fun: &Expression, values: &[Expression], env: &Env) -> EvalResponse {
     let res = eval_expression(fun, env)?;
-    let Object::Function(idents, blk,new_env ) =  res.as_ref() else {todo!();};
+    let (idents, blk, new_env) = match res.as_ref() {
+        Object::Function(idents, blk, new_env) => (idents, blk, new_env),
+        Object::Builtin(builtin) => {
+            let args = values
+                .iter()
+                .map(|v| eval_expression(v, env))
+                .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
+            return builtin(&args);
+        }
+        _ => todo!(),
+    };
     let args: Vec<Rc<Object>> = values
         .iter()
         .map(|v| eval_expression(v, env))

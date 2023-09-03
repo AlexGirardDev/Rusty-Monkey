@@ -8,6 +8,7 @@ pub enum EvalError {
     InvalidOperator(String, String, String),
     IdentifierNotFount(String),
     ImpossibleState(String),
+    InvalidParams { expected: String, actual: String },
 }
 
 impl std::error::Error for EvalError {}
@@ -25,6 +26,9 @@ impl fmt::Display for EvalError {
                 f,
                 "Reached what is supposed to be impossible state lol - {i}"
             ),
+            EvalError::InvalidParams { expected, actual } => {
+                write!(f, "expecting {} params but got {}", expected, actual)
+            }
         }
     }
 }

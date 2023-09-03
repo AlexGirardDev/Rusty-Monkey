@@ -1,15 +1,16 @@
+
+
+use crate::builtin::get_builtin_fns;
 use crate::object::Object;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 pub type Env = Rc<RefCell<Environment>>;
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Environment {
-    id: u128,
     store: HashMap<String, Rc<Object>>,
     outer: Option<Rc<RefCell<Environment>>>,
 }
@@ -27,14 +28,16 @@ impl Environment {
         self.store.insert(key.into(), value);
     }
 
+    pub fn new_with_builtin() -> Self {
+        Environment {
+            outer: None,
+            store: get_builtin_fns(),
+        }
+    }
     pub fn new() -> Self {
         Environment {
             outer: None,
             store: Default::default(),
-            id: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos(),
         }
     }
 
@@ -42,17 +45,12 @@ impl Environment {
         Environment {
             outer: Some(env),
             store: Default::default(),
-            id: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos(),
         }
     }
 }
 
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "[{}]", &self.id.to_string())?;
         for (k, v) in self.store.iter() {
             writeln!(f, "[{k} : {v}]")?;
         }

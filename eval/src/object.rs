@@ -5,8 +5,9 @@ use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
 
 use crate::environment::Environment;
+use crate::eval::EvalResponse;
 use crate::eval_error::EvalError;
-
+pub type BuiltinFn = fn(&[Rc<Object>]) -> EvalResponse;
 #[derive(Debug, PartialEq, Default)]
 pub enum Object {
     #[default]
@@ -16,6 +17,7 @@ pub enum Object {
     Bool(bool),
     Return(Rc<Object>),
     Function(Vec<Identifier>, BlockStatement, Rc<RefCell<Environment>>),
+    Builtin(BuiltinFn),
 }
 
 impl From<i64> for Object {
@@ -114,6 +116,7 @@ impl fmt::Display for Object {
             Object::Return(r) => write!(f, "return {}", r),
             Object::Null => write!(f, "null"),
             Object::Function(idents, blk, _) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
+            Object::Builtin(idents) => write!(f, "fn({:?}) ", idents), //todo fix this
         }
     }
 }

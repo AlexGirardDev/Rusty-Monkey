@@ -13,6 +13,15 @@ use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
 
 #[test]
+fn test_builtin_fns() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("len(\"foo\");", 3),
+        SingleValueTest::new("len(\"fo0000000o\");", 10),
+    ];
+    SingleValueTest::test(tests);
+}
+
+#[test]
 fn test_string_operations() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("\"foo\"", "foo"),
@@ -197,7 +206,7 @@ fn test_error_exp() {
 
 fn test_eval(input: impl Into<String>) -> Result<Rc<Object>, EvalError> {
     let program = get_program(input.into());
-    let env = Environment::new();
+    let env = Environment::new_with_builtin();
     eval(Node::Program(program), &mut Rc::new(RefCell::new(env)))
 }
 
@@ -205,7 +214,7 @@ fn get_program(input: String) -> Program {
     let mut p = Parser::new(Lexer::new(&input));
     let program = p.parse_program();
     p.check_and_print_errors(&program);
-    return program;
+    program
 }
 
 struct SingleValueTest {
