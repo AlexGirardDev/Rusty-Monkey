@@ -52,7 +52,6 @@ impl<'a> Lexer<'a> {
             b'/' => Token::ForwardSlash,
             b'*' => Token::Asterisk,
             b'"' => {
-                self.read_char();
                 Token::String(self.read_string_lit())
             }
 
@@ -115,8 +114,8 @@ impl<'a> Lexer<'a> {
     }
 
     fn read_string_lit(&mut self) -> String {
-        let position = self.position;
         self.read_char();
+        let position = self.position;
         while self.ch != b'"' {
             self.read_char();
         }

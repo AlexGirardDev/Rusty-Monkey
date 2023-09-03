@@ -16,7 +16,7 @@ use parser::parser::Parser;
 fn test_builtin_fns() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("len(\"foo\");", 3),
-        SingleValueTest::new("len(\"fo0000000o\");", 10),
+        SingleValueTest::new("len(\"\");", 0),
     ];
     SingleValueTest::test(tests);
 }
@@ -196,10 +196,6 @@ fn test_eval_bool_exp() {
 fn test_error_exp() {
     let tests: Vec<ErrorTest> = vec![
         ErrorTest::new_type_missmatch("5+true", 5, true),
-        // ErrorTest::new_type_missmatch("5+true;5", 5, true),
-        // ErrorTest::new_invalid_operation("true+true;5", true, "+", true),
-        // ErrorTest::new_invalid_operation("if(5>1){return true+1;})", true, "+", 1),
-        // ErrorTest::new("foobar", EvalError::IdentifierNotFount("foobar".to_owned())),
     ];
     ErrorTest::test(tests);
 }

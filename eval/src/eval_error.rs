@@ -27,7 +27,7 @@ impl fmt::Display for EvalError {
                 "Reached what is supposed to be impossible state lol - {i}"
             ),
             EvalError::InvalidParams { expected, actual } => {
-                write!(f, "expecting {} params but got {}", expected, actual)
+                write!(f, "expected params: ({}) but got ({})", expected, actual)
             }
         }
     }

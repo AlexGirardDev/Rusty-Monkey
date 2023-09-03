@@ -42,6 +42,7 @@ if (5 < 10) {
 10 == 10;
 10 != 9;
 \"foobar\";
+\"\";
 ";
     let mut lex = Lexer::new(input);
 
@@ -120,6 +121,8 @@ if (5 < 10) {
         Token::Int(9),
         Token::Semicolon,
         Token::String("foobar".to_owned()),
+        Token::Semicolon,
+        Token::String("".to_owned()),
     ];
     for expected_token in expected_stuff {
         let actual_token = lex.next_token();
