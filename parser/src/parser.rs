@@ -204,11 +204,19 @@ impl<'a> Parser<'a> {
 
             left_exp = match &self.cur_token {
                 Token::LParen => self.parse_call_expression(left_exp)?,
+                Token::LBracket => self.parse_array_index_expression(left_exp)?,
                 _ => self.parse_infix_expression(left_exp)?,
             };
         }
 
         Ok(left_exp)
+    }
+
+    fn parse_array_index_expression(&mut self, left:Expression) -> Result<Expression, ParserError> {
+        self.next_token();
+        let val = self.parse_expression(Precedence::LOWEST)?;
+        self.expect_peek(TokenType::RBracket)?;
+        Ok(Expression::IndexExpression(Box::new(left),val.into()))
     }
 
     fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
@@ -330,6 +338,7 @@ impl<'a> Parser<'a> {
                 | Token::Dash
                 | Token::ForwardSlash
                 | Token::LParen
+                | Token::LBracket
                 | Token::Asterisk
         )
     }

@@ -4,27 +4,15 @@ use crate::parser::Parser;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 
-struct Test {
-    input: String,
-    expected_output: String,
-}
-
-impl Test {
-    fn new(input: impl Into<String>, output: impl Into<String>) -> Self {
-        Test {
-            input: input.into(),
-            expected_output: output.into(),
-        }
-    }
-}
-
-fn test_program(tests: Vec<Test>) {
-    for test in tests {
-        let mut p = Parser::new(Lexer::new(&test.input));
-        let program: Program = p.parse_program();
-        p.check_and_print_errors(&program);
-        assert_eq!(program.to_string(), test.expected_output, "Actual,Expected")
-    }
+#[test]
+fn test_array_index_parse() {
+    test_single_expression(
+        "myarray[10]",
+        Expression::IndexExpression(
+            Expression::new("myarray").into(),
+            Expression::new(10).into(),
+        ),
+    );
 }
 #[test]
 fn test_array_literal_parse() {
@@ -38,8 +26,8 @@ fn test_array_literal_parse() {
         Expression::Arrary(vec![
             1.into(),
             Expression::StringLiteral("foo".into()),
-            Expression::InfixExpression(Token::Plus,Box::new(2.into()), Box::new(3.into())),
-            Expression::InfixExpression(Token::Asterisk,Box::new(3.into()), Box::new(4.into())),
+            Expression::InfixExpression(Token::Plus, Box::new(2.into()), Box::new(3.into())),
+            Expression::InfixExpression(Token::Asterisk, Box::new(3.into()), Box::new(4.into())),
         ]),
     );
 }
@@ -442,13 +430,10 @@ fn test_return_statements() {
     ";
     let expected_count = 3;
 
-    let mut p = Parser::new(Lexer::new(input));
-
-    let program = p.parse_program();
-    p.check_and_print_errors(&program);
-    assert_eq!(program.statements.len(), expected_count);
+    let statements = get_statements(input);
+    assert_eq!(statements.len(), expected_count);
     for i in 0..expected_count {
-        let statement = &program.statements[i];
+        let statement = &statements[i];
         let test_result = test_return_statement(statement);
         if test_result.is_err() {
             panic!("{}", test_result.unwrap_err());
@@ -470,16 +455,21 @@ fn test_let_statement(statement: &Statement, name: &str) -> Result<(), String> {
 }
 
 fn test_single_expression(input: &str, exp: Expression) {
-    let mut p = Parser::new(Lexer::new(input));
-    let program: Program = p.parse_program();
-    p.check_and_print_errors(&program);
-    assert_eq!(program.statements.len(), 1);
-    let statement = &program.statements[0];
+    let statements = get_statements(input);
+    dbg!(&statements);
+    assert_eq!(statements.len(), 1,);
+    let statement = &statements[0];
     if let Statement::ExpressionStatement(e) = statement {
         assert_eq!(*e, exp);
     } else {
         panic!("expected expression but got {statement}");
     }
+}
+fn get_statements(input: &str) -> Vec<Statement> {
+    let mut p = Parser::new(Lexer::new(input));
+    let program: Program = p.parse_program();
+    p.check_and_print_errors(&program);
+    program.statements
 }
 
 fn test_return_statement(statement: &Statement) -> Result<(), String> {
@@ -491,4 +481,27 @@ fn test_return_statement(statement: &Statement) -> Result<(), String> {
     };
 
     Ok(())
+}
+
+struct Test {
+    input: String,
+    expected_output: String,
+}
+
+impl Test {
+    fn new(input: impl Into<String>, output: impl Into<String>) -> Self {
+        Test {
+            input: input.into(),
+            expected_output: output.into(),
+        }
+    }
+}
+
+fn test_program(tests: Vec<Test>) {
+    for test in tests {
+        let mut p = Parser::new(Lexer::new(&test.input));
+        let program: Program = p.parse_program();
+        p.check_and_print_errors(&program);
+        assert_eq!(program.to_string(), test.expected_output, "Actual,Expected")
+    }
 }

@@ -31,11 +31,23 @@ pub enum Expression {
     FnExpression(Vec<Identifier>, BlockStatement),
     CallExpression(Box<Expression>, Vec<Expression>),
     Arrary(Vec<Expression>),
+    IndexExpression(Box<Expression>, Box<Expression>),
 }
 
+impl Expression {
+    pub fn new(value: impl Into<Expression>) -> Self {
+        value.into()
+    }
+}
 impl From<i64> for Expression {
     fn from(value: i64) -> Self {
         Expression::IntLiteral(value)
+    }
+}
+
+impl From<&str> for Expression {
+    fn from(value: &str) -> Self {
+        Expression::Identifier(value.into())
     }
 }
 
@@ -66,6 +78,7 @@ impl std::fmt::Display for Expression {
             }
             Expression::StringLiteral(s) => write!(f, "{s}"),
             Expression::Arrary(values) => write!(f, "[{}]", values.iter().format(", ")),
+            Expression::IndexExpression(left, index) => write!(f, "{left}[{index}]"),
         }
     }
 }
@@ -98,6 +111,7 @@ impl Precedence {
     pub const PRODUCT: i8 = 4;
     pub const PREFIX: i8 = 5;
     pub const CALL: i8 = 6;
+    pub const INDEX: i8 = 7;
 
     pub fn from(token: &Token) -> i8 {
         match token {
@@ -109,6 +123,7 @@ impl Precedence {
             Token::Plus | Token::Dash => Precedence::SUM,
             Token::Asterisk | Token::ForwardSlash => Precedence::PRODUCT,
             Token::LParen => Precedence::CALL,
+            Token::LBracket => Precedence::INDEX,
             _ => Precedence::LOWEST,
         }
     }
