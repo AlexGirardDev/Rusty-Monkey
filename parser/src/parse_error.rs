@@ -95,6 +95,8 @@ impl From<&Token> for TokenType {
             Token::Return => TokenType::Return,
             Token::Bool(_) => TokenType::Bool,
             Token::String(_) => TokenType::String,
+            Token::LBracket=> TokenType::LBracket,
+            Token::RBracket => TokenType::RBracket,
         }
     }
 }
@@ -150,6 +152,8 @@ pub enum TokenType {
     Rparen,
     LSquirly,
     RSquirly,
+    LBracket,
+    RBracket,
     Function,
     Let,
     If,

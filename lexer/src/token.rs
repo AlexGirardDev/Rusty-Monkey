@@ -28,6 +28,8 @@ pub enum Token {
     RParent,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
 
     Function,
     Let,
@@ -100,6 +102,7 @@ impl Display for Token {
             Token::Bool(true) => write!(f, "true"),
             Token::Bool(false) => write!(f, "false"),
             Token::String(s) => write!(f, "{s}"),
-        }
+            Token::LBracket => write!(f,"["),
+            Token::RBracket => write!(f,"]")        }
     }
 }

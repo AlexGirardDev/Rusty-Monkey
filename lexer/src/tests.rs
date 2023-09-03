@@ -124,7 +124,13 @@ if (5 < 10) {
         Token::String("foobar".to_owned()),
         Token::Semicolon,
         Token::String("".to_owned()),
-        // Token::lsq("".to_owned()),
+        Token::Semicolon,
+        Token::LBracket,
+        Token::new(1),
+        Token::Comma,
+        Token::new(2),
+        Token::RBracket,
+        Token::Semicolon,
     ];
     for expected_token in expected_stuff {
         let actual_token = lex.next_token();

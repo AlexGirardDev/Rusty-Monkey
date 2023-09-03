@@ -41,6 +41,8 @@ impl<'a> Lexer<'a> {
             b'+' => Token::Plus,
             b'{' => Token::LBrace,
             b'}' => Token::RBrace,
+            b'[' => Token::LBracket,
+            b']' => Token::RBracket,
             b'!' => match self.peak_char() {
                 b'=' => {
                     self.read_char();
