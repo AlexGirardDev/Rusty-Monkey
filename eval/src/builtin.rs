@@ -13,6 +13,7 @@ pub fn get_builtin_fns() -> HashMap<String, Rc<Object>> {
         build_builtin("first", builtin_first),
         build_builtin("last", builtin_last),
         build_builtin("rest", builtin_rest),
+        build_builtin("push", builtin_push),
     ];
     builtins.into_iter().collect()
 }
@@ -29,6 +30,14 @@ fn builtin_rest(vals: &[Rc<Object>]) -> EvalResponse {
         .to_vec();
     Ok(Object::Array(slice).into())
 }
+
+fn builtin_push(vals: &[Rc<Object>]) -> EvalResponse {
+    validate_param_count(2, vals.len())?;
+    let mut slice = get_array(vals[0].clone())?;
+    slice.push(vals[1].clone());
+    Ok(Object::Array(slice).into())
+}
+
 
 fn builtin_len(vals: &[Rc<Object>]) -> EvalResponse {
     validate_param_count(1, vals.len())?;

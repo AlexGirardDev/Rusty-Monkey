@@ -43,8 +43,9 @@ fn test_builtin_fns() {
         SingleValueTest::new("first([1,2]);", 1),
         SingleValueTest::new("last([1,2]);", 2),
         SingleValueTest::new("let arr = [1]; first(arr) == last(arr)", true),
-        SingleValueTest::new("[1,2,3,4]", Object::Array((1..=4).map(|x|Rc::new(Object::Int(x))).collect())),
+        SingleValueTest::new("rest([1,2,3,4])", Object::Array((2..=4).map(|x|Rc::new(Object::Int(x))).collect())),
         SingleValueTest::new("len(rest(rest(rest(rest([1,2,3,4])))))", 0),
+        SingleValueTest::new("push([1,2,3,4],5)", Object::Array((1..=5).map(|x|Rc::new(Object::Int(x))).collect())),
     ];
     SingleValueTest::test(tests);
 }
