@@ -4,11 +4,18 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum EvalError {
     TypeMismatch(String, String),
+    InvalidOperation {
+        operation: String,
+        object_type: String,
+    },
     InvalidPrefix(Token),
     InvalidOperator(String, String, String),
     IdentifierNotFount(String),
     ImpossibleState(String),
-    InvalidParams { expected: String, actual: String },
+    InvalidParams {
+        expected: String,
+        actual: String,
+    },
     InvalidObjectType(String, String),
     IndexOperatorNotSupported(String),
     IndexOutOfBounds(i64, i64),
@@ -20,6 +27,10 @@ impl fmt::Display for EvalError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             EvalError::TypeMismatch(lhs, rhs) => write!(f, "{lhs} and {rhs} are different types"),
+            EvalError::InvalidOperation {
+                operation,
+                object_type,
+            } => write!(f, "{operation} is not a valid operation on {object_type}"),
             EvalError::InvalidPrefix(prefx) => write!(f, "{prefx} is an invalid prefix"),
             EvalError::InvalidOperator(l, opp, r) => {
                 write!(f, "{l} {opp} {r} is an invalid operation")

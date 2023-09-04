@@ -38,6 +38,8 @@ fn test_builtin_fns() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("len(\"foo\");", 3),
         SingleValueTest::new("len(\"\");", 0),
+        SingleValueTest::new("len([1,2]);", 2),
+        SingleValueTest::new("len([]);", 0),
     ];
     SingleValueTest::test(tests);
 }
