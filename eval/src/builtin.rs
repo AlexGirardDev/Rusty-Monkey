@@ -12,12 +12,22 @@ pub fn get_builtin_fns() -> HashMap<String, Rc<Object>> {
         build_builtin("len", builtin_len),
         build_builtin("first", builtin_first),
         build_builtin("last", builtin_last),
+        build_builtin("rest", builtin_rest),
     ];
     builtins.into_iter().collect()
 }
 
 fn build_builtin(key: impl Into<String>, fnn: BuiltinFn) -> (String, Rc<Object>) {
     (key.into(), Object::Builtin(fnn).into())
+}
+
+fn builtin_rest(vals: &[Rc<Object>]) -> EvalResponse {
+    validate_param_count(1, vals.len())?;
+    let slice = get_array(vals[0].clone())?
+        .get(1..) 
+        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .to_vec();
+    Ok(Object::Array(slice).into())
 }
 
 fn builtin_len(vals: &[Rc<Object>]) -> EvalResponse {
@@ -36,32 +46,19 @@ fn builtin_len(vals: &[Rc<Object>]) -> EvalResponse {
 }
 
 fn builtin_first(vals: &[Rc<Object>]) -> EvalResponse {
-    if let Object::Array(a) = vals[0].as_ref() {
-        let result = a
-            .first()
-            .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?;
-        Ok(result.clone())
-    } else {
-        Err(EvalError::InvalidOperation {
-            operation: "first".to_string(),
-            object_type: vals[0].to_string(),
-        })
-    }
+    validate_param_count(1, vals.len())?;
+    Ok(get_array(vals[0].clone())?
+        .first()
+        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .clone())
 }
 
 fn builtin_last(vals: &[Rc<Object>]) -> EvalResponse {
     validate_param_count(1, vals.len())?;
-    if let Object::Array(a) = vals[0].as_ref() {
-        let result = a
-            .last()
-            .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?;
-        Ok(result.clone())
-    } else {
-        Err(EvalError::InvalidOperation {
-            operation: "last".to_string(),
-            object_type: vals[0].to_string(),
-        })
-    }
+    Ok(get_array(vals[0].clone())?
+        .last()
+        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .clone())
 }
 
 fn generate_param_error(exp: &[&str], actual: &[Rc<Object>]) -> EvalError {
@@ -79,4 +76,14 @@ fn validate_param_count(expected: usize, actual: usize) -> Result<(), EvalError>
         return Err(EvalError::InvalidParamCount { expected, actual });
     }
     Ok(())
+}
+fn get_array(obj: Rc<Object>) -> Result<Vec<Rc<Object>>, EvalError> {
+    if let Object::Array(a) = obj.as_ref() {
+        Ok(a.clone())
+    } else {
+        Err(EvalError::InvalidOperation {
+            operation: "first".to_string(),
+            object_type: obj.to_string(),
+        })
+    }
 }
