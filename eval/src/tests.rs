@@ -34,6 +34,33 @@ fn test_array_accessing() {
 }
 
 #[test]
+fn test_complex_fns() {
+    let tests: Vec<SingleValueTest> = vec![SingleValueTest::new(
+    "
+    let map = fn(arr, f) {\
+    let iter = fn(arr, accumulated) {\
+    if (len(arr) == 0) {\
+      accumulated\
+    } else {\
+      iter(rest(arr), push(accumulated, f(first(arr))));\
+    }\
+    };\
+    iter(arr, []);\
+    };\
+    let double = fn(x) { x * 2 };\
+    map([1,2,3,4],double);\
+    ",
+        Object::Array(
+            vec![2, 4, 6, 8]
+                .iter()
+                .map(|x| Rc::new(Object::Int(*x)))
+                .collect(),
+        ),
+    )];
+    SingleValueTest::test(tests);
+}
+
+#[test]
 fn test_builtin_fns() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("len(\"foo\");", 3),
@@ -43,9 +70,15 @@ fn test_builtin_fns() {
         SingleValueTest::new("first([1,2]);", 1),
         SingleValueTest::new("last([1,2]);", 2),
         SingleValueTest::new("let arr = [1]; first(arr) == last(arr)", true),
-        SingleValueTest::new("rest([1,2,3,4])", Object::Array((2..=4).map(|x|Rc::new(Object::Int(x))).collect())),
+        SingleValueTest::new(
+            "rest([1,2,3,4])",
+            Object::Array((2..=4).map(|x| Rc::new(Object::Int(x))).collect()),
+        ),
         SingleValueTest::new("len(rest(rest(rest(rest([1,2,3,4])))))", 0),
-        SingleValueTest::new("push([1,2,3,4],5)", Object::Array((1..=5).map(|x|Rc::new(Object::Int(x))).collect())),
+        SingleValueTest::new(
+            "push([1,2,3,4],5)",
+            Object::Array((1..=5).map(|x| Rc::new(Object::Int(x))).collect()),
+        ),
     ];
     SingleValueTest::test(tests);
 }
