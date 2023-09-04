@@ -40,6 +40,9 @@ fn test_builtin_fns() {
         SingleValueTest::new("len(\"\");", 0),
         SingleValueTest::new("len([1,2]);", 2),
         SingleValueTest::new("len([]);", 0),
+        SingleValueTest::new("first([1,2]);", 1),
+        SingleValueTest::new("last([1,2]);", 2),
+        SingleValueTest::new("let arr = [1]; first(arr) == last(arr)", true),
     ];
     SingleValueTest::test(tests);
 }
@@ -219,8 +222,8 @@ fn test_eval_bool_exp() {
 fn test_error_exp() {
     let tests: Vec<ErrorTest> = vec![
         ErrorTest::new_type_missmatch("5+true", 5, true),
-        ErrorTest::new("[0][1]", EvalError::IndexOutOfBounds(1, 1)),
-        ErrorTest::new("[0][-1]", EvalError::IndexOutOfBounds(-1, 1)),
+        ErrorTest::new("[0][1]", EvalError::IndexOutOfBounds{max:1,index:1}),
+        ErrorTest::new("[0][-1]", EvalError::IndexOutOfBounds{max:1, index:-1}),
     ];
     ErrorTest::test(tests);
 }

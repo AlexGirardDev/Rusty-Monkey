@@ -93,7 +93,7 @@ fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -
         return Err(EvalError::InvalidObjectType("Int".into(),index.to_string()));
     };
     if i >= array.len() as i64 || i < 0 {
-        return Err(EvalError::IndexOutOfBounds(i, array.len() as i64));
+        return Err(EvalError::IndexOutOfBounds{index:i, max:array.len() as i64});
     }
     Ok(array[usize::try_from(i).unwrap()].clone())
 }
