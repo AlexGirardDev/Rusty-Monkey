@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
+use itertools::Itertools;
 
 use crate::environment::Environment;
 use crate::eval::EvalResponse;
@@ -18,6 +19,7 @@ pub enum Object {
     Return(Rc<Object>),
     Function(Vec<Identifier>, BlockStatement, Rc<RefCell<Environment>>),
     Builtin(BuiltinFn),
+    Array(Vec<Rc<Object>>),
 }
 
 impl From<i64> for Object {
@@ -31,6 +33,7 @@ impl From<bool> for Object {
         Object::Bool(v)
     }
 }
+
 
 impl<'a> From<&'a str> for Object {
     fn from(s: &'a str) -> Self {
@@ -116,7 +119,8 @@ impl fmt::Display for Object {
             Object::Return(r) => write!(f, "return {}", r),
             Object::Null => write!(f, "null"),
             Object::Function(idents, blk, _) => write!(f, "fn({}) {}", idents.join(" ,"), blk),
-            Object::Builtin(idents) => write!(f, "fn({:?}) ", idents), //todo fix this
+            Object::Builtin(func) => write!(f, "fn({:?}) ", func), 
+            Object::Array(array) => write!(f, "[{}] ", array.iter().format(", ")),
         }
     }
 }

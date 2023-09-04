@@ -13,6 +13,27 @@ use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
 
 #[test]
+fn test_array_accessing() {
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new("[1,2][0]", 1),
+        SingleValueTest::new("[1, 2, 3][0]", 1),
+        SingleValueTest::new("[1, 2, 3][1]", 2),
+        SingleValueTest::new("let i = 0; [1][i]", 1),
+        SingleValueTest::new("[1, 2, 3][1 + 1];", 3),
+        SingleValueTest::new("let myArray = [1, 2, 3]; myArray[2];", 3),
+        SingleValueTest::new(
+            "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+            6,
+        ),
+        SingleValueTest::new(
+            "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];",
+            2,
+        ),
+    ];
+    SingleValueTest::test(tests);
+}
+
+#[test]
 fn test_builtin_fns() {
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new("len(\"foo\");", 3),
@@ -196,6 +217,8 @@ fn test_eval_bool_exp() {
 fn test_error_exp() {
     let tests: Vec<ErrorTest> = vec![
         ErrorTest::new_type_missmatch("5+true", 5, true),
+        ErrorTest::new("[0][1]", EvalError::IndexOutOfBounds(1, 1)),
+        ErrorTest::new("[0][-1]", EvalError::IndexOutOfBounds(-1, 1)),
     ];
     ErrorTest::test(tests);
 }

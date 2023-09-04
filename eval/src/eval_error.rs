@@ -9,6 +9,9 @@ pub enum EvalError {
     IdentifierNotFount(String),
     ImpossibleState(String),
     InvalidParams { expected: String, actual: String },
+    InvalidObjectType(String, String),
+    IndexOperatorNotSupported(String),
+    IndexOutOfBounds(i64, i64),
 }
 
 impl std::error::Error for EvalError {}
@@ -29,6 +32,17 @@ impl fmt::Display for EvalError {
             EvalError::InvalidParams { expected, actual } => {
                 write!(f, "expected params: ({}) but got ({})", expected, actual)
             }
+            EvalError::InvalidObjectType(expected, acutal) => {
+                write!(f, "{expected} was expected, but got {acutal} ")
+            }
+            EvalError::IndexOperatorNotSupported(s) => {
+                write!(f, "could not use index accessor on {s}")
+            }
+            EvalError::IndexOutOfBounds(max, index) => write!(
+                f,
+                "attemped to access:{} when array is only {} big",
+                max, index
+            ),
         }
     }
 }

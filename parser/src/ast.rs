@@ -20,7 +20,6 @@ impl std::fmt::Display for Statement {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    Constant,
     Identifier(Identifier),
     IntLiteral(i64),
     StringLiteral(String),
@@ -60,7 +59,6 @@ impl From<Vec<Expression>> for Expression {
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expression::Constant => write!(f, "Constant expression???"),
             Expression::Identifier(i) => write!(f, "{}", i),
             Expression::IntLiteral(i) => write!(f, "{}", i),
             Expression::Bool(b) => write!(f, "{}", b),

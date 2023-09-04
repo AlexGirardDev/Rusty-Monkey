@@ -77,21 +77,39 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> EvalResponse {
             Ok(Object::Function(idents.clone(), blk.clone(), Rc::clone(env)).into())
         }
         Expression::CallExpression(fun, values) => eval_call_expression(fun, values, env),
-        _ => Ok(Object::Null.into()),
+        Expression::Arrary(a) => eval_array_expression(a, env),
+        Expression::IndexExpression(left, index_exp) => eval_index_expression(left, index_exp, env),
     };
 }
+
+fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -> EvalResponse {
+    let left = eval_expression(&left, env)?;
+    let Object::Array(array) = left.as_ref() else {
+        return Err(EvalError::IndexOperatorNotSupported(left.to_string()));
+    };
+
+    let index = eval_expression(&index_exp, env)?;
+    let Object::Int(i) = *index else {
+        return Err(EvalError::InvalidObjectType("Int".into(),index.to_string()));
+    };
+    if i >= array.len() as i64 || i < 0 {
+        return Err(EvalError::IndexOutOfBounds(i, array.len() as i64));
+    }
+    Ok(array[usize::try_from(i).unwrap()].clone())
+}
+
+fn eval_array_expression(values: &[Expression], env: &Env) -> EvalResponse {
+    Ok(Object::Array(expressions_to_objects(values, env)?).into())
+}
+
 fn eval_call_expression(fun: &Expression, values: &[Expression], env: &Env) -> EvalResponse {
     let res = eval_expression(fun, env)?;
     let (idents, blk, new_env) = match res.as_ref() {
         Object::Function(idents, blk, new_env) => (idents, blk, new_env),
         Object::Builtin(builtin) => {
-            let args = values
-                .iter()
-                .map(|v| eval_expression(v, env))
-                .collect::<Result<Vec<Rc<Object>>, EvalError>>()?;
-            return builtin(&args);
+            return builtin(&expressions_to_objects(values, env)?);
         }
-        _ => todo!(),
+        _ => unreachable!(),
     };
     let args: Vec<Rc<Object>> = values
         .iter()
@@ -240,6 +258,12 @@ fn eval_minus_operator_expression(right: Rc<Object>) -> Result<Object, EvalError
         Object::Int(i) => Ok(Object::Int(-*i)),
         _ => Ok(Object::Null),
     }
+}
+fn expressions_to_objects(values: &[Expression], env: &Env) -> Result<Vec<Rc<Object>>, EvalError> {
+    values
+        .iter()
+        .map(|v| eval_expression(v, env))
+        .collect::<Result<Vec<Rc<Object>>, EvalError>>()
 }
 
 enum ObjectComparison {
