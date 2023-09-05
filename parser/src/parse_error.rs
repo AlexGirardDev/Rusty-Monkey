@@ -97,6 +97,7 @@ impl From<&Token> for TokenType {
             Token::String(_) => TokenType::String,
             Token::LBracket=> TokenType::LBracket,
             Token::RBracket => TokenType::RBracket,
+            Token::Colon => TokenType::Colon,
         }
     }
 }
@@ -161,4 +162,5 @@ pub enum TokenType {
     Return,
     Bool,
     String,
+    Colon,
 }
