@@ -35,6 +35,7 @@ impl<'a> Lexer<'a> {
                 _ => Token::Assign,
             },
             b';' => Token::Semicolon,
+            b':' => Token::Colon,
             b'(' => Token::LParen,
             b')' => Token::RParent,
             b',' => Token::Comma,

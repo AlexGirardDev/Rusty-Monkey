@@ -24,27 +24,28 @@ fn lexer_test() {
 
 #[test]
 fn test_next_token() {
-    let input = "let five = 5;\
-            let ten = 10;\
-            let add = fn (x, y)\
-            {\
-                x + y;\
-            };\
-\
-            let result = add(five, ten);\
-            !-/*5;\
-            5 < 10 >= 5;\
+    let input = r#"
+    let five = 5;
+            let ten = 10;
+            let add = fn (x, y)
+            {
+                x + y;
+            };
+            let result = add(five, ten);
+            !-/*5;
+            5 < 10 >= 5;
 if (5 < 10) {
     return true;
 } else {
     return false;
-}\
+}
 10 == 10;
 10 != 9;
-\"foobar\";
-\"\";
+"foobar";
+"";
 [1,2];
-";
+{"foo":"bar"};
+"#;
     let mut lex = Lexer::new(input);
 
     let expected_stuff: Vec<Token> = vec![
@@ -131,6 +132,13 @@ if (5 < 10) {
         Token::new(2),
         Token::RBracket,
         Token::Semicolon,
+        Token::LBrace,
+        Token::String("foo".to_owned()),
+        Token::Colon,
+        Token::String("bar".to_owned()),
+        Token::RBrace,
+        Token::Semicolon,
+
     ];
     for expected_token in expected_stuff {
         let actual_token = lex.next_token();
