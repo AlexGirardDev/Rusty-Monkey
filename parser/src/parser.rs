@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
 use crate::parse_error::{ParserError, TokenType};
 use colored::Colorize;
@@ -95,6 +97,19 @@ impl<'a> Parser<'a> {
         Ok(Statement::ExpressionStatement(expression))
     }
 
+    fn parse_map(&mut self) -> Result<Expression, ParserError> {
+        let mut map = HashMap::<String, Expression>::new();
+        while !matches!(&self.cur_token, Token::RBrace) {
+            self.next_token();
+            let Expression::StringLiteral(k) = self.parse_expression(Precedence::LOWEST)? 
+            else { return Err(self.cur_error(TokenType::String))};
+            self.expect_peek(TokenType::Colon)?;
+            self.next_token();
+            map.insert(k, self.parse_expression(Precedence::LOWEST)?);
+            self.next_token();
+        }
+        Ok(map.into())
+    }
     fn parse_array(&mut self) -> Result<Expression, ParserError> {
         let mut values = Vec::<Expression>::new();
         if matches!(&self.peek_token, Token::RBracket) {
@@ -138,7 +153,7 @@ impl<'a> Parser<'a> {
         if let Token::Ident(ident) = &self.cur_token {
             idents.push(ident.clone());
         } else {
-            return Err(self.peek_error(TokenType::Identifier));
+            return Err(self.cur_error(TokenType::Identifier));
         }
 
         while matches!(&self.peek_token, Token::Comma) {
@@ -212,11 +227,14 @@ impl<'a> Parser<'a> {
         Ok(left_exp)
     }
 
-    fn parse_array_index_expression(&mut self, left:Expression) -> Result<Expression, ParserError> {
+    fn parse_array_index_expression(
+        &mut self,
+        left: Expression,
+    ) -> Result<Expression, ParserError> {
         self.next_token();
         let val = self.parse_expression(Precedence::LOWEST)?;
         self.expect_peek(TokenType::RBracket)?;
-        Ok(Expression::IndexExpression(Box::new(left),val.into()))
+        Ok(Expression::IndexExpression(Box::new(left), val.into()))
     }
 
     fn parse_call_expression(&mut self, left_side: Expression) -> Result<Expression, ParserError> {
@@ -269,6 +287,7 @@ impl<'a> Parser<'a> {
             Token::If => return self.parse_if_expression(),
             Token::Function => return self.parse_fn_expression(),
             Token::LBracket => return self.parse_array(),
+            Token::LBrace => return self.parse_map(),
             _ => {}
         };
 
@@ -356,6 +375,13 @@ impl<'a> Parser<'a> {
     }
 
     fn peek_error(&self, expected_token: TokenType) -> ParserError {
+        ParserError::WrongPeekToken {
+            expected_token,
+            actual_token: TokenType::from(&self.peek_token),
+        }
+    }
+
+    fn cur_error(&self, expected_token: TokenType) -> ParserError {
         ParserError::WrongPeekToken {
             expected_token,
             actual_token: TokenType::from(&self.peek_token),

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use itertools::Itertools;
 use lexer::token::Token;
 
@@ -30,6 +32,7 @@ pub enum Expression {
     FnExpression(Vec<Identifier>, BlockStatement),
     CallExpression(Box<Expression>, Vec<Expression>),
     Arrary(Vec<Expression>),
+    Map(HashMap<String,Expression>),
     IndexExpression(Box<Expression>, Box<Expression>),
 }
 
@@ -56,6 +59,12 @@ impl From<Vec<Expression>> for Expression {
     }
 }
 
+impl From<HashMap<String,Expression>> for Expression {
+    fn from(value: HashMap<String,Expression>) -> Self {
+        Expression::Map(value)
+    }
+}
+
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -77,6 +86,7 @@ impl std::fmt::Display for Expression {
             Expression::StringLiteral(s) => write!(f, "{s}"),
             Expression::Arrary(values) => write!(f, "[{}]", values.iter().format(", ")),
             Expression::IndexExpression(left, index) => write!(f, "{left}[{index}]"),
+            Expression::Map(map) => write!(f, "{:?}", map)
         }
     }
 }
