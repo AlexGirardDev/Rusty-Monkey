@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use itertools::Itertools;
 use lexer::token::Token;
@@ -32,10 +31,33 @@ pub enum Expression {
     FnExpression(Vec<Identifier>, BlockStatement),
     CallExpression(Box<Expression>, Vec<Expression>),
     Arrary(Vec<Expression>),
-    Map(HashMap<String,Expression>),
+    Map(Vec<(Expression,Expression)>),
     IndexExpression(Box<Expression>, Box<Expression>),
 }
-
+// impl Eq for Expression{
+//
+// }
+//
+// impl Hash for Expression{
+//  fn hash<H: Hasher>(&self, state: &mut H) {
+//         match &self{
+//             Expression::Identifier(ident) => ident.hash(state),
+//             Expression::IntLiteral(int) => int.hash(state),
+//             Expression::StringLiteral(string) => string.hash(state),
+//             Expression::Bool(b) => b.hash(state),
+//             Expression::PrefixExpression(_, _) => todo!(),
+//             Expression::InfixExpression(_, _, _) => todo!(),
+//             Expression::IfExpression(_, _, _) => todo!(),
+//             Expression::FnExpression(_, _) => todo!(),
+//             Expression::CallExpression(_, _) => todo!(),
+//             Expression::Arrary(_) => todo!(),
+//             Expression::Map(_) => todo!(),
+//             Expression::IndexExpression(_, _) => todo!(),
+//         }
+//         // self.id.hash(state);{}
+//         // self.phone.hash(state);
+//     }
+// }
 impl Expression {
     pub fn new(value: impl Into<Expression>) -> Self {
         value.into()
@@ -59,8 +81,8 @@ impl From<Vec<Expression>> for Expression {
     }
 }
 
-impl From<HashMap<String,Expression>> for Expression {
-    fn from(value: HashMap<String,Expression>) -> Self {
+impl From<Vec<(Expression,Expression)>> for Expression {
+    fn from(value: Vec<(Expression,Expression)>) -> Self {
         Expression::Map(value)
     }
 }

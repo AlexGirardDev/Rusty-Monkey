@@ -1,16 +1,60 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::environment::Environment;
 use crate::eval::eval;
 use crate::eval_error::EvalError;
 use crate::node::Node;
-use crate::object::Object;
+use crate::object::{HashKey, HashPair, Object};
 use colored::Colorize;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
+
+#[test]
+fn test_hash_literal() {
+    let input = r#"
+let two = "two";
+{
+
+  "one": 10 - 9,
+  two: 1 + 1,
+  "thr" + "ee": 6 / 2,
+  4: 4,
+  true: 5,
+  false: 6
+}"#;
+
+    let test = test_eval(input).unwrap();
+    let mut hash: HashMap<HashKey, HashPair> = HashMap::new();
+    add_hash_item(&mut hash, Object::String(String::from("one")), 1);
+    add_hash_item(&mut hash, Object::String(String::from("two")), 2);
+    add_hash_item(&mut hash, Object::String(String::from("three")), 3);
+    add_hash_item(&mut hash, 4, 4);
+    add_hash_item(&mut hash, true, 5);
+    add_hash_item(&mut hash, false, 6);
+    assert_eq!(test,Object::Hash(hash).into());
+}
+fn add_hash_item(
+    hash: &mut HashMap<HashKey, HashPair>,
+    key: impl Into<Object>,
+    value: impl Into<Object>,
+) {
+    let key: Object = key.into();
+    let value: Object = value.into();
+
+    let hash_key: HashKey = key.hash_key();
+    hash.insert(
+        hash_key,
+        HashPair {
+            key: key.into(),
+            value: value.into(),
+        },
+    );
+    // hash
+}
 
 #[test]
 fn test_array_accessing() {
@@ -36,7 +80,7 @@ fn test_array_accessing() {
 #[test]
 fn test_complex_fns() {
     let tests: Vec<SingleValueTest> = vec![SingleValueTest::new(
-    "
+        "
     let map = fn(arr, f) {\
     let iter = fn(arr, accumulated) {\
     if (len(arr) == 0) {\

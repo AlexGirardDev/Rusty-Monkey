@@ -1,6 +1,4 @@
 #![allow(dead_code)]
-use std::collections::HashMap;
-
 use crate::ast::{Expression, Program, Statement};
 use crate::parser::Parser;
 use lexer::lexer::Lexer;
@@ -21,19 +19,25 @@ fn test_array_index_parse() {
 fn test_map_parse() {
     test_single_expression(
         r#"{"foo":3,"bar":5}"#,
-        Expression::Map(HashMap::from([
-            ("foo".to_string(), Expression::IntLiteral(3)),
-            ("bar".to_string(), Expression::IntLiteral(5)),
-        ])),
+        Expression::Map(vec![
+            (
+                Expression::StringLiteral("foo".to_string()),
+                Expression::IntLiteral(3),
+            ),
+            (
+                Expression::StringLiteral("bar".to_string()),
+                Expression::IntLiteral(5),
+            ),
+        ]),
     );
 
     test_single_expression(
                 "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}",
-        Expression::Map(HashMap::from([
-            ("one".to_string(), Expression::InfixExpression(Token::Plus,Expression::IntLiteral(0).into(),Expression::IntLiteral(1).into())),
-            ("two".to_string(), Expression::InfixExpression(Token::Dash,Expression::IntLiteral(10).into(),Expression::IntLiteral(8).into())),
-            ("three".to_string(), Expression::InfixExpression(Token::ForwardSlash,Expression::IntLiteral(15).into(),Expression::IntLiteral(5).into())),
-        ])),
+        Expression::Map(vec![
+            (Expression::StringLiteral("one".to_string()), Expression::InfixExpression(Token::Plus,Expression::IntLiteral(0).into(),Expression::IntLiteral(1).into())),
+            (Expression::StringLiteral("two".to_string()), Expression::InfixExpression(Token::Dash,Expression::IntLiteral(10).into(),Expression::IntLiteral(8).into())),
+            (Expression::StringLiteral("three".to_string()), Expression::InfixExpression(Token::ForwardSlash,Expression::IntLiteral(15).into(),Expression::IntLiteral(5).into())),
+        ]),
     );
 }
 

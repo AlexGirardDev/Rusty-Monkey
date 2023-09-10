@@ -1,9 +1,11 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::rc::Rc;
 
 use crate::environment::{Env, Environment};
 use crate::eval_error::EvalError;
+use crate::object::{HashKey, HashPair};
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
 use parser::ast::{BlockStatement, Expression, Program, Statement};
@@ -79,9 +81,22 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> EvalResponse {
         Expression::CallExpression(fun, values) => eval_call_expression(fun, values, env),
         Expression::Arrary(a) => eval_array_expression(a, env),
         Expression::IndexExpression(left, index_exp) => eval_index_expression(left, index_exp, env),
+        Expression::Map(map) => eval_map_expression(map, env),//eval_map_expression(map, env),
     };
 }
 
+fn eval_map_expression(map: &[(Expression,Expression)], env: &Env) -> EvalResponse {
+
+    let mut mapped: HashMap<HashKey,HashPair> = HashMap::new();
+
+    for (k,v) in map {
+        let key = eval_expression(k, env)?;
+        let value = eval_expression(v, env)?;
+        mapped.insert(key.as_ref().hash_key(), HashPair{key,value});
+    }
+
+    return Ok(Object::Hash(mapped).into());
+}
 fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -> EvalResponse {
     let left = eval_expression(&left, env)?;
     let Object::Array(array) = left.as_ref() else {

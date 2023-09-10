@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
 use crate::parse_error::{ParserError, TokenType};
@@ -97,15 +96,14 @@ impl<'a> Parser<'a> {
         Ok(Statement::ExpressionStatement(expression))
     }
 
-    fn parse_map(&mut self) -> Result<Expression, ParserError> {
-        let mut map = HashMap::<String, Expression>::new();
+    fn parse_hash(&mut self) -> Result<Expression, ParserError> {
+        let mut map = Vec::<(Expression, Expression)>::new();
         while !matches!(&self.cur_token, Token::RBrace) {
             self.next_token();
-            let Expression::StringLiteral(k) = self.parse_expression(Precedence::LOWEST)? 
-            else { return Err(self.cur_error(TokenType::String))};
+            let key = self.parse_expression(Precedence::LOWEST)? ;
             self.expect_peek(TokenType::Colon)?;
             self.next_token();
-            map.insert(k, self.parse_expression(Precedence::LOWEST)?);
+            map.push((key, self.parse_expression(Precedence::LOWEST)?));
             self.next_token();
         }
         Ok(map.into())
@@ -287,7 +285,7 @@ impl<'a> Parser<'a> {
             Token::If => return self.parse_if_expression(),
             Token::Function => return self.parse_fn_expression(),
             Token::LBracket => return self.parse_array(),
-            Token::LBrace => return self.parse_map(),
+            Token::LBrace => return self.parse_hash(),
             _ => {}
         };
 
