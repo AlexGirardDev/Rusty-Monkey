@@ -30,6 +30,11 @@ fn test_map_parse() {
             ),
         ]),
     );
+    test_single_expression(
+        r#"{}"#,
+        Expression::Map(vec![ ]),
+    );
+
 
     test_single_expression(
                 "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}",

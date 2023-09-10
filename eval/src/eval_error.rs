@@ -26,6 +26,8 @@ pub enum EvalError {
         index: i64,
         max: i64,
     },
+    InvalidHashKeyType (String),
+    HashKeyNotFound(String),
 }
 
 impl std::error::Error for EvalError {}
@@ -64,6 +66,8 @@ impl fmt::Display for EvalError {
                 "attemped to access:{} when array is only {} big",
                 max, index
             ),
+            EvalError::InvalidHashKeyType(k) => write!(f,"{} is not a valid hash key type",k),
+            EvalError::HashKeyNotFound(k) => write!(f,"key: {k} does not exsist")
         }
     }
 }

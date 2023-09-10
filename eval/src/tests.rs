@@ -14,6 +14,23 @@ use parser::ast::{Expression, Program, Statement};
 use parser::parser::Parser;
 
 #[test]
+fn test_hash_index_expression() {
+
+    let tests: Vec<SingleValueTest> = vec![
+        SingleValueTest::new(r#"{"foo":5}["foo"]"#, 5),
+
+            SingleValueTest::new("{\"foo\": 5}[\"foo\"]",5),
+            SingleValueTest::new("{\"foo\": 5}[\"bar\"]", Object::Null),
+            SingleValueTest::new("let key = \"foo\"; {\"foo\": 5}[key]", 5),
+            SingleValueTest::new("{}[\"foo\"]", Object::Null),
+            SingleValueTest::new("{5: 5}[5]", 5),
+            SingleValueTest::new("{true: 5}[true]", 5),
+            SingleValueTest::new("{false: 5}[false]", 5),
+    ];
+    SingleValueTest::test(tests);
+}
+
+#[test]
 fn test_hash_literal() {
     let input = r#"
 let two = "two";
@@ -45,7 +62,7 @@ fn add_hash_item(
     let key: Object = key.into();
     let value: Object = value.into();
 
-    let hash_key: HashKey = key.hash_key();
+    let hash_key: HashKey = key.hash_key().unwrap();
     hash.insert(
         hash_key,
         HashPair {

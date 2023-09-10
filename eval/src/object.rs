@@ -58,7 +58,7 @@ impl From<u64> for HashKey {
 }
 
 impl Object {
-    pub fn hash_key(&self) -> HashKey {
+    pub fn hash_key(&self) -> Result<HashKey,EvalError> {
         let mut hasher = DefaultHasher::new();
         match self {
             Object::Null => hasher.write_u32(0),
@@ -71,12 +71,12 @@ impl Object {
                     hasher.write_u8(0)
                 }
             }
-            _ => panic!("wrong type reeeeeee"),
+            k => return Err(EvalError::InvalidHashKeyType(k.to_string()))
         }
 
-        HashKey {
+        Ok(HashKey {
             key: hasher.finish(),
-        }
+        })
     }
 }
 

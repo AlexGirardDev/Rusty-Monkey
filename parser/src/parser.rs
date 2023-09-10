@@ -1,4 +1,3 @@
-
 use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
 use crate::parse_error::{ParserError, TokenType};
 use colored::Colorize;
@@ -98,9 +97,12 @@ impl<'a> Parser<'a> {
 
     fn parse_hash(&mut self) -> Result<Expression, ParserError> {
         let mut map = Vec::<(Expression, Expression)>::new();
+        if matches!(&self.peek_token ,Token::RBrace) {
+            return Ok(map.into());
+        }
+
         while !matches!(&self.cur_token, Token::RBrace) {
-            self.next_token();
-            let key = self.parse_expression(Precedence::LOWEST)? ;
+            let key = self.parse_expression(Precedence::LOWEST)?;
             self.expect_peek(TokenType::Colon)?;
             self.next_token();
             map.push((key, self.parse_expression(Precedence::LOWEST)?));

@@ -81,36 +81,48 @@ pub fn eval_expression(exp: &Expression, env: &Env) -> EvalResponse {
         Expression::CallExpression(fun, values) => eval_call_expression(fun, values, env),
         Expression::Arrary(a) => eval_array_expression(a, env),
         Expression::IndexExpression(left, index_exp) => eval_index_expression(left, index_exp, env),
-        Expression::Map(map) => eval_map_expression(map, env),//eval_map_expression(map, env),
+        Expression::Map(map) => eval_map_expression(map, env), //eval_map_expression(map, env),
     };
 }
 
-fn eval_map_expression(map: &[(Expression,Expression)], env: &Env) -> EvalResponse {
+fn eval_map_expression(map: &[(Expression, Expression)], env: &Env) -> EvalResponse {
+    let mut mapped: HashMap<HashKey, HashPair> = HashMap::new();
 
-    let mut mapped: HashMap<HashKey,HashPair> = HashMap::new();
-
-    for (k,v) in map {
+    for (k, v) in map {
         let key = eval_expression(k, env)?;
         let value = eval_expression(v, env)?;
-        mapped.insert(key.as_ref().hash_key(), HashPair{key,value});
+        mapped.insert(key.as_ref().hash_key()?, HashPair { key, value });
     }
 
     return Ok(Object::Hash(mapped).into());
 }
 fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -> EvalResponse {
     let left = eval_expression(&left, env)?;
-    let Object::Array(array) = left.as_ref() else {
-        return Err(EvalError::IndexOperatorNotSupported(left.to_string()));
-    };
-
-    let index = eval_expression(&index_exp, env)?;
-    let Object::Int(i) = *index else {
-        return Err(EvalError::InvalidObjectType("Int".into(),index.to_string()));
-    };
-    if i >= array.len() as i64 || i < 0 {
-        return Err(EvalError::IndexOutOfBounds{index:i, max:array.len() as i64});
+    match left.as_ref() {
+        Object::Array(array) => {
+            let index = eval_expression(&index_exp, env)?;
+            let Object::Int(i) = *index else { return Err(EvalError::InvalidObjectType("Int".into(),index.to_string())); };
+            if i >= array.len() as i64 || i < 0 {
+                return Err(EvalError::IndexOutOfBounds {
+                    index: i,
+                    max: array.len() as i64,
+                });
+            }
+            Ok(array[usize::try_from(i).unwrap()].clone())
+        },
+        Object::Hash(map) => {
+            let key = eval_expression(&index_exp, env)?;
+            let hash_key = key.hash_key()?;
+            Ok( match map.get(&hash_key){
+                Some(s) => s.value.clone(),
+                None => Object::Null.into()}
+            )
+        },
+        _ => return Err(EvalError::IndexOperatorNotSupported(left.to_string())),
     }
-    Ok(array[usize::try_from(i).unwrap()].clone())
+    // let Object::Array(array) = left.as_ref() else {
+    //     return ;
+    // };
 }
 
 fn eval_array_expression(values: &[Expression], env: &Env) -> EvalResponse {
