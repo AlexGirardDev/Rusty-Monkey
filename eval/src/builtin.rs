@@ -14,6 +14,7 @@ pub fn get_builtin_fns() -> HashMap<String, Rc<Object>> {
         build_builtin("last", builtin_last),
         build_builtin("rest", builtin_rest),
         build_builtin("push", builtin_push),
+        build_builtin("put", builtin_put),
     ];
     builtins.into_iter().collect()
 }
@@ -22,11 +23,17 @@ fn build_builtin(key: impl Into<String>, fnn: BuiltinFn) -> (String, Rc<Object>)
     (key.into(), Object::Builtin(fnn).into())
 }
 
+fn builtin_put(vals: &[Rc<Object>]) -> EvalResponse {
+    for v in vals {
+        println!("{v}");
+    }
+    Ok(Object::Null.into())
+}
 fn builtin_rest(vals: &[Rc<Object>]) -> EvalResponse {
     validate_param_count(1, vals.len())?;
     let slice = get_array(vals[0].clone())?
         .get(1..) 
-        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .ok_or(EvalError::IndexOutOfBounds { index: 0, max: 0 })?
         .to_vec();
     Ok(Object::Array(slice).into())
 }
@@ -58,7 +65,7 @@ fn builtin_first(vals: &[Rc<Object>]) -> EvalResponse {
     validate_param_count(1, vals.len())?;
     Ok(get_array(vals[0].clone())?
         .first()
-        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .ok_or(EvalError::IndexOutOfBounds { index: 0, max: 0 })?
         .clone())
 }
 
@@ -66,7 +73,7 @@ fn builtin_last(vals: &[Rc<Object>]) -> EvalResponse {
     validate_param_count(1, vals.len())?;
     Ok(get_array(vals[0].clone())?
         .last()
-        .ok_or_else(|| EvalError::IndexOutOfBounds { index: 0, max: 0 })?
+        .ok_or(EvalError::IndexOutOfBounds { index: 0, max: 0 })?
         .clone())
 }
 

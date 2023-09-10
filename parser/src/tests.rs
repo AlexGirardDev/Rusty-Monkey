@@ -32,7 +32,7 @@ fn test_map_parse() {
     );
     test_single_expression(
         r#"{}"#,
-        Expression::Map(vec![ ]),
+        Expression::Map(Vec::new()),
     );
 
 

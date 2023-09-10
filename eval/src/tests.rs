@@ -15,17 +15,15 @@ use parser::parser::Parser;
 
 #[test]
 fn test_hash_index_expression() {
-
     let tests: Vec<SingleValueTest> = vec![
         SingleValueTest::new(r#"{"foo":5}["foo"]"#, 5),
-
-            SingleValueTest::new("{\"foo\": 5}[\"foo\"]",5),
-            SingleValueTest::new("{\"foo\": 5}[\"bar\"]", Object::Null),
-            SingleValueTest::new("let key = \"foo\"; {\"foo\": 5}[key]", 5),
-            SingleValueTest::new("{}[\"foo\"]", Object::Null),
-            SingleValueTest::new("{5: 5}[5]", 5),
-            SingleValueTest::new("{true: 5}[true]", 5),
-            SingleValueTest::new("{false: 5}[false]", 5),
+        SingleValueTest::new("{\"foo\": 5}[\"foo\"]", 5),
+        SingleValueTest::new("{\"foo\": 5}[\"bar\"]", Object::Null),
+        SingleValueTest::new("let key = \"foo\"; {\"foo\": 5}[key]", 5),
+        SingleValueTest::new("{}[\"foo\"]", Object::Null),
+        SingleValueTest::new("{5: 5}[5]", 5),
+        SingleValueTest::new("{true: 5}[true]", 5),
+        SingleValueTest::new("{false: 5}[false]", 5),
     ];
     SingleValueTest::test(tests);
 }
@@ -52,7 +50,7 @@ let two = "two";
     add_hash_item(&mut hash, 4, 4);
     add_hash_item(&mut hash, true, 5);
     add_hash_item(&mut hash, false, 6);
-    assert_eq!(test,Object::Hash(hash).into());
+    assert_eq!(test, Object::Hash(hash).into());
 }
 fn add_hash_item(
     hash: &mut HashMap<HashKey, HashPair>,
