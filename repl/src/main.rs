@@ -21,7 +21,7 @@ impl Repl {
         let prompt = ">>>".green();
 
         println!("Feel free to type in commands");
-        let env = Rc::new(RefCell::new(Environment::new()));
+        let env = Rc::new(RefCell::new(Environment::new_with_builtin()));
         loop {
             let mut line = String::new();
             print!("{prompt}");
