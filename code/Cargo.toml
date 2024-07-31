@@ -1,5 +1,5 @@
 [package]
-name = "eval"
+name = "code"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,6 +9,6 @@ path = "src/lib.rs"
 [dependencies]
 colored = "2.0.4"
 itertools = "0.13.0"
-lexer = { path = "../lexer" }
-once_cell = "1.18.0"
-parser = { path = "../parser" }
+thiserror = "1.0.63"
+anyhow = "1.0.86"
+
