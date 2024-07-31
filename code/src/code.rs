@@ -1,7 +1,5 @@
-use itertools::Itertools;
-use thiserror::Error;
 
-pub type Instructions = [u8];
+pub type Instructions = Vec<u8>;
 
 #[repr(u8)]
 #[derive(Clone, Copy)]

@@ -110,7 +110,7 @@ fn test_complex_fns() {
     map([1,2,3,4],double);\
     ",
         Object::Array(
-            vec![2, 4, 6, 8]
+            [2, 4, 6, 8]
                 .iter()
                 .map(|x| Rc::new(Object::Int(*x)))
                 .collect(),
@@ -326,7 +326,7 @@ fn test_error_exp() {
 fn test_eval(input: impl Into<String>) -> Result<Rc<Object>, EvalError> {
     let program = get_program(input.into());
     let env = Environment::new_with_builtin();
-    eval(Node::Program(program), &mut Rc::new(RefCell::new(env)))
+    eval(Node::Program(program), &Rc::new(RefCell::new(env)))
 }
 
 fn get_program(input: String) -> Program {

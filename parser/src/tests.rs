@@ -464,9 +464,8 @@ fn test_return_statements() {
 
     let statements = get_statements(input);
     assert_eq!(statements.len(), expected_count);
-    for i in 0..expected_count {
-        let statement = &statements[i];
-        let test_result = test_return_statement(statement);
+    for statement in statements {
+        let test_result = test_return_statement(&statement);
         if test_result.is_err() {
             panic!("{}", test_result.unwrap_err());
         }
