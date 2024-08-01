@@ -1,9 +1,9 @@
+use bytes::Bytes;
 use code::code::{read_operands, Opcode};
 
 use code::instructions::Instructions;
 use eval::object::Object;
-use itertools::Itertools;
-use parser::program::Program;
+use parser::program::{self, Program};
 
 use crate::compiler::{ByteCode, Compiler};
 
@@ -12,9 +12,9 @@ fn test_int_math() {
     let tests = vec![Test::new(
         "1+2",
         vec![1.into(), 2.into()],
-        vec![Opcode::Constant.make(&[1]), Opcode::Constant.make(&[2])],
+        vec![Opcode::Constant.make(&[0]), Opcode::Constant.make(&[1])],
     )];
-    run_compiler_tests(tests.as_slice());
+    run_compiler_tests(&tests);
 }
 
 #[test]
@@ -78,6 +78,7 @@ fn run_compiler_tests(tests: &[Test]) {
     } in tests
     {
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
+        eprintln!("Parsed program {}", program);
         let mut compiler = Compiler::new();
 
         compiler.compile(program).expect("Program should compile");
@@ -85,28 +86,34 @@ fn run_compiler_tests(tests: &[Test]) {
             instructions,
             constants,
         } = compiler.bytecode();
+        let instructions = &Instructions(instructions.clone().into());
+        eprintln!("constants {:?} instructions {instructions}", constants);
         test_instuction(expected_instructions, instructions);
         test_constants(expected_constants, constants);
     }
 }
 fn join_instruction(input: &[Instructions]) -> Instructions {
-    input.iter().flat_map(|m| m.0.clone()).collect_vec().into()
+    Bytes::from_iter(input.iter().flat_map(|m| m.0.clone())).into()
 }
 
 fn test_instuction(expected: &[Instructions], actual: &Instructions) {
-    // let flattened = expected.get(0).unwrap().0.iter();
-
     let expected = join_instruction(expected);
+    eprintln!("want = {expected} got ={actual}");
+    eprintln!("{expected}");
     assert_eq!(
         expected.len(),
         actual.len(),
         "instructions not the same length want={} got={}",
-        expected.iter().map(|f| format!("{:x}", f)).join("_"),
-        actual.iter().map(|f| format!("{:x}", f)).join("_"),
+        expected,
+        actual,
     );
 
     for (i, b) in expected.iter().enumerate() {
-        assert_eq!(actual[i], *b, "wrong instruction at pos {i}");
+        let actual = actual[i];
+        assert_eq!(
+            actual, *b,
+            "wrong instruction at pos {i} want={b} got={actual}"
+        );
     }
 }
 
@@ -120,7 +127,10 @@ fn test_constants(expected: &[Object], actual: &[Object]) {
     );
     for (i, b) in expected.iter().enumerate() {
         let actual = &actual[i];
-        assert_eq!(actual, b, "wrong constant at pos {i} ");
+        assert_eq!(
+            actual, b,
+            "wrong constant at pos {i} want={b} got={actual} "
+        );
     }
 }
 
@@ -129,7 +139,6 @@ struct TestOperands {
     operands: Vec<usize>,
     bytes_read: usize,
 }
-
 
 struct Test {
     input: String,

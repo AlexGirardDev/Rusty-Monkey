@@ -14,4 +14,5 @@ anyhow = "1.0.86"
 hex = "0.4.3"
 shrinkwraprs = "0.3.0"
 strum = { version = "0.26", features = ["derive"] }
+bytes = "1.7.0"
 

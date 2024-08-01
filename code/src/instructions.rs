@@ -1,11 +1,12 @@
 use std::ops::{Deref, DerefMut};
 
+use bytes::{Bytes, BytesMut};
 use itertools::Itertools;
 
 use crate::code::{read_operands, Opcode};
 
 #[derive(Default, Debug)]
-pub struct Instructions(pub Vec<u8>);
+pub struct Instructions(pub Bytes);
 
 impl std::fmt::Display for Instructions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -30,7 +31,7 @@ impl std::fmt::Display for Instructions {
     }
 }
 impl Deref for Instructions {
-    type Target = Vec<u8>;
+    type Target = Bytes;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -43,8 +44,15 @@ impl DerefMut for Instructions {
     }
 }
 
-impl From<Vec<u8>> for Instructions {
-    fn from(value: Vec<u8>) -> Self {
+impl From<Bytes> for Instructions {
+    fn from(value: Bytes) -> Self {
         Instructions(value)
     }
 }
+
+impl From<BytesMut> for Instructions {
+    fn from(value: BytesMut) -> Self {
+        Instructions(value.into())
+    }
+}
+
