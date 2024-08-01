@@ -1,36 +1,11 @@
 use code::code::{read_operands, Opcode};
 
-use code::instructions::{self, Instructions};
+use code::instructions::Instructions;
 use eval::object::Object;
 use itertools::Itertools;
 use parser::program::Program;
 
 use crate::compiler::{ByteCode, Compiler};
-
-// use crate::{
-//     compiler::{ByteCode, Compiler},
-//     tests,
-// };
-
-struct Test {
-    input: String,
-    expected_constants: Vec<Object>,
-    expected_instructions: Vec<Instructions>,
-}
-
-impl Test {
-    fn new(
-        input: impl Into<String>,
-        expected_constants: Vec<Object>,
-        expected_instructions: Vec<Instructions>,
-    ) -> Self {
-        Self {
-            input: input.into(),
-            expected_constants,
-            expected_instructions,
-        }
-    }
-}
 
 #[test]
 fn test_int_math() {
@@ -54,9 +29,7 @@ fn test_instructions_string() {
 0006 OpConstant 65535
 "#;
 
-    dbg!(&instrucitons);
     let actual = join_instruction(&instrucitons);
-    dbg!(&actual);
     assert_eq!(
         expected,
         format!("{actual}"),
@@ -155,4 +128,25 @@ struct TestOperands {
     op: Opcode,
     operands: Vec<usize>,
     bytes_read: usize,
+}
+
+
+struct Test {
+    input: String,
+    expected_constants: Vec<Object>,
+    expected_instructions: Vec<Instructions>,
+}
+
+impl Test {
+    fn new(
+        input: impl Into<String>,
+        expected_constants: Vec<Object>,
+        expected_instructions: Vec<Instructions>,
+    ) -> Self {
+        Self {
+            input: input.into(),
+            expected_constants,
+            expected_instructions,
+        }
+    }
 }

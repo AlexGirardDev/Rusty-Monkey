@@ -9,16 +9,22 @@ pub struct Instructions(pub Vec<u8>);
 
 impl std::fmt::Display for Instructions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut i = 0;
+        let mut offset = 0;
 
-        while i < self.len() {
-            let opcode = Opcode::from_repr(self[i]).unwrap();
+        while offset < self.len() {
+            let opcode = Opcode::from_repr(self[offset]).unwrap();
             let def = opcode.definition();
-            let (opperands, size) = read_operands(&def, &self[i..]);
+            let (opperands, size) = read_operands(&def, &self[offset + 1..]);
 
-            writeln!(f, "{:04} {} {}", i, def.name, opperands.iter().join(" "))?;
+            writeln!(
+                f,
+                "{:04} {} {}",
+                offset,
+                def.name,
+                opperands.iter().join(" ")
+            )?;
 
-            i += size + 1;
+            offset += 1 + size;
         }
         Ok(())
     }

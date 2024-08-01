@@ -33,9 +33,3 @@ pub struct ByteCode<'a> {
     pub instructions: &'a Instructions,
     pub constants: &'a [Object],
 }
-pub fn read_operands(def:&Definition, instructions:Instructions) ->(Vec<usize>, usize) {
-
-    let mut operands = vec![0;def.operand_widths.len()];
-
-    todo!()
-}

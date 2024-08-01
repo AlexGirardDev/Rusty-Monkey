@@ -54,7 +54,7 @@ pub fn read_operands(def: &Definition, instructions: &[u8]) -> (Vec<usize>, usiz
     let mut offset = 0;
     for (i, width) in def.operand_widths.iter().enumerate() {
         operands[i] = match width {
-            2 => u16::from_be_bytes([instructions[offset+1], instructions[offset + 2]]) as usize,
+            2 => u16::from_be_bytes([instructions[offset], instructions[offset+1]]) as usize,
             _ => todo!(),
         };
         offset += width;
