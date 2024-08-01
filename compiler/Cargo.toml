@@ -15,4 +15,6 @@ anyhow = "1.0.86"
 parser = { path = "../parser" }
 code = { path = "../code" }
 eval = { path = "../eval" }
+hex = "0.4.3"
+shrinkwraprs = "0.3.0"
 

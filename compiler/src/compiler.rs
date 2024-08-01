@@ -1,6 +1,9 @@
-use code::code::Instructions;
+use anyhow::{Ok, Result};
+use code::code::Definition;
+use code::instructions::Instructions;
 use eval::node::Node;
 use eval::object::Object;
+
 #[derive(Default)]
 pub struct Compiler {
     insturctions: Instructions,
@@ -15,7 +18,9 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&self, _node: Node) {}
+    pub fn compile(&mut self, _node: impl Into<Node>) -> Result<()> {
+        Ok(())
+    }
     pub fn bytecode(&self) -> ByteCode {
         ByteCode {
             instructions: &self.insturctions,
@@ -25,6 +30,12 @@ impl Compiler {
 }
 
 pub struct ByteCode<'a> {
-    instructions: &'a Instructions,
-    constants: &'a [Object],
+    pub instructions: &'a Instructions,
+    pub constants: &'a [Object],
+}
+pub fn read_operands(def:&Definition, instructions:Instructions) ->(Vec<usize>, usize) {
+
+    let mut operands = vec![0;def.operand_widths.len()];
+
+    todo!()
 }

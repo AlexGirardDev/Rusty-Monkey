@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use parser::ast::{BlockStatement, Expression, Program, Statement};
+use parser::{ast::{BlockStatement, Expression, Statement}, program::Program};
 
 use crate::object::Object;
 

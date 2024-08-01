@@ -8,7 +8,8 @@ use crate::eval_error::EvalError;
 use crate::object::{HashKey, HashPair};
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
-use parser::ast::{BlockStatement, Expression, Program, Statement};
+use parser::ast::{BlockStatement, Expression, Statement};
+use parser::program::Program;
 
 pub type EvalResponse = Result<Rc<Object>, EvalError>;
 

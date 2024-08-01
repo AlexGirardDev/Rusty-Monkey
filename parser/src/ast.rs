@@ -115,8 +115,6 @@ impl std::fmt::Display for Expression {
 
 pub type Identifier = String;
 
-pub type Program = BlockStatement;
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct BlockStatement {
     pub statements: Vec<Statement>,

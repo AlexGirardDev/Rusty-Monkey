@@ -1,6 +1,7 @@
 #![allow(dead_code)]
-use crate::ast::{Expression, Program, Statement};
+use crate::ast::{Expression, Statement};
 use crate::parser::Parser;
+use crate::program::Program;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
 
@@ -487,7 +488,6 @@ fn test_let_statement(statement: &Statement, name: &str) -> Result<(), String> {
 
 fn test_single_expression(input: &str, exp: Expression) {
     let statements = get_statements(input);
-    dbg!(&statements);
     assert_eq!(statements.len(), 1,);
     let statement = &statements[0];
     if let Statement::ExpressionStatement(e) = statement {

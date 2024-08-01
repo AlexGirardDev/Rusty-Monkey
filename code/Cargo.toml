@@ -11,4 +11,7 @@ colored = "2.0.4"
 itertools = "0.13.0"
 thiserror = "1.0.63"
 anyhow = "1.0.86"
+hex = "0.4.3"
+shrinkwraprs = "0.3.0"
+strum = { version = "0.26", features = ["derive"] }
 

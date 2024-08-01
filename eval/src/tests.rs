@@ -10,8 +10,9 @@ use crate::object::{HashKey, HashPair, Object};
 use colored::Colorize;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
-use parser::ast::{Expression, Program, Statement};
+use parser::ast::{Expression, Statement};
 use parser::parser::Parser;
+use parser::program::Program;
 
 #[test]
 fn test_hash_index_expression() {

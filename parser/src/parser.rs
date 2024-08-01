@@ -1,5 +1,6 @@
-use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Program, Statement};
+use crate::ast::{BlockStatement, Expression, Identifier, Precedence, Statement};
 use crate::parse_error::{ParserError, TokenType};
+use crate::program::Program;
 use colored::Colorize;
 use lexer::lexer::Lexer;
 use lexer::token::Token;
