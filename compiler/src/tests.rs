@@ -1,9 +1,9 @@
 use bytes::Bytes;
-use code::code::{read_operands, Opcode};
+use code::opcode::{self, read_operands, Opcode};
 
 use code::instructions::Instructions;
 use eval::object::Object;
-use parser::program::{self, Program};
+use parser::program::Program;
 
 use crate::compiler::{ByteCode, Compiler};
 
@@ -12,7 +12,11 @@ fn test_int_math() {
     let tests = vec![Test::new(
         "1+2",
         vec![1.into(), 2.into()],
-        vec![Opcode::Constant.make(&[0]), Opcode::Constant.make(&[1])],
+        vec![
+            Opcode::Constant.make(&[0]),
+            Opcode::Constant.make(&[1]),
+            Opcode::Add.make(&[]),
+        ],
     )];
     run_compiler_tests(&tests);
 }
@@ -20,13 +24,13 @@ fn test_int_math() {
 #[test]
 fn test_instructions_string() {
     let instrucitons = vec![
-        Opcode::Constant.make(&[1]),
+        Opcode::Add.make(&[]),
         Opcode::Constant.make(&[2]),
         Opcode::Constant.make(&[65535]),
     ];
-    let expected = r#"0000 OpConstant 1
-0003 OpConstant 2
-0006 OpConstant 65535
+    let expected = r#"0000 OpAdd 
+0001 OpConstant 2
+0004 OpConstant 65535
 "#;
 
     let actual = join_instruction(&instrucitons);

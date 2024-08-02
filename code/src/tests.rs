@@ -1,4 +1,4 @@
-use crate::code::Opcode;
+use crate::opcode::Opcode;
 
 struct Test {
     opcode: Opcode,
@@ -18,11 +18,10 @@ impl Test {
 
 #[test]
 fn test_make() {
-    let tests = vec![Test::new(
-        Opcode::Constant,
-        vec![65534],
-        vec![Opcode::Constant as u8, 255, 254],
-    )];
+    let tests = vec![
+        Test::new( Opcode::Constant, vec![65534], vec![Opcode::Constant as u8, 255, 254]),
+        Test::new( Opcode::Add, vec![], vec![Opcode::Add as u8])
+    ];
     for Test {
         opcode,
         opperands,

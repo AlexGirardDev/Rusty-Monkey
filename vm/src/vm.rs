@@ -1,8 +1,7 @@
-use std::{default, rc::Rc};
+use std::rc::Rc;
 
 use anyhow::{bail, Context, Ok, Result};
-use bytes::Buf;
-use code::{code::Opcode, instructions::Instructions};
+use code::{opcode::Opcode, instructions::Instructions};
 use compiler::compiler::ByteCode;
 use eval::object::Object;
 use itertools::Itertools;
@@ -32,6 +31,12 @@ impl Vm {
         while ip < self.insturctions.len() {
             match self.insturctions[ip].into() {
                 Opcode::Constant => {
+                    eprintln!("pushing to stack");
+                    let const_index = self.insturctions.read_u16(ip + 1);
+                    self.push_const(const_index)?;
+                    ip += 2;
+                },
+                Opcode::Add => {
                     eprintln!("pushing to stack");
                     let const_index = self.insturctions.read_u16(ip + 1);
                     self.push_const(const_index)?;

@@ -9,6 +9,7 @@ use crate::instructions::Instructions;
 #[derive(Clone, Copy, FromRepr, Display)]
 pub enum Opcode {
     Constant = 0,
+    Add,
 }
 
 impl Opcode {
@@ -30,6 +31,7 @@ impl Opcode {
     pub fn definition(&self) -> Definition {
         match self {
             Opcode::Constant => Definition::new("OpConstant", vec![2]),
+            Opcode::Add => Definition::new("OpAdd", vec![]),
         }
     }
 }
