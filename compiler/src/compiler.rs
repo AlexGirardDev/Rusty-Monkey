@@ -4,6 +4,7 @@ use code::code::Opcode;
 use code::instructions::Instructions;
 use eval::node::Node;
 use eval::object::Object;
+use itertools::Itertools;
 use parser::ast::{BlockStatement, Expression, Statement};
 
 #[derive(Default)]
@@ -21,7 +22,8 @@ impl Compiler {
     }
 
     pub fn compile(&mut self, node: impl Into<Node>) -> Result<()> {
-        match node.into() {
+        let node: Node = node.into();
+        match node {
             Node::BlockStatement(BlockStatement { statements }) => {
                 for statement in statements {
                     self.compile(statement)?;
@@ -37,13 +39,15 @@ impl Compiler {
                 eprintln!("Compiling infix {left} {opperator} {right}");
                 self.compile(*left)?;
                 self.compile(*right)?;
-
             }
-            Node::Statement(_) => todo!(),
+            Node::Statement(Statement::ExpressionStatement(expression)) => {
+                self.compile(expression);
+            }
+            Node::Statement(_)=>todo!(),
             Node::Expression(Expression::IntLiteral(i)) => {
                 eprintln!("Compiling IntLiteral {i}");
                 let opperands = &[self.add_constant(Object::Int(i))];
-                eprintln!(" opperands {:?}",opperands);
+                eprintln!(" opperands {:?}", opperands);
                 self.emit(Opcode::Constant, opperands);
             }
             Node::Expression(_) => todo!(),
@@ -68,15 +72,15 @@ impl Compiler {
         position
     }
 
-    pub fn bytecode(&self) -> ByteCode {
+    pub fn bytecode(self) -> ByteCode {
         ByteCode {
-            instructions: &self.insturctions,
-            constants: &self.constants,
+            instructions: self.insturctions.clone().into(),
+            constants: self.constants,
         }
     }
 }
 
-pub struct ByteCode<'a> {
-    pub instructions: &'a BytesMut,
-    pub constants: &'a [Object],
+pub struct ByteCode {
+    pub instructions: Instructions,
+    pub constants: Vec<Object>,
 }

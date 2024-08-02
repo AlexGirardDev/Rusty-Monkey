@@ -5,6 +5,11 @@
       <sourceFolder url="file://$MODULE_DIR$/lexer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/repl/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/code/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/compiler/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/eval/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/vm/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/lexer/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

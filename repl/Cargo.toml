@@ -14,6 +14,7 @@ parser = { path = "../parser" }
 eval = { path = "../eval" }
 code = { path = "../code" }
 compiler = { path = "../compiler" }
+vm = { path = "../vm" }
 whoami = "1.4.1"
 colored = "2.0.4"
 # parser = { path = "../parser" }

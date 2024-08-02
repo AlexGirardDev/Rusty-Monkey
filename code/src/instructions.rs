@@ -8,6 +8,12 @@ use crate::code::{read_operands, Opcode};
 #[derive(Default, Debug)]
 pub struct Instructions(pub Bytes);
 
+impl Instructions {
+    pub fn read_u16(&self, offset:usize )->u16{
+        u16::from_be_bytes([self[offset], self[offset+1]])
+    }
+}
+
 impl std::fmt::Display for Instructions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut offset = 0;

@@ -86,7 +86,7 @@ fn run_compiler_tests(tests: &[Test]) {
             instructions,
             constants,
         } = compiler.bytecode();
-        let instructions = &Instructions(instructions.clone().into());
+        let instructions = &Instructions(instructions.clone());
         eprintln!("constants {:?} instructions {instructions}", constants);
         test_instuction(expected_instructions, instructions);
         test_constants(expected_constants, constants);
@@ -117,7 +117,7 @@ fn test_instuction(expected: &[Instructions], actual: &Instructions) {
     }
 }
 
-fn test_constants(expected: &[Object], actual: &[Object]) {
+fn test_constants(expected: &[Object], actual: Vec<Object>) {
     assert_eq!(
         expected.len(),
         actual.len(),

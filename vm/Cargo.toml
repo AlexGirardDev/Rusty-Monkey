@@ -1,0 +1,23 @@
+[package]
+name = "vm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+colored = "2.0.4"
+itertools = "0.13.0"
+thiserror = "1.0.63"
+anyhow = "1.0.86"
+hex = "0.4.3"
+shrinkwraprs = "0.3.0"
+strum = { version = "0.26", features = ["derive"] }
+bytes = "1.7.0"
+
+
+parser = { path = "../parser" }
+code = { path = "../code" }
+eval = { path = "../eval" }
+compiler = { path = "../compiler" }

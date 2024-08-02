@@ -33,7 +33,11 @@ impl Opcode {
         }
     }
 }
-
+impl From<u8> for Opcode {
+    fn from(value: u8) -> Self {
+        Opcode::from_repr(value).expect("expecing a valid opcode")
+    }
+}
 #[derive(Clone, Debug)]
 pub struct Definition {
     pub name: String,
