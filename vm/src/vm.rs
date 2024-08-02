@@ -74,7 +74,7 @@ impl Vm {
                 Opcode::NotEqual => {
                     let right = self.pop()?;
                     let left = self.pop()?;
-                    self.push(Object::Bool(left == right))?;
+                    self.push(Object::Bool(left != right))?;
                 }
                 Opcode::GreaterThan => {
                     let right = self.pop()?;
