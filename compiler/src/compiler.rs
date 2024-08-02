@@ -1,7 +1,7 @@
 use anyhow::{bail, Ok, Result};
 use bytes::BytesMut;
+use code::instructions::Instructions;
 use code::opcode::Opcode;
-use code::{instructions::Instructions};
 use eval::node::Node;
 use eval::object::Object;
 use lexer::token::Token;
@@ -51,7 +51,17 @@ impl Compiler {
                     Expression::Bool(false) => {
                         self.emit(Opcode::False, &[]);
                     }
-                    Expression::PrefixExpression(_, _) => todo!(),
+                    Expression::PrefixExpression(token, right) => match token {
+                        Token::Bang => {
+                            self.compile(*right)?;
+                            self.emit(Opcode::Bang, &[]);
+                        }
+                        Token::Dash => {
+                            self.compile(*right)?;
+                            self.emit(Opcode::Minus, &[]);
+                        }
+                        t => bail!("{t} is an invalid token for a prefix exrpession"),
+                    },
                     Expression::InfixExpression(opperator, left, right) => {
                         match opperator {
                             Token::Plus => {
@@ -83,12 +93,12 @@ impl Compiler {
                                 self.compile(*left)?;
                                 self.compile(*right)?;
                                 self.emit(Opcode::NotEqual, &[]);
-                            },
+                            }
                             Token::GreaterThan => {
                                 self.compile(*left)?;
                                 self.compile(*right)?;
                                 self.emit(Opcode::GreaterThan, &[]);
-                            },
+                            }
                             Token::LessThan => {
                                 self.compile(*right)?;
                                 self.compile(*left)?;

@@ -35,6 +35,24 @@ fn test_integer_arithmetic() {
         Test::new("(1 < 2) == false", false),
         Test::new("(1 > 2) == true", false),
         Test::new("(1 > 2) == false", true),
+        Test::new("-1", -1),
+        Test::new("-5", -5),
+        Test::new("-10", -10),
+        Test::new("-50 + 100 + -50", 0),
+        Test::new("(5 + 10 * 2 + 15 / 3) * 2 + -10", 50),
+    ];
+    run_vm_tests(&tests);
+}
+
+#[test]
+fn test_bool() {
+    let tests = [
+        Test::new("!true", false),
+        Test::new("!false", true),
+        Test::new("!5", false),
+        Test::new("!!true", true),
+        Test::new("!!false", false),
+        Test::new("!!5", true),
     ];
     run_vm_tests(&tests);
 }

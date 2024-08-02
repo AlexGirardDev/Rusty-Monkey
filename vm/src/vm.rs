@@ -79,8 +79,28 @@ impl Vm {
                 Opcode::GreaterThan => {
                     let right = self.pop()?;
                     let left = self.pop()?;
-                    let result = Object::eval_obj_comparison(left, right,  ObjectComparison::GreaterThan)?;
+                    let result =
+                        Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThan)?;
+
                     self.push(result)?;
+                }
+                Opcode::Minus => {
+                    let right = self.pop()?;
+
+                    let result = match right.as_ref() {
+                        Object::Int(i) => Object::Int(-*i),
+                        t => bail!("{t} is not a valid type for - prefix"),
+                    };
+                    self.push(result)?;
+                }
+                Opcode::Bang => {
+                    let right = self.pop()?;
+                    let result = match right.as_ref() {
+                        Object::Bool(b) => !*b,
+                        Object::Null => true,
+                        _ => false,
+                    };
+                    self.push(Object::Bool(result))?;
                 }
             }
             ip += 1;

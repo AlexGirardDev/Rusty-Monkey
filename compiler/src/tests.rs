@@ -63,6 +63,15 @@ fn test_int_math() {
                 Pop.make(),
             ],
         ),
+        Test::new(
+            "-1",
+            vec![1.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Minus.make(),
+                Pop.make(),
+            ],
+        ),
     ];
     run_compiler_tests(&tests);
 }
@@ -169,6 +178,24 @@ fn test_bools() {
                 True.make(),
                 False.make(),
                 NotEqual.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "!true",
+            vec![],
+            vec![
+                True.make(),
+                Bang.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "-1",
+            vec![1.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Minus.make(),
                 Pop.make(),
             ],
         ),
