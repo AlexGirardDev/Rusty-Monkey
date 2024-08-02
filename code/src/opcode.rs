@@ -9,8 +9,11 @@ use crate::instructions::Instructions;
 #[derive(Clone, Copy, FromRepr, Display)]
 pub enum Opcode {
     Constant = 0,
-    Add,
-    Pop
+    Pop = 1,
+    Add = 2,
+    Sub = 3,
+    Mul = 4,
+    Div = 5,
 }
 
 impl Opcode {
@@ -33,6 +36,9 @@ impl Opcode {
             Opcode::Constant => Definition::new("OpConstant", vec![2]),
             Opcode::Add => Definition::new("OpAdd", vec![]),
             Opcode::Pop => Definition::new("OpPop", vec![]),
+            Opcode::Sub => Definition::new("OpSub", vec![]),
+            Opcode::Mul => Definition::new("OpMul", vec![]),
+            Opcode::Div => Definition::new("OpDiv", vec![]),
         }
     }
 }

@@ -32,20 +32,7 @@ impl Compiler {
             Node::Program(_) => todo!(),
             Node::Object(_) => todo!(),
             Node::Statement(Statement::ExpressionStatement(expression)) => {
-                match expression {
-                    Expression::InfixExpression(opperator, left, right) => {
-                        self.compile(*left)?;
-                        self.compile(*right)?;
-                        match opperator {
-                            Token::Plus => {
-                                self.emit(Opcode::Add, &[]);
-                            }
-                            t => bail!("{t} is an invalid infix opperator"),
-                        };
-                    }
-                    exp => self.compile(exp)?,
-                };
-
+                self.compile(expression)?;
                 self.emit(Opcode::Pop, &[]);
             }
             Node::Statement(_) => todo!(),
@@ -53,7 +40,40 @@ impl Compiler {
                 let opperands = &[self.add_constant(Object::Int(i))];
                 self.emit(Opcode::Constant, opperands);
             }
-            Node::Expression(_) => todo!(),
+            Node::Expression(exp) => {
+                match exp {
+                    Expression::Identifier(_) => todo!(),
+                    Expression::IntLiteral(_) => todo!(),
+                    Expression::StringLiteral(_) => todo!(),
+                    Expression::Bool(_) => todo!(),
+                    Expression::PrefixExpression(_, _) => todo!(),
+                    Expression::InfixExpression(opperator, left, right) => {
+                        self.compile(*left)?;
+                        self.compile(*right)?;
+                        match opperator {
+                            Token::Plus => {
+                                self.emit(Opcode::Add, &[]);
+                            }
+                            Token::Dash => {
+                                self.emit(Opcode::Sub, &[]);
+                            }
+                            Token::Asterisk => {
+                                self.emit(Opcode::Mul, &[]);
+                            }
+                            Token::ForwardSlash => {
+                                self.emit(Opcode::Div, &[]);
+                            }
+                            t => bail!("{t} is an invalid infix opperator"),
+                        };
+                    },
+                    Expression::IfExpression(_, _, _) => todo!(),
+                    Expression::FnExpression(_, _) => todo!(),
+                    Expression::CallExpression(_, _) => todo!(),
+                    Expression::Arrary(_) => todo!(),
+                    Expression::Map(_) => todo!(),
+                    Expression::IndexExpression(_, _) => todo!(),
+                }
+            }
         };
 
         Ok(())

@@ -9,24 +9,57 @@ use crate::compiler::{ByteCode, Compiler};
 
 #[test]
 fn test_int_math() {
-    let tests = vec![Test::new(
-        "1+2",
-        vec![1.into(), 2.into()],
-        vec![
-            Opcode::Constant.make(&[0]),
-            Opcode::Constant.make(&[1]),
-            Opcode::Add.make(&[]),
-            Opcode::Pop.make(&[]),
-        ]),
-Test::new(
-        "1;2",
-        vec![1.into(), 2.into()],
-        vec![
-            Opcode::Constant.make(&[0]),
-            Opcode::Pop.make(&[]),
-            Opcode::Constant.make(&[1]),
-            Opcode::Pop.make(&[]),
-        ])
+    let tests = vec![
+        Test::new(
+            "1+2",
+            vec![1.into(), 2.into()],
+            vec![
+                Opcode::Constant.make(&[0]),
+                Opcode::Constant.make(&[1]),
+                Opcode::Add.make(&[]),
+                Opcode::Pop.make(&[]),
+            ],
+        ),
+        Test::new(
+            "1-2",
+            vec![1.into(), 2.into()],
+            vec![
+                Opcode::Constant.make(&[0]),
+                Opcode::Constant.make(&[1]),
+                Opcode::Sub.make(&[]),
+                Opcode::Pop.make(&[]),
+            ],
+        ),
+        Test::new(
+            "1*2",
+            vec![1.into(), 2.into()],
+            vec![
+                Opcode::Constant.make(&[0]),
+                Opcode::Constant.make(&[1]),
+                Opcode::Mul.make(&[]),
+                Opcode::Pop.make(&[]),
+            ],
+        ),
+        Test::new(
+            "1/2",
+            vec![1.into(), 2.into()],
+            vec![
+                Opcode::Constant.make(&[0]),
+                Opcode::Constant.make(&[1]),
+                Opcode::Div.make(&[]),
+                Opcode::Pop.make(&[]),
+            ],
+        ),
+        Test::new(
+            "1;2",
+            vec![1.into(), 2.into()],
+            vec![
+                Opcode::Constant.make(&[0]),
+                Opcode::Pop.make(&[]),
+                Opcode::Constant.make(&[1]),
+                Opcode::Pop.make(&[]),
+            ],
+        ),
     ];
     run_compiler_tests(&tests);
 }
