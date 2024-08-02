@@ -37,16 +37,25 @@ impl Vm {
                     ip += 2;
                 },
                 Opcode::Add => {
-                    eprintln!("pushing to stack");
-                    let const_index = self.insturctions.read_u16(ip + 1);
-                    self.push_const(const_index)?;
-                    ip += 2;
+                    let left = self.pop()?;
+                    let right = self.pop()?;
+                    let result = (left.as_ref() + right.as_ref())?;
+                    self.push(result)?;
                 }
             }
             ip += 1;
         }
         Ok(())
     }
+
+    fn pop(&mut self) -> Result<Rc<Object>> {
+        if self.sp > Vm::STACKSIZE {
+            bail!("stack overflow");
+        }
+        self.sp -= 1;
+        self.stack.pop().context("tried to pop the stack")
+    }
+
     fn push(&mut self, value: Rc<Object>) -> Result<()> {
         if self.sp > Vm::STACKSIZE {
             bail!("stack overflow");

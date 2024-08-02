@@ -6,7 +6,7 @@ use parser::program::Program;
 
 #[test]
 fn test_integer_arithmetic() {
-    let tests = vec![Test::new("1", 1), Test::new("2", 2), Test::new("1+2", 2)];
+    let tests = vec![Test::new("1", 1), Test::new("2", 2), Test::new("1+2", 3)];
 
     run_vm_tests(&tests);
 }
@@ -27,7 +27,7 @@ fn run_vm_tests(tests: &[Test]) {
         let mut vm = Vm::new(comp.bytecode());
         vm.run().expect("vm should run without errors");
         let stack_element = vm.stack_top().expect("expeced value from stack");
-        assert_eq!(stack_element.as_ref(), expected_value);
+        assert_eq!(stack_element.as_ref(), expected_value,"stack element is not the same want={} got={}", expected_value, stack_element);
     }
 }
 
