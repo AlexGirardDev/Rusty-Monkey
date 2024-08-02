@@ -19,6 +19,8 @@ pub enum Opcode {
     Equal,
     NotEqual,
     GreaterThan,
+    Minus,
+    Bang
 }
 
 impl Opcode {
@@ -55,6 +57,8 @@ impl Opcode {
             Opcode::Equal => Definition::new("OpEqual", vec![]),
             Opcode::NotEqual => Definition::new("OpNotEqual", vec![]),
             Opcode::GreaterThan => Definition::new("OpGreaterThan", vec![]),
+            Opcode::Bang => Definition::new("OpBang", vec![]),
+            Opcode::Minus => Definition::new("OpMinus", vec![]),
         }
     }
 }
