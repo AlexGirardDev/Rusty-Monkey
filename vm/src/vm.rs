@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std:: rc::Rc;
 
 use anyhow::{bail, Context, Ok, Result};
 use code::{opcode::Opcode, instructions::Instructions};
@@ -17,21 +17,20 @@ impl Vm {
     const STACKSIZE: usize = 2048;
 
     pub fn new(byte_code: ByteCode) -> Self {
+        let stack = (0..Vm::STACKSIZE).map(|_| Rc::new(Object::Null)).collect_vec();
         Self {
             insturctions: byte_code.instructions,
             constants: byte_code.constants.into_iter().map(Rc::new).collect_vec(),
-            stack: Vec::with_capacity(Vm::STACKSIZE),
+            stack,
             sp: 0,
         }
     }
 
     pub fn run(&mut self) -> Result<()> {
         let mut ip = 0;
-        dbg!(&self.insturctions);
         while ip < self.insturctions.len() {
             match self.insturctions[ip].into() {
                 Opcode::Constant => {
-                    eprintln!("pushing to stack");
                     let const_index = self.insturctions.read_u16(ip + 1);
                     self.push_const(const_index)?;
                     ip += 2;
@@ -41,7 +40,12 @@ impl Vm {
                     let right = self.pop()?;
                     let result = (left.as_ref() + right.as_ref())?;
                     self.push(result)?;
+                },
+                Opcode::Pop => {
+                    self.pop()?;
                 }
+
+
             }
             ip += 1;
         }
@@ -52,15 +56,17 @@ impl Vm {
         if self.sp > Vm::STACKSIZE {
             bail!("stack overflow");
         }
+        let item = self.stack.get(self.sp-1).context("tried to pop the stack");
         self.sp -= 1;
-        self.stack.pop().context("tried to pop the stack")
+        item.cloned()
+
     }
 
     fn push(&mut self, value: Rc<Object>) -> Result<()> {
         if self.sp > Vm::STACKSIZE {
             bail!("stack overflow");
         }
-        self.stack.push(value);
+        self.stack[self.sp] = value;
         self.sp += 1;
         Ok(())
     }
@@ -75,7 +81,7 @@ impl Vm {
         Ok(())
     }
 
-    pub fn stack_top(&self) -> Option<Rc<Object>> {
-        self.stack.get(self.sp - 1).cloned()
+    pub fn last_popped_stack_element(&self) -> Rc<Object> {
+        self.stack[self.sp].clone()
     }
 }

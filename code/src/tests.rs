@@ -20,7 +20,8 @@ impl Test {
 fn test_make() {
     let tests = vec![
         Test::new( Opcode::Constant, vec![65534], vec![Opcode::Constant as u8, 255, 254]),
-        Test::new( Opcode::Add, vec![], vec![Opcode::Add as u8])
+        Test::new( Opcode::Add, vec![], vec![Opcode::Add as u8]),
+        Test::new( Opcode::Pop, vec![], vec![Opcode::Pop as u8])
     ];
     for Test {
         opcode,

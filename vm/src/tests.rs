@@ -17,16 +17,14 @@ fn run_vm_tests(tests: &[Test]) {
         expected_value,
     } in tests
     {
-        dbg!(input,expected_value);
 
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
-        eprintln!("Parsed program {}", program);
         let mut comp = Compiler::new();
         comp.compile(program).expect("Program should compile");
 
         let mut vm = Vm::new(comp.bytecode());
         vm.run().expect("vm should run without errors");
-        let stack_element = vm.stack_top().expect("expeced value from stack");
+        let stack_element = vm.last_popped_stack_element();
         assert_eq!(stack_element.as_ref(), expected_value,"stack element is not the same want={} got={}", expected_value, stack_element);
     }
 }

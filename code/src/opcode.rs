@@ -10,12 +10,12 @@ use crate::instructions::Instructions;
 pub enum Opcode {
     Constant = 0,
     Add,
+    Pop
 }
 
 impl Opcode {
     pub fn make(&self, operands: &[usize]) -> Instructions {
         let def = self.definition();
-        eprintln!("making opcode {self} {:?}", operands);
         let instruction_len = def.operand_widths.iter().sum::<usize>() + 1;
         let mut instruction = BytesMut::with_capacity(instruction_len);
         instruction.put_u8(*self as u8);
@@ -32,6 +32,7 @@ impl Opcode {
         match self {
             Opcode::Constant => Definition::new("OpConstant", vec![2]),
             Opcode::Add => Definition::new("OpAdd", vec![]),
+            Opcode::Pop => Definition::new("OpPop", vec![]),
         }
     }
 }

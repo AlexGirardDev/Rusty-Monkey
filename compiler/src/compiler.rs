@@ -1,12 +1,11 @@
 use anyhow::{bail, Ok, Result};
 use bytes::BytesMut;
 use code::instructions::Instructions;
-use code::opcode::{self, Opcode};
+use code::opcode::Opcode;
 use eval::node::Node;
 use eval::object::Object;
 use lexer::token::Token;
 use parser::ast::{BlockStatement, Expression, Statement};
-use parser::parse_error::TokenType;
 
 #[derive(Default)]
 pub struct Compiler {
@@ -32,29 +31,26 @@ impl Compiler {
             }
             Node::Program(_) => todo!(),
             Node::Object(_) => todo!(),
-            Node::Statement(Statement::ExpressionStatement(Expression::InfixExpression(
-                opperator,
-                left,
-                right,
-            ))) => {
-                eprintln!("Compiling infix {left} {opperator} {right}");
-                self.compile(*left)?;
-                self.compile(*right)?;
-                match opperator {
-                    Token::Plus => {
-                        self.emit(Opcode::Add, &[]);
-                    }
-                    t => bail!("{t} is an invalid infix opperator"),
-                };
-            }
             Node::Statement(Statement::ExpressionStatement(expression)) => {
-                self.compile(expression)?;
+                match expression {
+                    Expression::InfixExpression(opperator, left, right) => {
+                        self.compile(*left)?;
+                        self.compile(*right)?;
+                        match opperator {
+                            Token::Plus => {
+                                self.emit(Opcode::Add, &[]);
+                            }
+                            t => bail!("{t} is an invalid infix opperator"),
+                        };
+                    }
+                    exp => self.compile(exp)?,
+                };
+
+                self.emit(Opcode::Pop, &[]);
             }
             Node::Statement(_) => todo!(),
             Node::Expression(Expression::IntLiteral(i)) => {
-                eprintln!("Compiling IntLiteral {i}");
                 let opperands = &[self.add_constant(Object::Int(i))];
-                eprintln!(" opperands {:?}", opperands);
                 self.emit(Opcode::Constant, opperands);
             }
             Node::Expression(_) => todo!(),
@@ -74,7 +70,6 @@ impl Compiler {
 
     fn add_instruction(&mut self, instruction: Instructions) -> usize {
         let position = self.insturctions.len();
-        eprintln!("adding {instruction} ");
         self.insturctions.extend(instruction.0);
         position
     }
