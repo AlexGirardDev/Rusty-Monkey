@@ -29,7 +29,7 @@ fn test_make() {
         expected,
     } in tests
     {
-        let instructions = opcode.make(&opperands);
+        let instructions = opcode.make_with(&opperands);
         assert_eq!(
             instructions.len(),
             expected.len(),

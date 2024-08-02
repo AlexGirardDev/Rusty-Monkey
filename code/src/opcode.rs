@@ -9,15 +9,26 @@ use crate::instructions::Instructions;
 #[derive(Clone, Copy, FromRepr, Display)]
 pub enum Opcode {
     Constant = 0,
-    Pop = 1,
-    Add = 2,
-    Sub = 3,
-    Mul = 4,
-    Div = 5,
+    Pop,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    True,
+    False,
+    Equal,
+    NotEqual,
+    GreaterThan,
 }
 
 impl Opcode {
-    pub fn make(&self, operands: &[usize]) -> Instructions {
+    pub fn make(&self) -> Instructions {
+        let mut instruction = BytesMut::with_capacity(1);
+        instruction.put_u8(*self as u8);
+        instruction.into()
+    }
+
+    pub fn make_with(&self, operands: &[usize]) -> Instructions {
         let def = self.definition();
         let instruction_len = def.operand_widths.iter().sum::<usize>() + 1;
         let mut instruction = BytesMut::with_capacity(instruction_len);
@@ -39,6 +50,11 @@ impl Opcode {
             Opcode::Sub => Definition::new("OpSub", vec![]),
             Opcode::Mul => Definition::new("OpMul", vec![]),
             Opcode::Div => Definition::new("OpDiv", vec![]),
+            Opcode::False => Definition::new("OpTrue", vec![]),
+            Opcode::True => Definition::new("OpFalse", vec![]),
+            Opcode::Equal => Definition::new("OpEqual", vec![]),
+            Opcode::NotEqual => Definition::new("OpNotEqual", vec![]),
+            Opcode::GreaterThan => Definition::new("OpGreaterThan", vec![]),
         }
     }
 }
@@ -67,7 +83,14 @@ pub fn read_operands(def: &Definition, instructions: &[u8]) -> (Vec<usize>, usiz
     let mut offset = 0;
     for (i, width) in def.operand_widths.iter().enumerate() {
         operands[i] = match width {
-            2 => u16::from_be_bytes([instructions[offset], instructions[offset + 1]]) as usize,
+            2 => {
+                assert!(
+                    instructions.len() > offset + 1,
+                    "insructions to short to read number? {}",
+                    def.name
+                );
+                u16::from_be_bytes([instructions[offset], instructions[offset + 1]]) as usize
+            }
             _ => todo!(),
         };
         offset += width;

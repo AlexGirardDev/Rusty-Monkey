@@ -1,5 +1,8 @@
 use bytes::Bytes;
-use code::opcode::{read_operands, Opcode};
+use code::opcode::{
+    read_operands,
+    Opcode::{self, *},
+};
 
 use code::instructions::Instructions;
 use eval::object::Object;
@@ -14,50 +17,159 @@ fn test_int_math() {
             "1+2",
             vec![1.into(), 2.into()],
             vec![
-                Opcode::Constant.make(&[0]),
-                Opcode::Constant.make(&[1]),
-                Opcode::Add.make(&[]),
-                Opcode::Pop.make(&[]),
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Add.make(),
+                Pop.make(),
             ],
         ),
         Test::new(
             "1-2",
             vec![1.into(), 2.into()],
             vec![
-                Opcode::Constant.make(&[0]),
-                Opcode::Constant.make(&[1]),
-                Opcode::Sub.make(&[]),
-                Opcode::Pop.make(&[]),
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Sub.make(),
+                Pop.make(),
             ],
         ),
         Test::new(
             "1*2",
             vec![1.into(), 2.into()],
             vec![
-                Opcode::Constant.make(&[0]),
-                Opcode::Constant.make(&[1]),
-                Opcode::Mul.make(&[]),
-                Opcode::Pop.make(&[]),
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Mul.make(),
+                Pop.make(),
             ],
         ),
         Test::new(
             "1/2",
             vec![1.into(), 2.into()],
             vec![
-                Opcode::Constant.make(&[0]),
-                Opcode::Constant.make(&[1]),
-                Opcode::Div.make(&[]),
-                Opcode::Pop.make(&[]),
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Div.make(),
+                Pop.make(),
             ],
         ),
         Test::new(
             "1;2",
             vec![1.into(), 2.into()],
             vec![
-                Opcode::Constant.make(&[0]),
-                Opcode::Pop.make(&[]),
-                Opcode::Constant.make(&[1]),
-                Opcode::Pop.make(&[]),
+                Constant.make_with(&[0]),
+                Pop.make(),
+                Constant.make_with(&[1]),
+                Pop.make(),
+            ],
+        ),
+    ];
+    run_compiler_tests(&tests);
+}
+
+#[test]
+fn test_bools() {
+    let tests = vec![
+        Test::new("true", vec![], vec![True.make(), Pop.make()]),
+        Test::new("true", vec![], vec![True.make(), Pop.make()]),
+        Test::new(
+            "1-2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Sub.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1*2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Mul.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1/2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Div.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1;2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Pop.make(),
+                Constant.make_with(&[1]),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1>2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                GreaterThan.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1<2",
+            vec![2.into(), 1.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                GreaterThan.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1==2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                Equal.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "1!=2",
+            vec![1.into(), 2.into()],
+            vec![
+                Constant.make_with(&[0]),
+                Constant.make_with(&[1]),
+                NotEqual.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "true==false",
+            vec![],
+            vec![
+                True.make(),
+                False.make(),
+                Equal.make(),
+                Pop.make(),
+            ],
+        ),
+        Test::new(
+            "true!=false",
+            vec![],
+            vec![
+                True.make(),
+                False.make(),
+                NotEqual.make(),
+                Pop.make(),
             ],
         ),
     ];
@@ -67,9 +179,9 @@ fn test_int_math() {
 #[test]
 fn test_instructions_string() {
     let instrucitons = vec![
-        Opcode::Add.make(&[]),
-        Opcode::Constant.make(&[2]),
-        Opcode::Constant.make(&[65535]),
+        Add.make(),
+        Constant.make_with(&[2]),
+        Constant.make_with(&[65535]),
     ];
     let expected = r#"0000 OpAdd 
 0001 OpConstant 2
@@ -89,7 +201,7 @@ fn test_instructions_string() {
 #[test]
 fn test_read_operands() {
     let tests = vec![TestOperands {
-        op: Opcode::Constant,
+        op: Constant,
         operands: vec![65535],
         bytes_read: 2,
     }];
@@ -100,7 +212,7 @@ fn test_read_operands() {
         bytes_read,
     } in tests
     {
-        let instruction = op.make(&operands);
+        let instruction = op.make_with(&operands);
         let def = op.definition();
 
         let (operands_read, n) = read_operands(&def, &instruction[1..]);
@@ -124,6 +236,7 @@ fn run_compiler_tests(tests: &[Test]) {
         expected_instructions,
     } in tests
     {
+        eprintln!("Running test {input}");
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
         let mut compiler = Compiler::new();
 
@@ -146,7 +259,7 @@ fn test_instuction(expected: &[Instructions], actual: &Instructions) {
     assert_eq!(
         expected.len(),
         actual.len(),
-        "instructions not the same length want={} got={}",
+        "instructions not the same length want={} got={} ",
         expected,
         actual,
     );

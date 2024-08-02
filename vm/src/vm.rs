@@ -3,7 +3,7 @@ use std::rc::Rc;
 use anyhow::{bail, Context, Ok, Result};
 use code::{instructions::Instructions, opcode::Opcode};
 use compiler::compiler::ByteCode;
-use eval::object::Object;
+use eval::object::{Object, ObjectComparison};
 use itertools::Itertools;
 
 pub struct Vm {
@@ -59,6 +59,28 @@ impl Vm {
                 }
                 Opcode::Pop => {
                     self.pop()?;
+                }
+                Opcode::True => {
+                    self.push(Object::Bool(true))?;
+                }
+                Opcode::False => {
+                    self.push(Object::Bool(false))?;
+                }
+                Opcode::Equal => {
+                    let right = self.pop()?;
+                    let left = self.pop()?;
+                    self.push(Object::Bool(left == right))?;
+                }
+                Opcode::NotEqual => {
+                    let right = self.pop()?;
+                    let left = self.pop()?;
+                    self.push(Object::Bool(left == right))?;
+                }
+                Opcode::GreaterThan => {
+                    let right = self.pop()?;
+                    let left = self.pop()?;
+                    let result = Object::eval_obj_comparison(left, right,  ObjectComparison::GreaterThan)?;
+                    self.push(result)?;
                 }
             }
             ip += 1;

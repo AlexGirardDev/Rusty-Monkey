@@ -3,7 +3,7 @@ use parser::ast::{BlockStatement, Identifier};
 use std::cell::RefCell;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::fmt;
+use std::fmt::{self, Display};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
@@ -57,8 +57,30 @@ impl From<u64> for HashKey {
     }
 }
 
+pub enum ObjectComparison {
+    GreaterThan,
+    GreaterThanEqual,
+    LessThan,
+    LessThanEqual,
+    Equal,
+    NotEqual,
+}
+
+impl Display for ObjectComparison {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ObjectComparison::GreaterThan => write!(f, ">"),
+            ObjectComparison::GreaterThanEqual => write!(f, ">="),
+            ObjectComparison::LessThan => write!(f, "<"),
+            ObjectComparison::LessThanEqual => write!(f, "<="),
+            ObjectComparison::Equal => write!(f, "=="),
+            ObjectComparison::NotEqual => write!(f, "!="),
+        }
+    }
+}
+
 impl Object {
-    pub fn hash_key(&self) -> Result<HashKey,EvalError> {
+    pub fn hash_key(&self) -> Result<HashKey, EvalError> {
         let mut hasher = DefaultHasher::new();
         match self {
             Object::Null => hasher.write_u32(0),
@@ -71,12 +93,61 @@ impl Object {
                     hasher.write_u8(0)
                 }
             }
-            k => return Err(EvalError::InvalidHashKeyType(k.to_string()))
+            k => return Err(EvalError::InvalidHashKeyType(k.to_string())),
         }
 
         Ok(HashKey {
             key: hasher.finish(),
         })
+    }
+
+    pub fn eval_obj_comparison(
+        left: Rc<Object>,
+        right: Rc<Object>,
+        comp: ObjectComparison,
+    ) -> EvalResponse {
+        let r = match comp {
+            ObjectComparison::GreaterThan
+            | ObjectComparison::GreaterThanEqual
+            | ObjectComparison::LessThan
+            | ObjectComparison::LessThanEqual => {
+                let (Object::Int(l), Object::Int(r)) = (left.as_ref(), right.as_ref()) else {
+                    return Err(EvalError::InvalidOperator(
+                        left.to_string(),
+                        comp.to_string(),
+                        right.to_string(),
+                    ));
+                };
+
+                match comp {
+                    ObjectComparison::GreaterThan => l > r,
+                    ObjectComparison::GreaterThanEqual => l >= r,
+                    ObjectComparison::LessThan => l < r,
+                    ObjectComparison::LessThanEqual => l <= r,
+                    _ => false,
+                }
+            }
+            ObjectComparison::Equal | ObjectComparison::NotEqual => {
+                let result = match (left.as_ref(), right.as_ref()) {
+                    (Object::Bool(l), Object::Bool(r)) => l == r,
+                    (Object::String(l), Object::String(r)) => l == r,
+                    (Object::Int(l), Object::Int(r)) => l == r,
+                    (Object::Null, Object::Null) => true,
+                    (l, r) => {
+                        return Err(EvalError::InvalidOperator(
+                            l.to_string(),
+                            comp.to_string(),
+                            r.to_string(),
+                        ));
+                    }
+                };
+                match comp {
+                    ObjectComparison::NotEqual => !result,
+                    _ => result,
+                }
+            }
+        };
+        Ok(Rc::new(r.into()))
     }
 }
 

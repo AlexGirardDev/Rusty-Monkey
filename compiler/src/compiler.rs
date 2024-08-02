@@ -1,7 +1,7 @@
 use anyhow::{bail, Ok, Result};
 use bytes::BytesMut;
-use code::instructions::Instructions;
 use code::opcode::Opcode;
+use code::{instructions::Instructions};
 use eval::node::Node;
 use eval::object::Object;
 use lexer::token::Token;
@@ -45,34 +45,65 @@ impl Compiler {
                     Expression::Identifier(_) => todo!(),
                     Expression::IntLiteral(_) => todo!(),
                     Expression::StringLiteral(_) => todo!(),
-                    Expression::Bool(_) => todo!(),
+                    Expression::Bool(true) => {
+                        self.emit(Opcode::True, &[]);
+                    }
+                    Expression::Bool(false) => {
+                        self.emit(Opcode::False, &[]);
+                    }
                     Expression::PrefixExpression(_, _) => todo!(),
                     Expression::InfixExpression(opperator, left, right) => {
-                        self.compile(*left)?;
-                        self.compile(*right)?;
                         match opperator {
                             Token::Plus => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
                                 self.emit(Opcode::Add, &[]);
                             }
                             Token::Dash => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
                                 self.emit(Opcode::Sub, &[]);
                             }
                             Token::Asterisk => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
                                 self.emit(Opcode::Mul, &[]);
                             }
                             Token::ForwardSlash => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
                                 self.emit(Opcode::Div, &[]);
+                            }
+                            Token::Equal => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
+                                self.emit(Opcode::Equal, &[]);
+                            }
+                            Token::NotEqual => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
+                                self.emit(Opcode::NotEqual, &[]);
+                            },
+                            Token::GreaterThan => {
+                                self.compile(*left)?;
+                                self.compile(*right)?;
+                                self.emit(Opcode::GreaterThan, &[]);
+                            },
+                            Token::LessThan => {
+                                self.compile(*right)?;
+                                self.compile(*left)?;
+                                self.emit(Opcode::GreaterThan, &[]);
                             }
                             t => bail!("{t} is an invalid infix opperator"),
                         };
-                    },
+                    }
                     Expression::IfExpression(_, _, _) => todo!(),
                     Expression::FnExpression(_, _) => todo!(),
                     Expression::CallExpression(_, _) => todo!(),
                     Expression::Arrary(_) => todo!(),
                     Expression::Map(_) => todo!(),
                     Expression::IndexExpression(_, _) => todo!(),
-                }
+                };
             }
         };
 
@@ -84,7 +115,7 @@ impl Compiler {
     }
 
     fn emit(&mut self, opcode: Opcode, operands: &[usize]) -> usize {
-        let instructions = opcode.make(operands);
+        let instructions = opcode.make_with(operands);
         self.add_instruction(instructions)
     }
 

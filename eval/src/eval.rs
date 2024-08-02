@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use crate::environment::{Env, Environment};
 use crate::eval_error::EvalError;
-use crate::object::{HashKey, HashPair};
+use crate::object::{HashKey, HashPair, ObjectComparison};
 use crate::{node::Node, object::Object};
 use lexer::token::Token;
 use parser::ast::{BlockStatement, Expression, Statement};
@@ -187,13 +187,13 @@ fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> Eva
         Token::Plus => left.as_ref() + right.as_ref(),
         Token::ForwardSlash => left.as_ref() / right.as_ref(),
         Token::Asterisk => left.as_ref() * right.as_ref(),
-        Token::NotEqual => eval_obj_comparison(left, right, ObjectComparison::NotEqual),
-        Token::Equal => eval_obj_comparison(left, right, ObjectComparison::Equal),
-        Token::LessThan => eval_obj_comparison(left, right, ObjectComparison::LessThan),
-        Token::LessThanEqual => eval_obj_comparison(left, right, ObjectComparison::LessThanEqual),
-        Token::GreaterThan => eval_obj_comparison(left, right, ObjectComparison::GreaterThan),
+        Token::NotEqual => Object::eval_obj_comparison(left, right, ObjectComparison::NotEqual),
+        Token::Equal => Object::eval_obj_comparison(left, right, ObjectComparison::Equal),
+        Token::LessThan => Object::eval_obj_comparison(left, right, ObjectComparison::LessThan),
+        Token::LessThanEqual => Object::eval_obj_comparison(left, right, ObjectComparison::LessThanEqual),
+        Token::GreaterThan => Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThan),
         Token::GreaterThanEqual => {
-            eval_obj_comparison(left, right, ObjectComparison::GreaterThanEqual)
+            Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThanEqual)
         }
         t => Err(EvalError::InvalidOperator(
             left.to_string(),
@@ -203,50 +203,6 @@ fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> Eva
     };
 }
 
-fn eval_obj_comparison(
-    left: Rc<Object>,
-    right: Rc<Object>,
-    comp: ObjectComparison,
-) -> EvalResponse {
-    let r = match comp {
-        ObjectComparison::GreaterThan
-        | ObjectComparison::GreaterThanEqual
-        | ObjectComparison::LessThan
-        | ObjectComparison::LessThanEqual => {
-            let (Object::Int(l), Object::Int(r)) = (left.as_ref(), right.as_ref()) else {
-                return Err(EvalError::InvalidOperator(left.to_string(), comp.to_string(), right.to_string()));
-            };
-
-            match comp {
-                ObjectComparison::GreaterThan => l > r,
-                ObjectComparison::GreaterThanEqual => l >= r,
-                ObjectComparison::LessThan => l < r,
-                ObjectComparison::LessThanEqual => l <= r,
-                _ => false,
-            }
-        }
-        ObjectComparison::Equal | ObjectComparison::NotEqual => {
-            let result = match (left.as_ref(), right.as_ref()) {
-                (Object::Bool(l), Object::Bool(r)) => l == r,
-                (Object::String(l), Object::String(r)) => l == r,
-                (Object::Int(l), Object::Int(r)) => l == r,
-                (Object::Null, Object::Null) => true,
-                (l, r) => {
-                    return Err(EvalError::InvalidOperator(
-                        l.to_string(),
-                        comp.to_string(),
-                        r.to_string(),
-                    ));
-                }
-            };
-            match comp {
-                ObjectComparison::NotEqual => !result,
-                _ => result,
-            }
-        }
-    };
-    Ok(Rc::new(r.into()))
-}
 
 fn eval_object_equality(left: Rc<Object>, right: Rc<Object>, flip: bool) -> EvalResponse {
     let result = match (left.as_ref(), right.as_ref()) {
@@ -295,24 +251,4 @@ fn expressions_to_objects(values: &[Expression], env: &Env) -> Result<Vec<Rc<Obj
         .collect::<Result<Vec<Rc<Object>>, EvalError>>()
 }
 
-enum ObjectComparison {
-    GreaterThan,
-    GreaterThanEqual,
-    LessThan,
-    LessThanEqual,
-    Equal,
-    NotEqual,
-}
 
-impl Display for ObjectComparison {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ObjectComparison::GreaterThan => write!(f, ">"),
-            ObjectComparison::GreaterThanEqual => write!(f, ">="),
-            ObjectComparison::LessThan => write!(f, "<"),
-            ObjectComparison::LessThanEqual => write!(f, "<="),
-            ObjectComparison::Equal => write!(f, "=="),
-            ObjectComparison::NotEqual => write!(f, "!="),
-        }
-    }
-}

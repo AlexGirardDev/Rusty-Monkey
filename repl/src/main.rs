@@ -1,7 +1,7 @@
 use colored::Colorize;
 use compiler::compiler::Compiler;
 use eval::object::Object;
-use eval::{environment::Environment, eval::eval};
+use eval::{environment::Environment};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
 use std::{cell::RefCell, io::Write, rc::Rc};
