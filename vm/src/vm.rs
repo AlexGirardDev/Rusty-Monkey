@@ -102,6 +102,9 @@ impl Vm {
                     };
                     self.push(Object::Bool(result))?;
                 }
+                Opcode::Jump => todo!(),
+                Opcode::JumpNotTruthy => todo!(),
+
             }
             ip += 1;
         }

@@ -1,7 +1,6 @@
 use colored::Colorize;
 use compiler::compiler::Compiler;
-use eval::object::Object;
-use eval::{environment::Environment};
+use eval::{environment::Environment, object::Object};
 use lexer::lexer::Lexer;
 use parser::parser::Parser;
 use std::{cell::RefCell, io::Write, rc::Rc};
@@ -23,7 +22,6 @@ impl Repl {
         let prompt = ">>>".green();
 
         println!("Feel free to type in commands");
-        let env = Rc::new(RefCell::new(Environment::new_with_builtin()));
         loop {
             let mut line = String::new();
             print!("{prompt}");
@@ -32,7 +30,7 @@ impl Repl {
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
             let mut comp = Compiler::new();
-            comp.compile(program).expect("program didn't compile :( ");
+            comp.compile(program.into()).expect("program didn't compile :( ");
             let mut vm = Vm::new(comp.bytecode());
             vm.run().expect("vm couldn't run");
 

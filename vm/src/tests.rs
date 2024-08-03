@@ -65,7 +65,7 @@ fn run_vm_tests(tests: &[Test]) {
     {
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
         let mut comp = Compiler::new();
-        comp.compile(program).expect("Program should compile");
+        comp.compile(program.into()).expect("Program should compile");
 
         let mut vm = Vm::new(comp.bytecode());
         vm.run().expect("vm should run without errors");

@@ -5,7 +5,10 @@ use code::opcode::Opcode;
 use eval::node::Node;
 use eval::object::Object;
 use lexer::token::Token;
-use parser::ast::{BlockStatement, Expression, Statement};
+use parser::{
+    ast::{BlockStatement, Expression, Statement},
+    program::Program,
+};
 
 #[derive(Default)]
 pub struct Compiler {
@@ -21,104 +24,121 @@ impl Compiler {
         }
     }
 
-    pub fn compile(&mut self, node: impl Into<Node>) -> Result<()> {
-        let node: Node = node.into();
-        match node {
-            Node::BlockStatement(BlockStatement { statements }) => {
-                for statement in statements {
-                    self.compile(statement)?;
-                }
-            }
-            Node::Program(_) => todo!(),
+    pub fn compile(&mut self, node: Node) -> Result<()> {
+        match &node {
+            Node::BlockStatement(s) => self.compile_block(s),
+            Node::Program(p) => self.compile_program(p),
+            Node::Statement(s) => self.compile_statement(s),
+            Node::Expression(e) => self.compile_expression(e),
             Node::Object(_) => todo!(),
-            Node::Statement(Statement::ExpressionStatement(expression)) => {
-                self.compile(expression)?;
+        }
+    }
+    fn compile_block(&mut self, block: &BlockStatement) -> Result<()> {
+        for statement in &block.statements {
+            self.compile_statement(statement)?;
+        }
+        Ok(())
+    }
+
+    fn compile_program(&mut self, block: &Program) -> Result<()> {
+        todo!()
+    }
+
+    fn compile_statement(&mut self, statement: &Statement) -> Result<()> {
+        match statement {
+            Statement::Let(_, _) => todo!(),
+            Statement::Return(_) => todo!(),
+            Statement::ExpressionStatement(exprssion) => {
+                self.compile_expression(exprssion)?;
                 self.emit(Opcode::Pop, &[]);
             }
-            Node::Statement(_) => todo!(),
-            Node::Expression(Expression::IntLiteral(i)) => {
-                let opperands = &[self.add_constant(Object::Int(i))];
-                self.emit(Opcode::Constant, opperands);
+        };
+        Ok(())
+    }
+
+    pub fn compile_expression(&mut self, exp: &Expression) -> Result<()> {
+        match exp {
+            Expression::Identifier(_) => todo!(),
+            Expression::IntLiteral(i) => {
+                let instruction = self.add_constant(Object::Int(*i));
+                self.emit(Opcode::Constant, &[instruction]);
             }
-            Node::Expression(exp) => {
-                match exp {
-                    Expression::Identifier(_) => todo!(),
-                    Expression::IntLiteral(_) => todo!(),
-                    Expression::StringLiteral(_) => todo!(),
-                    Expression::Bool(true) => {
-                        self.emit(Opcode::True, &[]);
+            Expression::StringLiteral(_) => todo!(),
+            Expression::Bool(true) => {
+                self.emit(Opcode::True, &[]);
+            }
+            Expression::Bool(false) => {
+                self.emit(Opcode::False, &[]);
+            }
+            Expression::PrefixExpression(token, right) => match token {
+                Token::Bang => {
+                    self.compile_expression(right)?;
+                    self.emit(Opcode::Bang, &[]);
+                }
+                Token::Dash => {
+                    self.compile_expression(right)?;
+                    self.emit(Opcode::Minus, &[]);
+                }
+                t => bail!("{t} is an invalid token for a prefix exrpession"),
+            },
+            Expression::InfixExpression(opperator, left, right) => {
+                match opperator {
+                    Token::Plus => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::Add, &[]);
                     }
-                    Expression::Bool(false) => {
-                        self.emit(Opcode::False, &[]);
+                    Token::Dash => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::Sub, &[]);
                     }
-                    Expression::PrefixExpression(token, right) => match token {
-                        Token::Bang => {
-                            self.compile(*right)?;
-                            self.emit(Opcode::Bang, &[]);
-                        }
-                        Token::Dash => {
-                            self.compile(*right)?;
-                            self.emit(Opcode::Minus, &[]);
-                        }
-                        t => bail!("{t} is an invalid token for a prefix exrpession"),
-                    },
-                    Expression::InfixExpression(opperator, left, right) => {
-                        match opperator {
-                            Token::Plus => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::Add, &[]);
-                            }
-                            Token::Dash => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::Sub, &[]);
-                            }
-                            Token::Asterisk => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::Mul, &[]);
-                            }
-                            Token::ForwardSlash => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::Div, &[]);
-                            }
-                            Token::Equal => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::Equal, &[]);
-                            }
-                            Token::NotEqual => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::NotEqual, &[]);
-                            }
-                            Token::GreaterThan => {
-                                self.compile(*left)?;
-                                self.compile(*right)?;
-                                self.emit(Opcode::GreaterThan, &[]);
-                            }
-                            Token::LessThan => {
-                                self.compile(*right)?;
-                                self.compile(*left)?;
-                                self.emit(Opcode::GreaterThan, &[]);
-                            }
-                            t => bail!("{t} is an invalid infix opperator"),
-                        };
+                    Token::Asterisk => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::Mul, &[]);
                     }
-                    Expression::IfExpression(_, _, _) => todo!(),
-                    Expression::FnExpression(_, _) => todo!(),
-                    Expression::CallExpression(_, _) => todo!(),
-                    Expression::Arrary(_) => todo!(),
-                    Expression::Map(_) => todo!(),
-                    Expression::IndexExpression(_, _) => todo!(),
+                    Token::ForwardSlash => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::Div, &[]);
+                    }
+                    Token::Equal => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::Equal, &[]);
+                    }
+                    Token::NotEqual => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::NotEqual, &[]);
+                    }
+                    Token::GreaterThan => {
+                        self.compile_expression(left)?;
+                        self.compile_expression(right)?;
+                        self.emit(Opcode::GreaterThan, &[]);
+                    }
+                    Token::LessThan => {
+                        self.compile_expression(right)?;
+                        self.compile_expression(left)?;
+                        self.emit(Opcode::GreaterThan, &[]);
+                    }
+                    t => bail!("{t} is an invalid infix opperator"),
                 };
             }
+            Expression::IfExpression(con, if_exp, else_exp) => {
+                // self.compile(node)
+            }
+            Expression::FnExpression(_, _) => todo!(),
+            Expression::CallExpression(_, _) => todo!(),
+            Expression::Arrary(_) => todo!(),
+            Expression::Map(_) => todo!(),
+            Expression::IndexExpression(_, _) => todo!(),
         };
 
         Ok(())
     }
+
     fn add_constant(&mut self, object: impl Into<Object>) -> usize {
         self.constants.push(object.into());
         self.constants.len() - 1

@@ -66,13 +66,32 @@ fn test_int_math() {
         Test::new(
             "-1",
             vec![1.into()],
-            vec![
-                Constant.make_with(&[0]),
-                Minus.make(),
-                Pop.make(),
-            ],
+            vec![Constant.make_with(&[0]), Minus.make(), Pop.make()],
         ),
     ];
+    run_compiler_tests(&tests);
+}
+// #[test]
+fn test_conditionals() {
+    let tests = vec![Test::new(
+        "if (true) {10};3333;",
+        [10.into(), 3333.into()].into(),
+        [
+            // 0000
+            True.make(),
+            // 0001
+            JumpNotTruthy.make_with(&[7]),
+            // 0004
+            Constant.make_with(&[0]),
+            // 0007
+            Pop.make(),
+            // 0008
+            Constant.make_with(&[1]),
+            // 0011
+            Pop.make(),
+        ]
+        .into(),
+    )];
     run_compiler_tests(&tests);
 }
 
@@ -164,40 +183,18 @@ fn test_bools() {
         Test::new(
             "true==false",
             vec![],
-            vec![
-                True.make(),
-                False.make(),
-                Equal.make(),
-                Pop.make(),
-            ],
+            vec![True.make(), False.make(), Equal.make(), Pop.make()],
         ),
         Test::new(
             "true!=false",
             vec![],
-            vec![
-                True.make(),
-                False.make(),
-                NotEqual.make(),
-                Pop.make(),
-            ],
+            vec![True.make(), False.make(), NotEqual.make(), Pop.make()],
         ),
-        Test::new(
-            "!true",
-            vec![],
-            vec![
-                True.make(),
-                Bang.make(),
-                Pop.make(),
-            ],
-        ),
+        Test::new("!true", vec![], vec![True.make(), Bang.make(), Pop.make()]),
         Test::new(
             "-1",
             vec![1.into()],
-            vec![
-                Constant.make_with(&[0]),
-                Minus.make(),
-                Pop.make(),
-            ],
+            vec![Constant.make_with(&[0]), Minus.make(), Pop.make()],
         ),
     ];
     run_compiler_tests(&tests);
@@ -267,7 +264,7 @@ fn run_compiler_tests(tests: &[Test]) {
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
         let mut compiler = Compiler::new();
 
-        compiler.compile(program).expect("Program should compile");
+        compiler.compile(program.into()).expect("Program should compile");
         let ByteCode {
             instructions,
             constants,
