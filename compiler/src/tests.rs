@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use code::opcode::{
-    read_operands,
+    self, read_operands,
     Opcode::{self, *},
 };
 
@@ -71,7 +71,8 @@ fn test_int_math() {
     ];
     run_compiler_tests(&tests);
 }
-// #[test]
+
+#[test]
 fn test_conditionals() {
     let tests = vec![Test::new(
         "if (true) {10};3333;",
@@ -262,13 +263,16 @@ fn run_compiler_tests(tests: &[Test]) {
     {
         eprintln!("Running test {input}");
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
-        let mut compiler = Compiler::new();
+        let mut compiler = Compiler::default();
 
-        compiler.compile(program.into()).expect("Program should compile");
+        compiler
+            .compile(program.into())
+            .expect("Program should compile");
         let ByteCode {
             instructions,
             constants,
         } = compiler.bytecode();
+
         let instructions = &Instructions(instructions.clone());
         test_instuction(expected_instructions, instructions);
         test_constants(expected_constants, constants);
@@ -279,7 +283,13 @@ fn join_instruction(input: &[Instructions]) -> Instructions {
 }
 
 fn test_instuction(expected: &[Instructions], actual: &Instructions) {
+
     let expected = join_instruction(expected);
+
+        eprintln!("EXPECTED");
+        eprintln!("{}",expected);
+        eprintln!("ACTUAL");
+        eprintln!("{}",actual);
     assert_eq!(
         expected.len(),
         actual.len(),
@@ -289,10 +299,13 @@ fn test_instuction(expected: &[Instructions], actual: &Instructions) {
     );
 
     for (i, b) in expected.iter().enumerate() {
-        let actual = actual[i];
+        let actual_code = actual[i];
         assert_eq!(
-            actual, *b,
-            "wrong instruction at pos {i} want={b} got={actual}"
+            actual_code,
+            *b,
+            "wrong instruction at pos {i} \nwant={:?} \ngot= {:?}",
+            expected.to_string(),
+            actual.to_string()
         );
     }
 }

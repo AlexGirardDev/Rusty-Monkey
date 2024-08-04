@@ -1,9 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
 use bytes::{Bytes, BytesMut};
-use itertools::Itertools;
+use itertools::*;
 
 use crate::opcode::{read_operands, Opcode};
+
 
 #[derive(Default, Debug)]
 pub struct Instructions(pub Bytes);

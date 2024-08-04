@@ -29,7 +29,7 @@ impl Repl {
             std::io::stdin().read_line(&mut line).unwrap();
             let mut parser = Parser::new(Lexer::new(&line));
             let program = parser.parse_program();
-            let mut comp = Compiler::new();
+            let mut comp = Compiler::default();
             comp.compile(program.into()).expect("program didn't compile :( ");
             let mut vm = Vm::new(comp.bytecode());
             vm.run().expect("vm couldn't run");

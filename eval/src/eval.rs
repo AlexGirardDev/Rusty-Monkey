@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::rc::Rc;
 
 use crate::environment::{Env, Environment};

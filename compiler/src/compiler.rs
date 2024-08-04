@@ -1,7 +1,10 @@
+use std::fmt::Display;
+use std::{clone, mem};
+
 use anyhow::{bail, Ok, Result};
 use bytes::BytesMut;
-use code::instructions::Instructions;
 use code::opcode::Opcode;
+use code::{instructions::Instructions, opcode};
 use eval::node::Node;
 use eval::object::Object;
 use lexer::token::Token;
@@ -10,20 +13,31 @@ use parser::{
     program::Program,
 };
 
-#[derive(Default)]
+#[derive(Clone)]
+struct EmittedInstruction {
+    opcode: Opcode,
+    position: usize,
+}
+
+impl EmittedInstruction {
+    fn new(opcode: Opcode, position: usize) -> Self {
+        Self { opcode, position }
+    }
+}
+impl Display for EmittedInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} - {}", self.opcode, self.position)
+    }
+}
+
 pub struct Compiler {
     insturctions: BytesMut,
     constants: Vec<Object>,
+    last_instruction: EmittedInstruction,
+    previous_instruction: EmittedInstruction,
 }
 
 impl Compiler {
-    pub fn new() -> Self {
-        Self {
-            insturctions: BytesMut::default(),
-            constants: Vec::new(),
-        }
-    }
-
     pub fn compile(&mut self, node: Node) -> Result<()> {
         match &node {
             Node::BlockStatement(s) => self.compile_block(s),
@@ -33,6 +47,7 @@ impl Compiler {
             Node::Object(_) => todo!(),
         }
     }
+
     fn compile_block(&mut self, block: &BlockStatement) -> Result<()> {
         for statement in &block.statements {
             self.compile_statement(statement)?;
@@ -40,8 +55,8 @@ impl Compiler {
         Ok(())
     }
 
-    fn compile_program(&mut self, block: &Program) -> Result<()> {
-        todo!()
+    fn compile_program(&mut self, _block: &Program) -> Result<()> {
+        todo!();
     }
 
     fn compile_statement(&mut self, statement: &Statement) -> Result<()> {
@@ -126,8 +141,15 @@ impl Compiler {
                     t => bail!("{t} is an invalid infix opperator"),
                 };
             }
-            Expression::IfExpression(con, if_exp, else_exp) => {
-                // self.compile(node)
+            Expression::IfExpression(con, consequence, _else_exp) => {
+                self.compile_expression(con)?;
+                let jump_not_truthy_pos = self.emit(Opcode::JumpNotTruthy, &[9999]);
+                self.compile_block(consequence)?;
+                if self.last_insruction_is_pop() {
+                    self.remove_last_pop();
+                }
+                let after_consequence_position = self.insturctions.len();
+                self.change_operand(jump_not_truthy_pos, after_consequence_position);
             }
             Expression::FnExpression(_, _) => todo!(),
             Expression::CallExpression(_, _) => todo!(),
@@ -138,6 +160,32 @@ impl Compiler {
 
         Ok(())
     }
+    fn debug_print(&self) {
+        println!("Length :{}", self.insturctions.len());
+        println!("Prev :{}", self.previous_instruction);
+        println!("Last :{}", self.last_instruction);
+        println!("{}", Instructions::from(self.insturctions.clone()));
+    }
+
+    fn change_operand(&mut self, position: usize, operand: usize) {
+        let opcode: Opcode = self.insturctions[position].into();
+        let instruction = opcode.make_with(&[operand]);
+        self.replace_instruction(position, &instruction)
+    }
+
+    fn replace_instruction(&mut self, position: usize, instruction: &[u8]) {
+        self.insturctions[position..position + instruction.len()].copy_from_slice(instruction);
+    }
+
+    fn last_insruction_is_pop(&self) -> bool {
+        matches!(self.last_instruction.opcode, Opcode::Pop)
+    }
+
+    fn remove_last_pop(&mut self) {
+        self.insturctions
+            .resize(self.last_instruction.position, 0x0);
+        self.last_instruction = self.previous_instruction.clone();
+    }
 
     fn add_constant(&mut self, object: impl Into<Object>) -> usize {
         self.constants.push(object.into());
@@ -146,9 +194,19 @@ impl Compiler {
 
     fn emit(&mut self, opcode: Opcode, operands: &[usize]) -> usize {
         let instructions = opcode.make_with(operands);
-        self.add_instruction(instructions)
+        let pos = self.add_instruction(instructions);
+        self.set_last_instruction(opcode, pos);
+        self.debug_print();
+        pos
     }
 
+    fn set_last_instruction(&mut self, opcode: Opcode, position: usize) {
+        //this is some cute code to avoid having to clone
+        //really i'm just taking the new value and putting it in last_instruction
+        //and then putting last inte previous and getting rid of previous
+        self.previous_instruction = EmittedInstruction::new(opcode, position);
+        mem::swap(&mut self.previous_instruction, &mut self.last_instruction);
+    }
     fn add_instruction(&mut self, instruction: Instructions) -> usize {
         let position = self.insturctions.len();
         self.insturctions.extend(instruction.0);
@@ -159,6 +217,23 @@ impl Compiler {
         ByteCode {
             instructions: self.insturctions.clone().into(),
             constants: self.constants,
+        }
+    }
+}
+
+impl Default for Compiler {
+    fn default() -> Self {
+        Self {
+            insturctions: BytesMut::default(),
+            constants: Vec::new(),
+            last_instruction: EmittedInstruction {
+                opcode: Opcode::NoOp,
+                position: 0,
+            },
+            previous_instruction: EmittedInstruction {
+                opcode: Opcode::NoOp,
+                position: 0,
+            },
         }
     }
 }

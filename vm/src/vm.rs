@@ -32,6 +32,10 @@ impl Vm {
         let mut ip = 0;
         while ip < self.insturctions.len() {
             match self.insturctions[ip].into() {
+                Opcode::NoOp => {
+                    bail!("tried to run noop?");
+
+                }
                 Opcode::Constant => {
                     let const_index = self.insturctions.read_u16(ip + 1);
                     self.push_const(const_index)?;
