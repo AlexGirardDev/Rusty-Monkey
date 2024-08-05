@@ -16,6 +16,10 @@ pub struct Vm {
 impl Vm {
     const STACKSIZE: usize = 2048;
 
+    pub fn print_debug(&self, ip: usize) {
+        println!("ip = {ip} sp = {} \n {}", self.sp, self.insturctions);
+        println!("stack = {:?}", &self.stack[..self.sp + 3]);
+    }
     pub fn new(byte_code: ByteCode) -> Self {
         let stack = (0..Vm::STACKSIZE)
             .map(|_| Rc::new(Object::Null))
@@ -34,10 +38,10 @@ impl Vm {
             match self.insturctions[ip].into() {
                 Opcode::NoOp => {
                     bail!("tried to run noop?");
-
                 }
                 Opcode::Constant => {
                     let const_index = self.insturctions.read_u16(ip + 1);
+                    eprintln!("load const {const_index}");
                     self.push_const(const_index)?;
                     ip += 2;
                 }
@@ -65,6 +69,7 @@ impl Vm {
                     self.pop()?;
                 }
                 Opcode::True => {
+                    dbg!("true");
                     self.push(Object::Bool(true))?;
                 }
                 Opcode::False => {
@@ -106,9 +111,18 @@ impl Vm {
                     };
                     self.push(Object::Bool(result))?;
                 }
-                Opcode::Jump => todo!(),
-                Opcode::JumpNotTruthy => todo!(),
-
+                Opcode::Jump => {
+                    let pos = self.insturctions.read_u16(ip + 1);
+                    ip = pos as usize - 1;
+                }
+                Opcode::JumpNotTruthy => {
+                    let pos = self.insturctions.read_u16(ip + 1);
+                    ip += 2;
+                    let condition = self.pop()?;
+                    if !condition.is_truthy() {
+                        ip = pos as usize - 1;
+                    }
+                }
             }
             ip += 1;
         }
@@ -119,6 +133,7 @@ impl Vm {
         if self.sp > Vm::STACKSIZE {
             bail!("stack overflow");
         }
+        self.print_debug(0);
         let item = self
             .stack
             .get(self.sp - 1)

@@ -149,6 +149,14 @@ impl Object {
         };
         Ok(Rc::new(r.into()))
     }
+
+    pub fn is_truthy(&self) -> bool {
+        match *self {
+            Object::Bool(b) => b,
+            Object::Null => false,
+            _ => true,
+        }
+    }
 }
 
 impl From<i64> for Object {

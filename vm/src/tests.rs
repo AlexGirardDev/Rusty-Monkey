@@ -56,6 +56,19 @@ fn test_bool() {
     ];
     run_vm_tests(&tests);
 }
+#[test]
+fn test_conditionals() {
+    let tests = [
+        Test::new("if (true) { 10 }", 10),
+        Test::new("if (true) { 10 } else { 20 }", 10),
+        Test::new("if (false) { 10 } else { 20 } ", 20),
+        Test::new("if (1) { 10 }", 10),
+        Test::new("if (1 < 2) { 10 }", 10),
+        Test::new("if (1 < 2) { 10 } else { 20 }", 10),
+        Test::new("if (1 > 2) { 10 } else { 20 }", 20),
+    ];
+    run_vm_tests(&tests);
+}
 
 fn run_vm_tests(tests: &[Test]) {
     for Test {
@@ -63,13 +76,16 @@ fn run_vm_tests(tests: &[Test]) {
         expected_value,
     } in tests
     {
+        eprintln!("Testing {}",input);
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
         let mut comp = Compiler::default();
-        comp.compile(program.into()).expect("Program should compile");
+        comp.compile(program.into())
+            .expect("Program should compile");
 
         let mut vm = Vm::new(comp.bytecode());
         vm.run().expect("vm should run without errors");
         let stack_element = vm.last_popped_stack_element();
+
         assert_eq!(
             stack_element.as_ref(),
             expected_value,

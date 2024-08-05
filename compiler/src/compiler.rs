@@ -145,8 +145,6 @@ impl Compiler {
                 self.compile_expression(con)?;
                 let jump_not_truthy_pos = self.emit(Opcode::JumpNotTruthy, &[9999]);
 
-                dbg!("{}", else_exp);
-
                 self.compile_block(consequence)?;
                 if self.last_insruction_is_pop() {
                     self.remove_last_pop();

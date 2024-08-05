@@ -101,7 +101,12 @@ fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -
     match left.as_ref() {
         Object::Array(array) => {
             let index = eval_expression(index_exp, env)?;
-            let Object::Int(i) = *index else { return Err(EvalError::InvalidObjectType("Int".into(),index.to_string())); };
+            let Object::Int(i) = *index else {
+                return Err(EvalError::InvalidObjectType(
+                    "Int".into(),
+                    index.to_string(),
+                ));
+            };
             if i >= array.len() as i64 || i < 0 {
                 return Err(EvalError::IndexOutOfBounds {
                     index: i,
@@ -109,16 +114,16 @@ fn eval_index_expression(left: &Expression, index_exp: &Expression, env: &Env) -
                 });
             }
             Ok(array[usize::try_from(i).unwrap()].clone())
-        },
+        }
         Object::Hash(map) => {
             let key = eval_expression(index_exp, env)?;
             println!("wowee");
             let hash_key = key.hash_key()?;
-            Ok( match map.get(&hash_key){
+            Ok(match map.get(&hash_key) {
                 Some(s) => s.value.clone(),
-                None => Object::Null.into()}
-            )
-        },
+                None => Object::Null.into(),
+            })
+        }
         _ => Err(EvalError::IndexOperatorNotSupported(left.to_string())),
     }
     // let Object::Array(array) = left.as_ref() else {
@@ -162,7 +167,7 @@ fn eval_if_else_expression(
     else_exp: &Option<BlockStatement>,
     env: &Env,
 ) -> EvalResponse {
-    if is_truthy(eval_expression(cond, env)?) {
+    if eval_expression(cond, env)?.is_truthy() {
         eval_block(if_exp, env)
     } else {
         match else_exp {
@@ -172,15 +177,7 @@ fn eval_if_else_expression(
     }
 }
 
-fn is_truthy(obj: impl Into<Rc<Object>>) -> bool {
-    match *obj.into() {
-        Object::Bool(b) => b,
-        Object::Null => false,
-        _ => true,
-    }
-}
-
-fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> EvalResponse {
+fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> EvalResponse {;
     return match token {
         Token::Dash => left.as_ref() - right.as_ref(),
         Token::Plus => left.as_ref() + right.as_ref(),
@@ -189,8 +186,12 @@ fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> Eva
         Token::NotEqual => Object::eval_obj_comparison(left, right, ObjectComparison::NotEqual),
         Token::Equal => Object::eval_obj_comparison(left, right, ObjectComparison::Equal),
         Token::LessThan => Object::eval_obj_comparison(left, right, ObjectComparison::LessThan),
-        Token::LessThanEqual => Object::eval_obj_comparison(left, right, ObjectComparison::LessThanEqual),
-        Token::GreaterThan => Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThan),
+        Token::LessThanEqual => {
+            Object::eval_obj_comparison(left, right, ObjectComparison::LessThanEqual)
+        }
+        Token::GreaterThan => {
+            Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThan)
+        }
         Token::GreaterThanEqual => {
             Object::eval_obj_comparison(left, right, ObjectComparison::GreaterThanEqual)
         }
@@ -201,7 +202,6 @@ fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> Eva
         )),
     };
 }
-
 
 fn eval_object_equality(left: Rc<Object>, right: Rc<Object>, flip: bool) -> EvalResponse {
     let result = match (left.as_ref(), right.as_ref()) {
@@ -249,5 +249,3 @@ fn expressions_to_objects(values: &[Expression], env: &Env) -> Result<Vec<Rc<Obj
         .map(|v| eval_expression(v, env))
         .collect::<Result<Vec<Rc<Object>>, EvalError>>()
 }
-
-
