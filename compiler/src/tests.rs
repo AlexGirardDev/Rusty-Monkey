@@ -73,30 +73,6 @@ fn test_int_math() {
 }
 
 #[test]
-fn test_conditionals() {
-    let tests = vec![Test::new(
-        "if (true) {10};3333;",
-        [10.into(), 3333.into()].into(),
-        [
-            // 0000
-            True.make(),
-            // 0001
-            JumpNotTruthy.make_with(&[7]),
-            // 0004
-            Constant.make_with(&[0]),
-            // 0007
-            Pop.make(),
-            // 0008
-            Constant.make_with(&[1]),
-            // 0011
-            Pop.make(),
-        ]
-        .into(),
-    )];
-    run_compiler_tests(&tests);
-}
-
-#[test]
 fn test_bools() {
     let tests = vec![
         Test::new("true", vec![], vec![True.make(), Pop.make()]),
@@ -254,6 +230,55 @@ fn test_read_operands() {
     }
 }
 
+#[test]
+fn test_conditionals() {
+    let tests = vec![
+        Test::new(
+            "if (true) {10};3333;",
+            [10.into(), 3333.into()].into(),
+            [
+                // 0000
+                True.make(),
+                // 0001
+                JumpNotTruthy.make_with(&[7]),
+                // 0004
+                Constant.make_with(&[0]),
+                // 0007
+                Pop.make(),
+                // 0008
+                Constant.make_with(&[1]),
+                // 0011
+                Pop.make(),
+            ]
+            .into(),
+        ),
+        Test::new(
+            "if (true) { 10 } else { 20 };3333;",
+            [10.into(), 20.into(), 3333.into()].into(),
+            [
+                // 0000
+                True.make(),
+                // 0001
+                JumpNotTruthy.make_with(&[10]),
+                // 0004
+                Constant.make_with(&[0]),
+                // 0007
+                Jump.make_with(&[13]),
+                // 0010
+                Constant.make_with(&[1]),
+                // 0013
+                Pop.make(),
+                // 0014
+                Constant.make_with(&[2]),
+                // 0017
+                Pop.make(),
+            ]
+            .into(),
+        ),
+    ];
+    run_compiler_tests(&tests);
+}
+
 fn run_compiler_tests(tests: &[Test]) {
     for Test {
         input,
@@ -283,13 +308,12 @@ fn join_instruction(input: &[Instructions]) -> Instructions {
 }
 
 fn test_instuction(expected: &[Instructions], actual: &Instructions) {
-
     let expected = join_instruction(expected);
 
-        eprintln!("EXPECTED");
-        eprintln!("{}",expected);
-        eprintln!("ACTUAL");
-        eprintln!("{}",actual);
+    eprintln!("EXPECTED");
+    eprintln!("{}", expected);
+    eprintln!("ACTUAL");
+    eprintln!("{}", actual);
     assert_eq!(
         expected.len(),
         actual.len(),

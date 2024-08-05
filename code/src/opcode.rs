@@ -75,7 +75,7 @@ impl Opcode {
             Opcode::GreaterThan => Definition::new("OpGreaterThan", vec![]),
             Opcode::Bang => Definition::new("OpBang", vec![]),
             Opcode::Minus => Definition::new("OpMinus", vec![]),
-            Opcode::Jump => Definition::new("OpJump", vec![]),
+            Opcode::Jump => Definition::new("OpJump", vec![2]),
             Opcode::JumpNotTruthy => Definition::new("OpNotTruthy", vec![2]),
         }
     }

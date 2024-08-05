@@ -141,15 +141,34 @@ impl Compiler {
                     t => bail!("{t} is an invalid infix opperator"),
                 };
             }
-            Expression::IfExpression(con, consequence, _else_exp) => {
+            Expression::IfExpression(con, consequence, else_exp) => {
                 self.compile_expression(con)?;
                 let jump_not_truthy_pos = self.emit(Opcode::JumpNotTruthy, &[9999]);
+
+                dbg!("{}", else_exp);
+
                 self.compile_block(consequence)?;
                 if self.last_insruction_is_pop() {
                     self.remove_last_pop();
                 }
-                let after_consequence_position = self.insturctions.len();
-                self.change_operand(jump_not_truthy_pos, after_consequence_position);
+
+                match else_exp {
+                    Some(exp) => {
+                        let jump_pos = self.emit(Opcode::Jump, &[9999]);
+                        let after_consequence_position = self.insturctions.len();
+                        self.change_operand(jump_not_truthy_pos, after_consequence_position);
+                        self.compile_block(exp)?;
+
+                        if self.last_insruction_is_pop() {
+                            self.remove_last_pop();
+                        }
+                        self.change_operand(jump_pos, self.insturctions.len());
+                    }
+                    None => {
+                        let after_consequence_position = self.insturctions.len();
+                        self.change_operand(jump_not_truthy_pos, after_consequence_position);
+                    }
+                }
             }
             Expression::FnExpression(_, _) => todo!(),
             Expression::CallExpression(_, _) => todo!(),
@@ -161,10 +180,13 @@ impl Compiler {
         Ok(())
     }
     fn debug_print(&self) {
-        println!("Length :{}", self.insturctions.len());
-        println!("Prev :{}", self.previous_instruction);
-        println!("Last :{}", self.last_instruction);
-        println!("{}", Instructions::from(self.insturctions.clone()));
+        if true {
+            return;
+        }
+        eprintln!("Length :{}", self.insturctions.len());
+        eprintln!("Prev :{}", self.previous_instruction);
+        eprintln!("Last :{}", self.last_instruction);
+        eprintln!("{}", Instructions::from(self.insturctions.clone()));
     }
 
     fn change_operand(&mut self, position: usize, operand: usize) {
