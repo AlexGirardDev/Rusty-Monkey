@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{ptr::NonNull, rc::Rc};
 
 use anyhow::{bail, Context, Ok, Result};
 use code::{instructions::Instructions, opcode::Opcode};
@@ -123,6 +123,12 @@ impl Vm {
                         ip = pos as usize - 1;
                     }
                 }
+                Opcode::Null => {
+                    self.push(Object::Null)?;
+                }
+            }
+            for x in 0..15 
+            {
             }
             ip += 1;
         }

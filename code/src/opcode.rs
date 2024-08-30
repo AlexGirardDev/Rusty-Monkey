@@ -24,6 +24,7 @@ pub enum Opcode {
     Bang,
     Jump,
     JumpNotTruthy,
+    Null
 }
 
 impl Display for Opcode {
@@ -77,6 +78,7 @@ impl Opcode {
             Opcode::Minus => Definition::new("OpMinus", vec![]),
             Opcode::Jump => Definition::new("OpJump", vec![2]),
             Opcode::JumpNotTruthy => Definition::new("OpNotTruthy", vec![2]),
+            Opcode::Null => Definition::new("OpNull", vec![]),
         }
     }
     pub fn try_display(value: u8) -> String {

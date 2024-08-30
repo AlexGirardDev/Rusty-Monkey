@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use code::opcode::{
-    self, read_operands,
+    read_operands,
     Opcode::{self, *},
 };
 
@@ -240,14 +240,18 @@ fn test_conditionals() {
                 // 0000
                 True.make(),
                 // 0001
-                JumpNotTruthy.make_with(&[7]),
+                JumpNotTruthy.make_with(&[10]),
                 // 0004
                 Constant.make_with(&[0]),
                 // 0007
-                Pop.make(),
-                // 0008
-                Constant.make_with(&[1]),
+                Jump.make_with(&[11]),
+                // 0010
+                Opcode::Null.make(),
                 // 0011
+                Pop.make(),
+                // 0012
+                Constant.make_with(&[1]),
+                // 0015
                 Pop.make(),
             ]
             .into(),

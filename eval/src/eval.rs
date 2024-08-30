@@ -177,7 +177,7 @@ fn eval_if_else_expression(
     }
 }
 
-fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> EvalResponse {;
+fn eval_infix_objects(token: &Token, left: Rc<Object>, right: Rc<Object>) -> EvalResponse {
     return match token {
         Token::Dash => left.as_ref() - right.as_ref(),
         Token::Plus => left.as_ref() + right.as_ref(),

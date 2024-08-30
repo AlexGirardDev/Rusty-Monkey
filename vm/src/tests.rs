@@ -1,3 +1,5 @@
+use std::ptr::null;
+
 use crate::vm::Vm;
 use compiler::compiler;
 use compiler::Compiler;
@@ -66,6 +68,8 @@ fn test_conditionals() {
         Test::new("if (1 < 2) { 10 }", 10),
         Test::new("if (1 < 2) { 10 } else { 20 }", 10),
         Test::new("if (1 > 2) { 10 } else { 20 }", 20),
+        Test::new("if (1 > 2) { 10 } ", Object::Null),
+        Test::new("if (false) { 10 } ", Object::Null),
     ];
     run_vm_tests(&tests);
 }
@@ -76,7 +80,7 @@ fn run_vm_tests(tests: &[Test]) {
         expected_value,
     } in tests
     {
-        eprintln!("Testing {}",input);
+        eprintln!("Testing {}", input);
         let program = Program::try_parse(input).expect("Erorr while trying to parse program");
         let mut comp = Compiler::default();
         comp.compile(program.into())
